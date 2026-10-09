@@ -1,0 +1,3 @@
+src/kiremoted.c
+src/config.c
+src/log.c

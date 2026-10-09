@@ -1,0 +1,9 @@
+[submodule "upstream/kdeconnect-kde"]
+	path = upstream/kdeconnect-kde
+	url = https://invent.kde.org/network/kdeconnect-kde.git
+[submodule "upstream/kdeconnect-android"]
+	path = upstream/kdeconnect-android
+	url = https://invent.kde.org/network/kdeconnect-android.git
+[submodule "upstream/scrcpy"]
+	path = upstream/scrcpy
+	url = https://github.com/Genymobile/scrcpy.git

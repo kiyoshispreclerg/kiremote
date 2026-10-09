@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Kiremote
+Comment=Connects this computer to your phone
+Comment[pt_BR]=Conecta este computador ao seu celular
+Exec=kiremoted
+Icon=phone
+NoDisplay=true
+X-KDE-autostart-phase=2

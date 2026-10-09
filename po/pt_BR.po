@@ -1,0 +1,74 @@
+# Portuguese translations for kiremote package
+# Traduções em português brasileiro para o pacote kiremote.
+# Copyright (C) 2026 Kiremote contributors
+# This file is distributed under the same license as the kiremote package.
+# Automatically generated, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: kiremote\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-09 09:31-0300\n"
+"PO-Revision-Date: 2026-10-09 08:41-0300\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: none\n"
+"Language: pt_BR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#: src/kiremoted.c:23
+#, c-format
+msgid ""
+"Usage: %s [OPTION]...\n"
+"Connects this computer to your phone (KDE Connect protocol).\n"
+"\n"
+"  -c, --config FILE  configuration file\n"
+"                     (default ~/.config/kiremote/kiremote.ini)\n"
+"  -v, --verbose      debug messages\n"
+"  -V, --version      show the version and exit\n"
+"  -h, --help         show this help and exit\n"
+msgstr ""
+"Uso: %s [OPÇÃO]...\n"
+"Conecta este computador ao seu celular (protocolo do KDE Connect).\n"
+"\n"
+"  -c, --config ARQUIVO  arquivo de configuração\n"
+"                        (padrão ~/.config/kiremote/kiremote.ini)\n"
+"  -v, --verbose         mensagens de depuração\n"
+"  -V, --version         mostra a versão e sai\n"
+"  -h, --help            mostra esta ajuda e sai\n"
+
+#: src/kiremoted.c:88
+#, c-format
+msgid "device name: %s"
+msgstr "nome do dispositivo: %s"
+
+#: src/kiremoted.c:92
+#, c-format
+msgid "cannot watch signals: %s"
+msgstr "não foi possível observar os sinais: %s"
+
+#: src/config.c:59
+#, c-format
+msgid "%s:%d: unknown device type \"%s\", using \"desktop\""
+msgstr "%s:%d: tipo de dispositivo desconhecido \"%s\", usando \"desktop\""
+
+#: src/config.c:78
+msgid "cannot find the configuration folder (is HOME set?)"
+msgstr "pasta de configuração não encontrada (HOME está definido?)"
+
+#: src/config.c:87
+#, c-format
+msgid "cannot read %s: %s"
+msgstr "não foi possível ler %s: %s"
+
+#. TRANSLATORS: log prefix, keep the trailing ": ".
+#: src/log.c:58
+msgid "warning: "
+msgstr "aviso: "
+
+#. TRANSLATORS: log prefix, keep the trailing ": ".
+#: src/log.c:67
+msgid "error: "
+msgstr "erro: "
