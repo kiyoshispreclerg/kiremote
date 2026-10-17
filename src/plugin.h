@@ -14,6 +14,7 @@
 
 typedef struct kr_plugin {
     const char *name; /* also the key in the [plugins] section */
+    bool off_by_default; /* needs "name = true" in [plugins] */
     const char *const *incoming; /* NULL-terminated */
     const char *const *outgoing;
     /* Bytes of state kept for each device while it is connected and paired
@@ -52,6 +53,17 @@ extern const kr_plugin kr_plugin_find;
 extern const kr_plugin kr_plugin_telephony;
 extern const kr_plugin kr_plugin_mpris;
 extern const kr_plugin kr_plugin_volume;
+extern const kr_plugin kr_plugin_clipboard;
+extern const kr_plugin kr_plugin_notifications;
+extern const kr_plugin kr_plugin_runcommand;
+extern const kr_plugin kr_plugin_mousepad;
+extern const kr_plugin kr_plugin_presenter;
+extern const kr_plugin kr_plugin_screensaver;
+extern const kr_plugin kr_plugin_lock;
+
+/* clipboard: makes text the X clipboard (the phone's text, or shared text).
+ * False if there is no X connection. */
+bool kr_clipboard_set_text(kr_daemon *d, const char *text);
 
 /* systemvolume: the outputs, from `pactl --format=json list sinks`. */
 #define KR_MAX_SINKS 16
@@ -77,6 +89,9 @@ typedef struct {
     bool charging, discharging;
 } kr_battery_info;
 bool kr_battery_read(const char *dir, kr_battery_info *out);
+
+/* share: may xdg-open be given this link? */
+bool kr_url_openable(const char *url);
 
 /* ping */
 bool kr_ping_send(kr_daemon *d, kr_device *dev, const char *message);

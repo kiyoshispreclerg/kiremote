@@ -9,7 +9,10 @@ src/link.c
 src/log.c
 src/plugin_battery.c
 src/plugin_find.c
+src/plugin_lock.c
 src/plugin_ping.c
+src/plugin_runcommand.c
+src/plugin_screensaver.c
 src/plugin_share.c
 src/plugin_telephony.c
 src/plugin_volume.c

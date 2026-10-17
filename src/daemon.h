@@ -22,6 +22,7 @@
 #include "notify.h"
 #include "packet.h"
 #include "proc.h"
+#include "x11.h"
 
 typedef struct kr_daemon kr_daemon;
 typedef struct kr_device kr_device;
@@ -64,6 +65,10 @@ void kr_daemon_remove_source(kr_daemon *d, void *ud);
 kr_bus *kr_daemon_bus(kr_daemon *d);
 kr_notify *kr_daemon_notify(kr_daemon *d);
 kr_procs *kr_daemon_procs(kr_daemon *d);
+/* The system bus (logind), opened on the first call; NULL if there is none. */
+kr_bus *kr_daemon_system_bus(kr_daemon *d);
+/* The shared X connection, opened on the first call; NULL without $DISPLAY. */
+kr_x11 *kr_daemon_x11(kr_daemon *d);
 /* The MPRIS players, tracked from the first call on (NULL without a bus). */
 kr_mpris *kr_daemon_mpris(kr_daemon *d);
 
@@ -93,6 +98,12 @@ bool kr_daemon_send(kr_daemon *d, kr_device *dev, const kr_packet *p);
 /* Fetches the payload of p (received from dev) into path. */
 bool kr_daemon_download(kr_daemon *d, kr_device *dev, const kr_packet *p, const char *path,
                         int64_t mtime_ms);
+/* The same, and done(ud, ok, final_path) when it ends; final_path (valid
+ * during the call) may differ from path if that already existed. done is
+ * also called when the transfer fails, but not if the daemon is going away. */
+typedef void (*kr_download_done_fn)(void *ud, bool ok, const char *final_path);
+bool kr_daemon_download_cb(kr_daemon *d, kr_device *dev, const kr_packet *p, const char *path,
+                           int64_t mtime_ms, kr_download_done_fn done, void *ud);
 /* Sends p with fd (taken over, size bytes) as its payload. */
 bool kr_daemon_upload(kr_daemon *d, kr_device *dev, kr_packet *p, int fd, int64_t size,
                       const char *name);

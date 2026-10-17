@@ -34,6 +34,8 @@ static void usage(FILE *out)
                    "      --ping            send a ping\n"
                    "      --ping-msg TEXT   send a ping with a message\n"
                    "      --share FILE      send a file (may be repeated)\n"
+                   "      --share-text TEXT send text (it goes to the phone's clipboard)\n"
+                   "      --share-url URL   send a link (the phone opens it)\n"
                    "      --find-phone      make the phone ring\n"
                    "      --stop-ring       stop this computer's sound (when the phone looks for it)\n"
                    "      --mute-call       silence the phone's ringing call\n"
@@ -215,7 +217,7 @@ int main(int argc, char **argv)
     kr_i18n_init();
     kr_log_init("kiremote-cli");
 
-    enum { O_PAIR = 256, O_UNPAIR, O_PING, O_PING_MSG, O_SHARE, O_REFRESH, O_FIND, O_STOP_RING, O_MUTE };
+    enum { O_PAIR = 256, O_UNPAIR, O_PING, O_PING_MSG, O_SHARE, O_REFRESH, O_FIND, O_STOP_RING, O_MUTE, O_SHARE_TEXT, O_SHARE_URL };
     static const struct option longopts[] = {
         {"list", no_argument, NULL, 'l'},
         {"device", required_argument, NULL, 'd'},
@@ -225,6 +227,8 @@ int main(int argc, char **argv)
         {"ping-msg", required_argument, NULL, O_PING_MSG},
         {"share", required_argument, NULL, O_SHARE},
         {"refresh", no_argument, NULL, O_REFRESH},
+        {"share-text", required_argument, NULL, O_SHARE_TEXT},
+        {"share-url", required_argument, NULL, O_SHARE_URL},
         {"find-phone", no_argument, NULL, O_FIND},
         {"stop-ring", no_argument, NULL, O_STOP_RING},
         {"mute-call", no_argument, NULL, O_MUTE},
@@ -236,6 +240,7 @@ int main(int argc, char **argv)
     const char *device = NULL, *ping_msg = NULL;
     bool do_list = false, do_pair = false, do_unpair = false, do_ping = false, do_refresh = false;
     bool do_find = false, do_stop_ring = false, do_mute = false;
+    const char *share_text = NULL, *share_url = NULL;
     cJSON *files = cJSON_CreateArray();
     int c;
     while ((c = getopt_long(argc, argv, "ld:s:Vh", longopts, NULL)) != -1) {
@@ -272,6 +277,12 @@ int main(int argc, char **argv)
         case O_REFRESH:
             do_refresh = true;
             break;
+        case O_SHARE_TEXT:
+            share_text = optarg;
+            break;
+        case O_SHARE_URL:
+            share_url = optarg;
+            break;
         case O_FIND:
             do_find = true;
             break;
@@ -298,7 +309,8 @@ int main(int argc, char **argv)
             return 2;
         }
     }
-    bool per_device = do_pair || do_unpair || do_ping || do_find || do_mute || cJSON_GetArraySize(files);
+    bool per_device = do_pair || do_unpair || do_ping || do_find || do_mute || share_text || share_url ||
+                      cJSON_GetArraySize(files);
     if (optind < argc || (!per_device && !do_list && !do_refresh && !do_stop_ring) || (per_device && !device)) {
         if (per_device && !device)
             kr_log_error(_("say which device with -d"));
@@ -338,6 +350,20 @@ int main(int argc, char **argv)
         cJSON *req = simple("ping", device);
         if (ping_msg)
             cJSON_AddStringToObject(req, "message", ping_msg);
+        cJSON *r = request(req);
+        rc |= !r;
+        cJSON_Delete(r);
+    }
+    if (share_text && !rc) {
+        cJSON *req = simple("share-text", device);
+        cJSON_AddStringToObject(req, "text", share_text);
+        cJSON *r = request(req);
+        rc |= !r;
+        cJSON_Delete(r);
+    }
+    if (share_url && !rc) {
+        cJSON *req = simple("share-url", device);
+        cJSON_AddStringToObject(req, "url", share_url);
         cJSON *r = request(req);
         rc |= !r;
         cJSON_Delete(r);

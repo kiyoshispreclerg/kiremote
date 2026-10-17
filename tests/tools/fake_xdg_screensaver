@@ -1,0 +1,4 @@
+#!/bin/sh
+# SPDX-License-Identifier: GPL-3.0-or-later
+# A stand-in xdg-screensaver for tests/net: logs its arguments.
+echo "$*" >>"${FAKE_XDGSS_LOG:?}"

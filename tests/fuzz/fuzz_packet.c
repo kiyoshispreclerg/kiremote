@@ -13,6 +13,8 @@
 #include <string.h>
 
 #include "packet.h"
+#include "plugin.h"
+#include "util.h"
 
 int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size);
 
@@ -29,6 +31,15 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     for (size_t i = 0; i < sizeof ints / sizeof *ints; i++)
         (void)kr_packet_int(p, ints[i], &n);
     (void)kr_packet_bool(p, "pair", false);
+    /* The strings plugins act on: text and links from the phone. */
+    static const char *const strs[] = {"content", "text", "url", "message", "filename", "key"};
+    for (size_t i = 0; i < sizeof strs / sizeof *strs; i++) {
+        const char *v = kr_packet_str(p, strs[i]);
+        if (v) {
+            (void)kr_utf8_valid(v, strlen(v));
+            (void)kr_url_openable(v);
+        }
+    }
     char name[KR_NAME_SIZE];
     kr_name_filter(kr_packet_str(p, "deviceName"), name, sizeof name);
     (void)kr_device_id_valid(kr_packet_str(p, "deviceId"));

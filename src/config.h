@@ -47,13 +47,18 @@ const char *kr_config_addresses(const kr_config *c);
  * no home either. */
 bool kr_config_share_dir(const kr_config *c, char *out, size_t size);
 
-/* [plugins] <name>: false/no/off/0 turns a plugin off. Default on. */
-bool kr_config_plugin_enabled(const kr_config *c, const char *name);
+/* [plugins] <name>: false/no/off/0 turns a plugin off, true/yes/on/1 on;
+ * without the line, fallback. */
+bool kr_config_plugin_enabled(const kr_config *c, const char *name, bool fallback);
 
 /* A string, bool or int setting of any section, for plugins; the string is
  * owned by c. */
 const char *kr_config_get(const kr_config *c, const char *section, const char *key);
 bool kr_config_get_bool(const kr_config *c, const char *section, const char *key, bool fallback);
+
+/* Walks the "key = value" lines of a section in file order: start with
+ * *i = 0; false at the end. Strings are owned by c. */
+bool kr_config_each(const kr_config *c, const char *section, int *i, const char **key, const char **value);
 
 /* True for the device types the protocol knows. "smartphone" is the old
  * spelling of "phone" and is accepted on input. */

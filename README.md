@@ -35,13 +35,17 @@ build/kiremote-cli -d Celular --share foto.jpg
 build/kiremote-cli -d Celular --find-phone   # o celular toca
 build/kiremote-cli -d Celular --mute-call    # silencia a chamada que toca
 build/kiremote-cli --stop-ring               # para o som quando o celular procura o computador
+build/kiremote-cli -d Celular --share-text "oi"   # vai para o clipboard do celular
+build/kiremote-cli -d Celular --share-url https://exemplo.org
 ```
 
 Notificações, controle de mídia e pausar na chamada precisam de uma sessão
 D-Bus (`$DBUS_SESSION_BUS_ADDRESS`); sem ela o daemon funciona, mas só
 escreve no log. O volume usa o `pactl`, e o som de "achar o computador",
 `paplay`, `pw-play` ou `aplay`. Cada plugin pode ser desligado na seção
-`[plugins]` do .ini.
+`[plugins]` do .ini. Clipboard, mouse/teclado e ponteiro de apresentação
+precisam de X11 (`$DISPLAY`); os comandos que o celular pode rodar são só os
+da seção `[runcommand]`.
 
 No celular, abra o app do KDE Connect: o computador aparece na lista. Dá
 para parear dos dois lados; os dois mostram a mesma chave de verificação.

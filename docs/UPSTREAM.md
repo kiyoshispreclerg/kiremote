@@ -37,3 +37,13 @@ Lugares onde o Kiremote faz diferente do kdeconnect-kde de propósito.
 | Achar este computador | toca o som uma vez | repete até 30 s ou até fechar a notificação / `kiremote-cli --stop-ring`; o som é um player externo (paplay, pw-play, aplay) |
 | Pausar na chamada | pausa e, opcionalmente, muda o volume para mudo | só pausa (a opção de mudo fica para depois) |
 | Chamada tocando | notificação persistente com botão "Mute Call" | igual, mas o botão só existe se o servidor de notificações tiver `actions`; `kiremote-cli --mute-call` cobre o resto |
+| Clipboard com segredo de gerenciador de senhas | envia (`sendPassword` padrão ligado) | não envia por padrão (`[clipboard] share_passwords`) |
+| Pacote `clipboard.connect` sem texto | envia mesmo vazio | não envia se o clipboard está vazio (o outro lado o apagaria) |
+| Link recebido | abre qualquer coisa (`QDesktopServices::openUrl`) | só `http`, `https`, `ftp`, `mailto`, `tel`, `sms` e `geo`, sem espaços; avisa por notificação |
+| Desbloquear pelo celular | `Unlock()` do logind, sempre | desligado; precisa de `allow_unlock = true` em `[lock]` |
+| Comando de bloquear | `Lock()` do logind | comando configurável (padrão `loginctl lock-session`, que o `xss-lock` do KiDesktop atende) |
+| Caminho do ScreenSaver | `/ScreenSaver` | tenta `/org/freedesktop/ScreenSaver` e depois `/ScreenSaver`; sem serviço, `xdg-screensaver suspend` |
+| Ponteiro da apresentação | janela Qt/QML transparente | janela circular com XShape, sem compositor, sem capturar cliques |
+| Digitar texto | libfakekey | XTest; caracteres fora do layout usam um keycode livre emprestado, com espera entre eles |
+| Movimento fracionário do mouse | trunca cada `dx`/`dy` | guarda a fração e soma no próximo |
+| Comandos do celular | lista em JSON no config do KDE | seção `[runcommand]` do .ini (o nome da linha é a chave) |

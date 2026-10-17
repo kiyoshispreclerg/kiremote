@@ -139,18 +139,13 @@ static bool session_address(char *out, size_t size)
     return false;
 }
 
-kr_bus *kr_bus_open(void)
+static kr_bus *open_at(const char *addr)
 {
-    char addr[KR_PATH_MAX];
-    if (!session_address(addr, sizeof addr)) {
-        kr_log_debug("no session bus address");
-        return NULL;
-    }
     DBusError err;
     dbus_error_init(&err);
     DBusConnection *c = dbus_connection_open_private(addr, &err);
     if (!c || !dbus_bus_register(c, &err)) {
-        kr_log_debug("session bus: %s", dbus_error_is_set(&err) ? err.message : "?");
+        kr_log_debug("bus %s: %s", addr, dbus_error_is_set(&err) ? err.message : "?");
         dbus_error_free(&err);
         if (c) {
             dbus_connection_close(c);
@@ -177,12 +172,40 @@ kr_bus *kr_bus_open(void)
     return b;
 }
 
+kr_bus *kr_bus_open(void)
+{
+    char addr[KR_PATH_MAX];
+    if (!session_address(addr, sizeof addr)) {
+        kr_log_debug("no session bus address");
+        return NULL;
+    }
+    return open_at(addr);
+}
+
+kr_bus *kr_bus_open_system(void)
+{
+    const char *env = getenv("DBUS_SYSTEM_BUS_ADDRESS");
+    char addr[KR_PATH_MAX];
+    struct stat st;
+    if (env && *env)
+        return open_at(env);
+    if (stat("/run/dbus/system_bus_socket", &st) != 0 || !S_ISSOCK(st.st_mode)) {
+        kr_log_debug("no system bus");
+        return NULL;
+    }
+    kr_pathf(addr, sizeof addr, "unix:path=/run/dbus/system_bus_socket");
+    return open_at(addr);
+}
+
 void kr_bus_free(kr_bus *b)
 {
     if (!b)
         return;
     DBusConnection *c = b->conn;
     if (c) {
+        /* What was queued last (an UnInhibit, a CloseNotification) should
+         * reach the bus; this is shutdown, so waiting for the write is fine. */
+        dbus_connection_flush(c);
         dbus_connection_set_watch_functions(c, NULL, NULL, NULL, NULL, NULL);
         dbus_connection_set_timeout_functions(c, NULL, NULL, NULL, NULL, NULL);
         dbus_connection_set_dispatch_status_function(c, NULL, NULL, NULL);
@@ -210,7 +233,9 @@ static void call_done(DBusPendingCall *pc, void *data)
     call *c = data;
     DBusMessage *reply = dbus_pending_call_steal_reply(pc);
     if (reply && dbus_message_get_type(reply) == DBUS_MESSAGE_TYPE_ERROR) {
-        kr_log_debug("D-Bus error: %s", dbus_message_get_error_name(reply));
+        const char *text = NULL;
+        dbus_message_get_args(reply, NULL, DBUS_TYPE_STRING, &text, DBUS_TYPE_INVALID);
+        kr_log_debug("D-Bus error: %s%s%s", dbus_message_get_error_name(reply), text ? ": " : "", text ? text : "");
         dbus_message_unref(reply);
         reply = NULL;
     }
@@ -250,6 +275,23 @@ bool kr_bus_call(kr_bus *b, DBusMessage *msg, kr_bus_reply_fn fn, void *ud, int 
     }
     dbus_message_unref(msg);
     return ok;
+}
+
+bool kr_bus_call_args(kr_bus *b, const char *dest, const char *path, const char *iface, const char *member,
+                      kr_bus_reply_fn fn, void *ud, int timeout_ms, int first_type, ...)
+{
+    DBusMessage *m = kr_bus_new_call(dest, path, iface, member);
+    if (!m)
+        return false;
+    va_list ap;
+    va_start(ap, first_type);
+    bool ok = dbus_message_append_args_valist(m, first_type, ap);
+    va_end(ap);
+    if (!ok) {
+        dbus_message_unref(m);
+        return false;
+    }
+    return kr_bus_call(b, m, fn, ud, timeout_ms);
 }
 
 bool kr_bus_listen(kr_bus *b, const char *rule, kr_bus_signal_fn fn, void *ud)

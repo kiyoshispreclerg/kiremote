@@ -117,15 +117,26 @@ bool kr_which(const char *argv0)
 kr_proc *kr_proc_spawn(kr_procs *ps, const char *const *argv, bool capture, const kr_proc_cb *cb,
                        void *ud)
 {
+    return kr_proc_spawn_ex(ps, argv, capture ? KR_PROC_CAPTURE : 0, cb, ud);
+}
+
+kr_proc *kr_proc_spawn_ex(kr_procs *ps, const char *const *argv, unsigned flags, const kr_proc_cb *cb,
+                          void *ud)
+{
+    bool capture = flags & KR_PROC_CAPTURE;
     bool want_out = capture || (cb && cb->on_line);
     int pipefd[2] = {-1, -1};
     if (want_out && pipe2(pipefd, O_CLOEXEC | O_NONBLOCK) < 0)
         return NULL;
 
     kr_proc *p = calloc(1, sizeof *p);
-    char **env = make_env();
+    char **env = (flags & KR_PROC_USER) ? environ : make_env();
     posix_spawn_file_actions_t fa;
+    posix_spawnattr_t attr;
     bool fa_ok = posix_spawn_file_actions_init(&fa) == 0;
+    bool attr_ok = posix_spawnattr_init(&attr) == 0;
+    if (attr_ok && (flags & KR_PROC_USER))
+        posix_spawnattr_setflags(&attr, POSIX_SPAWN_SETSID);
     int err = ENOMEM;
     if (p && env && fa_ok) {
         posix_spawn_file_actions_addopen(&fa, 0, "/dev/null", O_RDONLY, 0);
@@ -133,15 +144,21 @@ kr_proc *kr_proc_spawn(kr_procs *ps, const char *const *argv, bool capture, cons
             posix_spawn_file_actions_adddup2(&fa, pipefd[1], 1);
         else
             posix_spawn_file_actions_addopen(&fa, 1, "/dev/null", O_WRONLY, 0);
-        posix_spawn_file_actions_addopen(&fa, 2, "/dev/null", O_WRONLY, 0);
+        if (want_out && (flags & KR_PROC_STDERR))
+            posix_spawn_file_actions_adddup2(&fa, pipefd[1], 2);
+        else
+            posix_spawn_file_actions_addopen(&fa, 2, "/dev/null", O_WRONLY, 0);
         pid_t pid;
-        err = posix_spawnp(&pid, argv[0], &fa, NULL, (char *const *)argv, env);
+        err = posix_spawnp(&pid, argv[0], &fa, attr_ok ? &attr : NULL, (char *const *)argv, env);
         if (err == 0)
             p->pid = pid;
     }
     if (fa_ok)
         posix_spawn_file_actions_destroy(&fa);
-    free(env);
+    if (attr_ok)
+        posix_spawnattr_destroy(&attr);
+    if (!(flags & KR_PROC_USER))
+        free(env);
     if (pipefd[1] >= 0)
         close(pipefd[1]);
     if (err != 0) {

@@ -163,8 +163,9 @@ static void note_action(void *ud, const char *key)
     ring_stop(ud);
 }
 
-static void note_closed(void *ud)
+static void note_closed(void *ud, int reason)
 {
+    (void)reason;
     kr_daemon *d = ud;
     ring.note = NULL;
     ring_stop(d);

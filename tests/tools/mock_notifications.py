@@ -28,12 +28,16 @@ class Server(dbus.service.Object):
 
     @dbus.service.method(IFACE, in_signature='susssasa{sv}i', out_signature='u')
     def Notify(self, app, replaces, icon, summary, body, actions, hints, timeout):
-        self.next_id += 1
         acts = ','.join(str(a) for a in actions)
         urgent = int(hints.get('urgency', 1))
-        log.write('NOTIFY %d | %s | %s | %s | timeout=%d | urgency=%d\n'
-                  % (self.next_id, summary, body, acts, timeout, urgent))
-        return dbus.UInt32(self.next_id)
+        if replaces:
+            nid = int(replaces)
+        else:
+            self.next_id += 1
+            nid = self.next_id
+        log.write('NOTIFY %d | %s | %s | %s | timeout=%d | urgency=%d | replaces=%d | icon=%s\n'
+                  % (nid, summary, body, acts, timeout, urgent, replaces, icon))
+        return dbus.UInt32(nid)
 
     @dbus.service.method(IFACE, in_signature='u')
     def CloseNotification(self, nid):

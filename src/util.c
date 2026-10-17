@@ -114,10 +114,72 @@ bool kr_config_path(char *out, size_t size, const char *rel)
     return xdg_path(out, size, "XDG_CONFIG_HOME", ".config", rel);
 }
 
+bool kr_cache_path(char *out, size_t size, const char *rel)
+{
+    return xdg_path(out, size, "XDG_CACHE_HOME", ".cache", rel);
+}
+
 bool kr_runtime_path(char *out, size_t size, const char *name)
 {
     const char *dir = getenv("XDG_RUNTIME_DIR");
     if (dir && dir[0] == '/')
         return kr_pathf(out, size, "%s/%s", dir, name);
     return kr_pathf(out, size, "/tmp/%s-%lu", name, (unsigned long)getuid());
+}
+
+bool kr_utf8_valid(const char *str, size_t len)
+{
+    const unsigned char *s = (const unsigned char *)str;
+    size_t i = 0;
+    while (i < len) {
+        unsigned c = s[i];
+        size_t n;
+        unsigned cp;
+        if (c < 0x80) {
+            i++;
+            continue;
+        } else if (c >= 0xC2 && c <= 0xDF) {
+            n = 2;
+            cp = c & 0x1F;
+        } else if (c >= 0xE0 && c <= 0xEF) {
+            n = 3;
+            cp = c & 0x0F;
+        } else if (c >= 0xF0 && c <= 0xF4) {
+            n = 4;
+            cp = c & 0x07;
+        } else {
+            return false;
+        }
+        if (i + n > len)
+            return false;
+        for (size_t k = 1; k < n; k++) {
+            if ((s[i + k] & 0xC0) != 0x80)
+                return false;
+            cp = (cp << 6) | (s[i + k] & 0x3F);
+        }
+        if ((n == 3 && cp < 0x800) || (n == 4 && cp < 0x10000) || cp > 0x10FFFF ||
+            (cp >= 0xD800 && cp <= 0xDFFF))
+            return false;
+        i += n;
+    }
+    return true;
+}
+
+char *kr_latin1_to_utf8(const char *str, size_t len)
+{
+    const unsigned char *s = (const unsigned char *)str;
+    char *out = malloc(len * 2 + 1);
+    if (!out)
+        return NULL;
+    size_t o = 0;
+    for (size_t i = 0; i < len; i++) {
+        if (s[i] < 0x80) {
+            out[o++] = (char)s[i];
+        } else {
+            out[o++] = (char)(0xC0 | (s[i] >> 6));
+            out[o++] = (char)(0x80 | (s[i] & 0x3F));
+        }
+    }
+    out[o] = '\0';
+    return out;
 }

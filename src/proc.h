@@ -37,6 +37,16 @@ void kr_procs_free(kr_procs *ps);
  * NULL for fire and forget. */
 kr_proc *kr_proc_spawn(kr_procs *ps, const char *const *argv, bool capture, const kr_proc_cb *cb,
                        void *ud);
+
+/* For programs the user asked for (not our own helpers): */
+enum {
+    KR_PROC_CAPTURE = 1 << 0,   /* as `capture` above */
+    KR_PROC_USER = 1 << 1,      /* keep the environment as it is (locale included) and
+                                   start a new session, so it is not ours to signal */
+    KR_PROC_STDERR = 1 << 2,    /* standard error joins the output */
+};
+kr_proc *kr_proc_spawn_ex(kr_procs *ps, const char *const *argv, unsigned flags, const kr_proc_cb *cb,
+                          void *ud);
 /* SIGTERM; on_exit still comes when it is gone. */
 void kr_proc_kill(kr_proc *p);
 /* The owner is going away: no more callbacks; the process runs on (kill it

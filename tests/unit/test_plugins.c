@@ -151,8 +151,9 @@ TEST(plugins_can_be_switched_off)
     kr_config_free(c);
 
     c = kr_config_parse("[plugins]\nbattery = false\nping = no\nmpris = off\ntelephony = 0\n");
-    CHECK(!kr_config_plugin_enabled(c, "battery"));
-    CHECK(kr_config_plugin_enabled(c, "share"));
+    CHECK(!kr_config_plugin_enabled(c, "battery", true));
+    CHECK(kr_config_plugin_enabled(c, "share", true));
+    CHECK(!kr_config_plugin_enabled(c, "share", false)); /* the fallback */
     in = kr_plugins_capabilities(c, true);
     cJSON_ArrayForEach(e, in)
     {
@@ -186,8 +187,60 @@ TEST(booleans_android_style)
     kr_packet_free(p);
 }
 
+TEST(links_xdg_open_may_get)
+{
+    CHECK(kr_url_openable("https://exemplo.org/x?y=1#z"));
+    CHECK(kr_url_openable("HTTP://exemplo.org"));
+    CHECK(kr_url_openable("mailto:alguem@exemplo.org"));
+    CHECK(kr_url_openable("tel:+5511999999999"));
+    CHECK(!kr_url_openable("file:///etc/passwd"));
+    CHECK(!kr_url_openable("javascript:alert(1)"));
+    CHECK(!kr_url_openable("smb://host/share"));
+    CHECK(!kr_url_openable("https://exemplo.org/a b")); /* spaces */
+    CHECK(!kr_url_openable("https://exemplo.org/\nx"));  /* more than one line */
+    CHECK(!kr_url_openable("exemplo.org"));
+    CHECK(!kr_url_openable(":x"));
+    CHECK(!kr_url_openable(""));
+}
+
+TEST(utf8_validation)
+{
+    CHECK(kr_utf8_valid("olá, ção 😀", strlen("olá, ção 😀")));
+    CHECK(kr_utf8_valid("", 0));
+    CHECK(!kr_utf8_valid("\xff", 1));
+    CHECK(!kr_utf8_valid("\xc0\xaf", 2));         /* overlong "/" */
+    CHECK(!kr_utf8_valid("\xed\xa0\x80", 3));     /* a surrogate */
+    CHECK(!kr_utf8_valid("\xf4\x90\x80\x80", 4)); /* above U+10FFFF */
+    CHECK(!kr_utf8_valid("\xe2\x82", 2));         /* cut short */
+    char *l1 = kr_latin1_to_utf8("a\xe7\xe3o", 4);
+    CHECK(l1);
+    CHECK_STR_EQ(l1, "a\xc3\xa7\xc3\xa3o");
+    CHECK(kr_utf8_valid(l1, strlen(l1)));
+    free(l1);
+}
+
+TEST(config_sections_can_be_walked)
+{
+    kr_config *c = kr_config_parse("[a]\nx = 1\n[runcommand]\nSay hi = echo oi\nOther = ls\n[b]\ny = 2\n"
+                                   "[RunCommand]\nLate = true\n");
+    int i = 0;
+    const char *k, *v;
+    CHECK(kr_config_each(c, "runcommand", &i, &k, &v));
+    CHECK_STR_EQ(k, "Say hi");
+    CHECK_STR_EQ(v, "echo oi");
+    CHECK(kr_config_each(c, "runcommand", &i, &k, &v));
+    CHECK_STR_EQ(k, "Other");
+    CHECK(kr_config_each(c, "runcommand", &i, &k, &v)); /* section names are case-insensitive */
+    CHECK_STR_EQ(k, "Late");
+    CHECK(!kr_config_each(c, "runcommand", &i, &k, &v));
+    kr_config_free(c);
+}
+
 int main(void)
 {
+    RUN(links_xdg_open_may_get);
+    RUN(utf8_validation);
+    RUN(config_sections_can_be_walked);
     RUN(battery_from_sysfs);
     RUN(sinks_from_pactl_json);
     RUN(ring_sound_is_a_wav);

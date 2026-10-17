@@ -48,8 +48,9 @@ static void note_action(void *ud, const char *key)
         send_mute(st->d, dev);
 }
 
-static void note_closed(void *ud)
+static void note_closed(void *ud, int reason)
 {
+    (void)reason;
     ((call_state *)ud)->note = NULL;
 }
 

@@ -16,6 +16,7 @@
  * A kr_bus is a source of the daemon's loop (see kr_source in daemon.h). */
 
 #include <poll.h>
+#include <stdarg.h>
 #include <stdbool.h>
 
 #include <dbus/dbus.h>
@@ -29,6 +30,9 @@ typedef void (*kr_bus_signal_fn)(void *ud, DBusMessage *signal);
 
 /* NULL (and a debug line) if there is no session bus. */
 kr_bus *kr_bus_open(void);
+/* The system bus: $DBUS_SYSTEM_BUS_ADDRESS, else /run/dbus/system_bus_socket
+ * (for logind). NULL if it is not there. */
+kr_bus *kr_bus_open_system(void);
 void kr_bus_free(kr_bus *b);
 /* False after the bus went away. */
 bool kr_bus_alive(const kr_bus *b);
@@ -39,6 +43,13 @@ DBusMessage *kr_bus_new_call(const char *dest, const char *path, const char *ifa
 /* Sends msg (consumed) and calls fn when the reply (or the failure)
  * comes. fn may be NULL when no reply is wanted. */
 bool kr_bus_call(kr_bus *b, DBusMessage *msg, kr_bus_reply_fn fn, void *ud, int timeout_ms);
+
+/* new_call + dbus_message_append_args + kr_bus_call in one: the arguments
+ * are type/value pairs ended by DBUS_TYPE_INVALID, as for
+ * dbus_message_append_args (use DBUS_TYPE_INVALID alone for none). Nothing
+ * leaks on failure. */
+bool kr_bus_call_args(kr_bus *b, const char *dest, const char *path, const char *iface, const char *member,
+                      kr_bus_reply_fn fn, void *ud, int timeout_ms, int first_type, ...);
 
 /* Signals matching rule (a D-Bus match rule string) go to fn; fn sees every
  * signal any listener asked for, so it checks the interface and member. */

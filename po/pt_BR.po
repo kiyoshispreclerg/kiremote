@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kiremote\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-17 17:21-0300\n"
-"PO-Revision-Date: 2026-10-17 20:00-0300\n"
+"POT-Creation-Date: 2026-10-17 19:51-0300\n"
+"PO-Revision-Date: 2026-10-17 21:00-0300\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
 "Language: pt_BR\n"
@@ -68,7 +68,7 @@ msgstr "certificado novo criado em %s (id do dispositivo %s)"
 msgid "%s:%d: unknown device type \"%s\", using \"desktop\""
 msgstr "%s:%d: tipo de dispositivo desconhecido \"%s\", usando \"desktop\""
 
-#: src/config.c:79 src/daemon.c:919
+#: src/config.c:79 src/daemon.c:970
 msgid "cannot find the configuration folder (is HOME set?)"
 msgstr "pasta de configuração não encontrada (HOME está definido?)"
 
@@ -85,7 +85,7 @@ msgstr "dados demais esperando para sair"
 msgid "TLS write error"
 msgstr "erro de escrita no TLS"
 
-#: src/conn.c:346 src/conn.c:400 src/conn.c:429 src/daemon.c:929 src/link.c:229
+#: src/conn.c:346 src/conn.c:400 src/conn.c:429 src/daemon.c:980 src/link.c:229
 msgid "out of memory"
 msgstr "sem memória"
 
@@ -134,41 +134,41 @@ msgstr "JSON inválido"
 msgid "missing \"type\""
 msgstr "faltou \"type\""
 
-#: src/control.c:179 src/daemon.c:793
+#: src/control.c:179 src/daemon.c:844
 msgid "unknown request"
 msgstr "pedido desconhecido"
 
-#: src/daemon.c:360
+#: src/daemon.c:401
 msgid "the clocks of the two devices are too far apart"
 msgstr "os relógios dos dois dispositivos estão muito diferentes"
 
-#: src/daemon.c:362
+#: src/daemon.c:403
 msgid "refused or canceled by the other device"
 msgstr "recusado ou cancelado pelo outro dispositivo"
 
-#: src/daemon.c:364
+#: src/daemon.c:405
 msgid "canceled"
 msgstr "cancelado"
 
-#: src/daemon.c:366
+#: src/daemon.c:407
 msgid "timed out"
 msgstr "tempo esgotado"
 
-#: src/daemon.c:368
+#: src/daemon.c:409
 msgid "the device is not reachable"
 msgstr "o dispositivo está fora de alcance"
 
-#: src/daemon.c:382
+#: src/daemon.c:423
 #, c-format
 msgid "unpaired from %s"
 msgstr "pareamento com %s desfeito"
 
-#: src/daemon.c:385
+#: src/daemon.c:426
 #, c-format
 msgid "pairing with %s failed: %s"
 msgstr "o pareamento com %s falhou: %s"
 
-#: src/daemon.c:389
+#: src/daemon.c:430
 #, c-format
 msgid ""
 "%s wants to pair; verification key %s. Accept with \"kiremote-cli -d %s --"
@@ -177,86 +177,86 @@ msgstr ""
 "%s quer parear; chave de verificação %s. Aceite com \"kiremote-cli -d %s --"
 "pair\", recuse com \"--unpair\"."
 
-#: src/daemon.c:395
+#: src/daemon.c:436
 #, c-format
 msgid "paired with %s, but could not save it"
 msgstr "pareado com %s, mas não foi possível salvar o pareamento"
 
-#: src/daemon.c:397
+#: src/daemon.c:438
 #, c-format
 msgid "paired with %s"
 msgstr "pareado com %s"
 
-#: src/daemon.c:460
+#: src/daemon.c:501
 #, c-format
 msgid "%s connected again with another certificate; refused"
 msgstr "%s conectou de novo com outro certificado; recusado"
 
-#: src/daemon.c:474
+#: src/daemon.c:515
 #, c-format
 msgid "too many unpaired devices around; ignoring %s"
 msgstr "dispositivos não pareados demais por perto; ignorando %s"
 
-#: src/daemon.c:502
+#: src/daemon.c:543
 #, c-format
 msgid "connected to %s (%s, %s)"
 msgstr "conectado a %s (%s, %s)"
 
-#: src/daemon.c:548
+#: src/daemon.c:589
 #, c-format
 msgid "[network] addresses: not an IPv4 address: %s"
 msgstr "[network] addresses: não é um endereço IPv4: %s"
 
-#: src/daemon.c:609
+#: src/daemon.c:650
 #, c-format
 msgid "refusing %s: it went back to an older protocol version"
 msgstr "recusando %s: voltou para uma versão mais antiga do protocolo"
 
-#: src/daemon.c:673
+#: src/daemon.c:714
 #, c-format
 msgid "cannot receive %s: %s"
 msgstr "não foi possível receber %s: %s"
 
-#: src/daemon.c:689
+#: src/daemon.c:740
 #, c-format
 msgid "no free port for sending %s"
 msgstr "nenhuma porta livre para enviar %s"
 
-#: src/daemon.c:697
+#: src/daemon.c:748
 #, c-format
 msgid "sending %s to %s"
 msgstr "enviando %s para %s"
 
-#: src/daemon.c:749
+#: src/daemon.c:800
 msgid "missing \"device\""
 msgstr "faltou \"device\""
 
-#: src/daemon.c:756
+#: src/daemon.c:807
 msgid "more than one device has that name; use the id"
 msgstr "mais de um dispositivo tem esse nome; use o id"
 
-#: src/daemon.c:763
+#: src/daemon.c:814
 #, c-format
 msgid "no such device: %s"
 msgstr "dispositivo desconhecido: %s"
 
-#: src/daemon.c:802
+#: src/daemon.c:853
 msgid "already paired"
 msgstr "já está pareado"
 
-#: src/daemon.c:813 src/plugin_find.c:287
+#: src/daemon.c:864 src/plugin_find.c:288 src/plugin_share.c:218
 msgid "the device is not paired"
 msgstr "o dispositivo não está pareado"
 
-#: src/daemon.c:821
+#: src/daemon.c:872
 msgid "the device does not take pings"
 msgstr "o dispositivo não aceita pings"
 
-#: src/daemon.c:933
+#: src/daemon.c:984
 msgid "new certificate: forgetting the old pairings"
 msgstr "certificado novo: esquecendo os pareamentos antigos"
 
-#: src/daemon.c:949
+#: src/daemon.c:1000
 #, c-format
 msgid ""
 "UDP port %d is taken (is KDE Connect running?): other devices won't be "
@@ -265,41 +265,41 @@ msgstr ""
 "a porta UDP %d está ocupada (o KDE Connect está rodando?): os outros "
 "dispositivos não serão descobertos, mas ainda podem nos achar"
 
-#: src/daemon.c:956
+#: src/daemon.c:1007
 #, c-format
 msgid "cannot open the network ports (%d-%d): %s"
 msgstr "não foi possível abrir as portas de rede (%d-%d): %s"
 
-#: src/daemon.c:982
+#: src/daemon.c:1033
 msgid "no session bus: notifications and media control are off"
 msgstr "sem barramento de sessão: notificações e controle de mídia desligados"
 
-#: src/daemon.c:988
+#: src/daemon.c:1039
 #, c-format
 msgid "this is %s (%s), id %s, TCP port %d"
 msgstr "este é %s (%s), id %s, porta TCP %d"
 
-#: src/daemon.c:1167
+#: src/daemon.c:1220
 #, c-format
 msgid "disconnected from %s: %s"
 msgstr "desconectado de %s: %s"
 
-#: src/daemon.c:1200
+#: src/daemon.c:1253
 #, c-format
 msgid "sent %s to %s"
 msgstr "%s enviado para %s"
 
-#: src/daemon.c:1200 src/plugin_share.c:76
+#: src/daemon.c:1253 src/plugin_share.c:81
 #, c-format
 msgid "received %s from %s"
 msgstr "%s recebido de %s"
 
-#: src/daemon.c:1203
+#: src/daemon.c:1256
 #, c-format
 msgid "sending %s to %s failed: %s"
 msgstr "o envio de %s para %s falhou: %s"
 
-#: src/daemon.c:1204
+#: src/daemon.c:1257
 #, c-format
 msgid "receiving %s from %s failed: %s"
 msgstr "o recebimento de %s de %s falhou: %s"
@@ -317,6 +317,8 @@ msgid ""
 "      --ping            send a ping\n"
 "      --ping-msg TEXT   send a ping with a message\n"
 "      --share FILE      send a file (may be repeated)\n"
+"      --share-text TEXT send text (it goes to the phone's clipboard)\n"
+"      --share-url URL   send a link (the phone opens it)\n"
 "      --find-phone      make the phone ring\n"
 "      --stop-ring       stop this computer's sound (when the phone looks for "
 "it)\n"
@@ -338,6 +340,8 @@ msgstr ""
 "      --ping             manda um ping\n"
 "      --ping-msg TEXTO   manda um ping com uma mensagem\n"
 "      --share ARQUIVO    envia um arquivo (pode repetir)\n"
+"      --share-text TEXTO envia um texto (vai para o clipboard do celular)\n"
+"      --share-url URL    envia um link (o celular abre)\n"
 "      --find-phone       faz o celular tocar\n"
 "      --stop-ring        para o som deste computador (quando o celular o "
 "procura)\n"
@@ -347,63 +351,63 @@ msgstr ""
 "  -V, --version          mostra a versão e sai\n"
 "  -h, --help             mostra esta ajuda e sai\n"
 
-#: src/kiremote-cli.c:57
+#: src/kiremote-cli.c:59
 #, c-format
 msgid "cannot talk to kiremoted at %s: %s"
 msgstr "não foi possível falar com o kiremoted em %s: %s"
 
-#: src/kiremote-cli.c:64
+#: src/kiremote-cli.c:66
 msgid "invalid reply from kiremoted"
 msgstr "resposta inválida do kiremoted"
 
-#: src/kiremote-cli.c:108
+#: src/kiremote-cli.c:110
 msgid "asks to pair"
 msgstr "pede para parear"
 
-#: src/kiremote-cli.c:110
+#: src/kiremote-cli.c:112
 msgid "waiting for it to accept the pairing"
 msgstr "esperando ele aceitar o pareamento"
 
-#: src/kiremote-cli.c:112
+#: src/kiremote-cli.c:114
 msgid "paired and reachable"
 msgstr "pareado e acessível"
 
-#: src/kiremote-cli.c:112
+#: src/kiremote-cli.c:114
 msgid "paired, not reachable"
 msgstr "pareado, fora de alcance"
 
-#: src/kiremote-cli.c:114
+#: src/kiremote-cli.c:116
 msgid "reachable, not paired"
 msgstr "acessível, não pareado"
 
-#: src/kiremote-cli.c:117
+#: src/kiremote-cli.c:119
 #, c-format
 msgid ", verification key %s"
 msgstr ", chave de verificação %s"
 
-#: src/kiremote-cli.c:121
+#: src/kiremote-cli.c:123
 #, c-format
 msgid ", battery %d%% (charging)"
 msgstr ", bateria %d%% (carregando)"
 
-#: src/kiremote-cli.c:121
+#: src/kiremote-cli.c:123
 #, c-format
 msgid ", battery %d%%"
 msgstr ", bateria %d%%"
 
-#: src/kiremote-cli.c:126
+#: src/kiremote-cli.c:128
 #, c-format
 msgid ", signal %s %d/4"
 msgstr ", sinal %s %d/4"
 
-#: src/kiremote-cli.c:139
+#: src/kiremote-cli.c:141
 #, c-format
 msgid "%d device found\n"
 msgid_plural "%d devices found\n"
 msgstr[0] "%d dispositivo encontrado\n"
 msgstr[1] "%d dispositivos encontrados\n"
 
-#: src/kiremote-cli.c:191
+#: src/kiremote-cli.c:193
 #, c-format
 msgid ""
 "Verification key: %s\n"
@@ -412,12 +416,12 @@ msgstr ""
 "Chave de verificação: %s\n"
 "Confira se %s mostra a mesma chave e aceite lá.\n"
 
-#: src/kiremote-cli.c:204
+#: src/kiremote-cli.c:206
 #, c-format
 msgid "Paired with %s.\n"
 msgstr "Pareado com %s.\n"
 
-#: src/kiremote-cli.c:207
+#: src/kiremote-cli.c:209
 #, c-format
 msgid ""
 "pairing with %s did not complete (refused, canceled or timed out; see the "
@@ -426,12 +430,12 @@ msgstr ""
 "o pareamento com %s não se completou (recusado, cancelado ou tempo esgotado; "
 "veja o log do daemon)"
 
-#: src/kiremote-cli.c:265 src/plugin_share.c:120
+#: src/kiremote-cli.c:270 src/plugin_share.c:244
 #, c-format
 msgid "cannot send %s: %s"
 msgstr "não foi possível enviar %s: %s"
 
-#: src/kiremote-cli.c:304
+#: src/kiremote-cli.c:316
 msgid "say which device with -d"
 msgstr "diga qual dispositivo com -d"
 
@@ -542,85 +546,167 @@ msgstr "%s: bateria baixa"
 msgid "cannot play the sound with %s"
 msgstr "não foi possível tocar o som com %s"
 
-#: src/plugin_find.c:236
+#: src/plugin_find.c:237
 msgid "no way to play a sound (install paplay, pw-play or aplay)"
 msgstr "não há como tocar um som (instale paplay, pw-play ou aplay)"
 
-#: src/plugin_find.c:240
+#: src/plugin_find.c:241
 #, c-format
 msgid "%s is looking for this computer"
 msgstr "%s está procurando este computador"
 
-#: src/plugin_find.c:241
+#: src/plugin_find.c:242
 msgid "Stop"
 msgstr "Parar"
 
-#: src/plugin_find.c:247
+#: src/plugin_find.c:248
 msgid "Close this notification to stop the sound."
 msgstr "Feche esta notificação para parar o som."
 
-#: src/plugin_find.c:286 src/plugin_telephony.c:121
+#: src/plugin_find.c:287 src/plugin_share.c:217 src/plugin_telephony.c:122
 msgid "the device is not reachable or does not take this"
 msgstr "o dispositivo está fora de alcance ou não aceita isso"
+
+#: src/plugin_lock.c:172
+#, c-format
+msgid "the %s command failed"
+msgstr "o comando de %s falhou"
+
+#: src/plugin_lock.c:172
+msgid "lock"
+msgstr "bloquear"
+
+#: src/plugin_lock.c:172
+msgid "unlock"
+msgstr "desbloquear"
+
+#: src/plugin_lock.c:189
+#, c-format
+msgid ""
+"%s asked to unlock this computer; refused (set allow_unlock in [lock] to "
+"allow it)"
+msgstr ""
+"%s pediu para desbloquear este computador; recusado (ligue allow_unlock em "
+"[lock] para permitir)"
+
+#: src/plugin_lock.c:243
+msgid "Remote lock successful"
+msgstr "Bloqueio remoto feito"
+
+#: src/plugin_lock.c:243
+msgid "Remote lock failed"
+msgstr "O bloqueio remoto falhou"
 
 #: src/plugin_ping.c:18
 msgid "Ping!"
 msgstr "Ping!"
 
-#: src/plugin_share.c:50
+#: src/plugin_runcommand.c:165
+#, c-format
+msgid "%s asked for a command that is not configured: %s"
+msgstr "%s pediu um comando que não está configurado: %s"
+
+#: src/plugin_runcommand.c:179
+#, c-format
+msgid "running for %s: %s"
+msgstr "executando para %s: %s"
+
+#: src/plugin_runcommand.c:183
+#, c-format
+msgid "cannot run %s: %s"
+msgstr "não foi possível executar %s: %s"
+
+#: src/plugin_screensaver.c:59
+msgid ""
+"cannot keep the screen awake: no screensaver service and no xdg-screensaver"
+msgstr ""
+"não foi possível manter a tela acesa: não há serviço de descanso de tela nem "
+"xdg-screensaver"
+
+#: src/plugin_screensaver.c:93
+msgid "Phone is connected"
+msgstr "O celular está conectado"
+
+#: src/plugin_share.c:55
 #, c-format
 msgid "%s sent a file, but there is no folder to save it in"
 msgstr "%s mandou um arquivo, mas não há pasta onde salvá-lo"
 
-#: src/plugin_share.c:56
+#: src/plugin_share.c:61
 #, c-format
 msgid "file name too long: %s"
 msgstr "nome de arquivo comprido demais: %s"
 
-#: src/plugin_share.c:64
+#: src/plugin_share.c:69
 #, c-format
 msgid "receiving %s from %s"
 msgstr "recebendo %s de %s"
 
-#: src/plugin_share.c:82
+#: src/plugin_share.c:87
 #, c-format
 msgid "cannot save %s: %s"
 msgstr "não foi possível salvar %s: %s"
 
-#: src/plugin_share.c:94
-#, c-format
-msgid "%s shared a text: %s"
-msgstr "%s compartilhou um texto: %s"
+#: src/plugin_share.c:109
+msgid "not opening a link with an unknown kind of address"
+msgstr "não vou abrir um link com um tipo de endereço desconhecido"
 
-#: src/plugin_share.c:96
+#: src/plugin_share.c:114
 #, c-format
-msgid "%s shared a link: %s"
-msgstr "%s compartilhou um link: %s"
+msgid "cannot run xdg-open: %s"
+msgstr "não foi possível executar o xdg-open: %s"
 
-#: src/plugin_share.c:121
+#: src/plugin_share.c:155
+#, c-format
+msgid "Shared text from %s copied to clipboard"
+msgstr "Texto compartilhado por %s copiado para a área de transferência"
+
+#: src/plugin_share.c:155
+#, c-format
+msgid "Shared text from %s"
+msgstr "Texto compartilhado por %s"
+
+#: src/plugin_share.c:158
+msgid "Open Link"
+msgstr "Abrir link"
+
+#: src/plugin_share.c:173
+#, c-format
+msgid "Link from %s"
+msgstr "Link de %s"
+
+#: src/plugin_share.c:210
+msgid "missing \"text\""
+msgstr "faltou \"text\""
+
+#: src/plugin_share.c:210
+msgid "missing \"url\""
+msgstr "faltou \"url\""
+
+#: src/plugin_share.c:245
 msgid "not a regular file"
 msgstr "não é um arquivo comum"
 
-#: src/plugin_share.c:151
+#: src/plugin_share.c:275
 #, c-format
 msgid "cannot send %s"
 msgstr "não foi possível enviar %s"
 
-#: src/plugin_telephony.c:99
+#: src/plugin_telephony.c:100
 msgid "unknown number"
 msgstr "número desconhecido"
 
-#: src/plugin_telephony.c:101
+#: src/plugin_telephony.c:102
 #, c-format
 msgid "Incoming call from %s"
 msgstr "Chamada de %s"
 
-#: src/plugin_telephony.c:101
+#: src/plugin_telephony.c:102
 #, c-format
 msgid "Missed call from %s"
 msgstr "Chamada perdida de %s"
 
-#: src/plugin_telephony.c:104
+#: src/plugin_telephony.c:105
 msgid "Mute Call"
 msgstr "Silenciar chamada"
 
@@ -655,5 +741,9 @@ msgid "cannot write %s: %s"
 msgstr "não foi possível gravar %s: %s"
 
 #, c-format
-#~ msgid "ping from %s: %s"
-#~ msgstr "ping de %s: %s"
+#~ msgid "%s shared a text: %s"
+#~ msgstr "%s compartilhou um texto: %s"
+
+#, c-format
+#~ msgid "%s shared a link: %s"
+#~ msgstr "%s compartilhou um link: %s"

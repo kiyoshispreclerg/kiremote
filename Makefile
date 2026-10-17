@@ -27,6 +27,7 @@ LIB_SRC = src/log.c \
       src/plugin_share.c \
       src/proc.c \
       src/bus.c \
+      src/x11.c \
       src/notify.c \
       src/mpris.c \
       src/plugin_battery.c \
@@ -35,7 +36,14 @@ LIB_SRC = src/log.c \
       src/plugin_telephony.c \
       src/plugin_pausemusic.c \
       src/plugin_mpris.c \
-      src/plugin_volume.c
+      src/plugin_volume.c \
+      src/plugin_clipboard.c \
+      src/plugin_notifications.c \
+      src/plugin_runcommand.c \
+      src/plugin_mousepad.c \
+      src/plugin_presenter.c \
+      src/plugin_screensaver.c \
+      src/plugin_lock.c
 VENDOR_SRC = vendor/cjson/cJSON.c
 LIBKR = $(BUILD)/libkr.a
 
@@ -109,7 +117,11 @@ $(BUILD)/tests/fakephone: tests/tools/fakephone.c $(LIBKR)
 	@mkdir -p $(@D)
 	$(CC) $(CPPFLAGS) $(ALL_CFLAGS) $(WARNFLAGS) $(ALL_LDFLAGS) -o $@ $< $(LIBKR) $(LDLIBS)
 
-test: all $(UNIT_TESTS) $(FUZZ_RUNNERS) $(BUILD)/tests/fakephone
+$(BUILD)/tests/xtool: tests/tools/xtool.c
+	@mkdir -p $(@D)
+	$(CC) $(CPPFLAGS) $(ALL_CFLAGS) $(WARNFLAGS) $(ALL_LDFLAGS) -o $@ $< $(LDLIBS)
+
+test: all $(UNIT_TESTS) $(FUZZ_RUNNERS) $(BUILD)/tests/fakephone $(BUILD)/tests/xtool
 	@fail=0; for t in $(UNIT_TESTS); do \
 		$$t || fail=1; \
 	done; \
@@ -118,13 +130,15 @@ test: all $(UNIT_TESTS) $(FUZZ_RUNNERS) $(BUILD)/tests/fakephone
 	done; \
 	tests/net/pair.sh $(BUILD) || fail=1; \
 	tests/net/plugins.sh $(BUILD) || fail=1; \
+	tests/net/desktop.sh $(BUILD) || fail=1; \
 	if [ $$fail -ne 0 ]; then echo "*** tests FAILED"; exit 1; fi; \
 	echo "*** all tests passed"
 
 # Only the two daemons in network namespaces (tests/net/pair.sh).
-test-net: all $(BUILD)/tests/fakephone
+test-net: all $(BUILD)/tests/fakephone $(BUILD)/tests/xtool
 	tests/net/pair.sh $(BUILD)
 	tests/net/plugins.sh $(BUILD)
+	tests/net/desktop.sh $(BUILD)
 
 run: $(BUILD)/kiremoted
 	$(BUILD)/kiremoted $(ARGS)

@@ -9,6 +9,8 @@
  *   - every line on stdin is a packet to send, as JSON ({"type":...,
  *     "body":{...}}); "pair" asks to pair, "accept" accepts the daemon's
  *     request;
+ *   - "payload FILE JSON" sends the packet with the file as its payload (the
+ *     phone serves it on a payload port, as the Android app does);
  *   - every packet received is printed as one line of JSON, prefixed "<< ",
  *     and "READY" / "CLOSED reason" tell the link state.
  * -I and -O are the incoming and outgoing capabilities, comma separated. */
@@ -28,6 +30,8 @@
 #include "link.h"
 #include "log.h"
 #include "packet.h"
+#include "net.h"
+#include "transfer.h"
 #include "trust.h"
 #include "util.h"
 
@@ -41,9 +45,52 @@ static cJSON *caps(const char *list)
     return a;
 }
 
+static SSL_CTX *g_ctx;
+static kr_transfer *xfers[8];
+
+/* "payload FILE JSON": JSON is the packet, FILE its payload. */
+static void send_payload(kr_link *l, char *args)
+{
+    char *sp = strchr(args, ' ');
+    if (!sp) {
+        printf("BAD payload\n");
+        return;
+    }
+    *sp = '\0';
+    kr_packet *p = kr_packet_parse(sp + 1, strlen(sp + 1));
+    int fd = open(args, O_RDONLY | O_CLOEXEC);
+    off_t size = fd >= 0 ? lseek(fd, 0, SEEK_END) : -1;
+    if (!p || fd < 0 || size < 0) {
+        printf("BAD payload\n");
+        kr_packet_free(p);
+        if (fd >= 0)
+            close(fd);
+        return;
+    }
+    lseek(fd, 0, SEEK_SET);
+    int port = 0, slot = -1;
+    for (int i = 0; i < 8 && slot < 0; i++)
+        if (!xfers[i])
+            slot = i;
+    kr_transfer *t = slot >= 0 ? kr_transfer_upload(g_ctx, kr_link_cert(l), fd, size, "payload", kr_now(), &port) : NULL;
+    if (!t) {
+        printf("NOT SENT payload\n");
+        kr_packet_free(p);
+        return;
+    }
+    xfers[slot] = t;
+    kr_packet_set_payload(p, size, port);
+    kr_link_send(l, p);
+    kr_packet_free(p);
+}
+
 static void send_line(kr_link *l, char *line)
 {
     kr_packet *p = NULL;
+    if (strncmp(line, "payload ", 8) == 0) {
+        send_payload(l, line + 8);
+        return;
+    }
     if (strcmp(line, "pair") == 0 || strcmp(line, "accept") == 0) {
         p = kr_packet_new(KR_PACKET_PAIR);
         cJSON_AddBoolToObject(p->body, "pair", true);
@@ -86,6 +133,7 @@ int main(int argc, char **argv)
 
     kr_cert *cert = kr_cert_load_or_create(dir, NULL);
     SSL_CTX *ctx = cert ? kr_conn_ssl_ctx(kr_cert_x509(cert), kr_cert_key(cert)) : NULL;
+    g_ctx = ctx;
     kr_packet *ident = kr_packet_new(KR_PACKET_IDENTITY);
     if (!ctx || !ident)
         return 1;
@@ -113,13 +161,32 @@ int main(int argc, char **argv)
     size_t blen = 0;
     bool stdin_open = true, ready = false;
     for (;;) {
-        struct pollfd p[2];
-        int n = 0;
+        struct pollfd p[2 + 8];
+        int n = 0, tslot[8], tn = 0;
         bool have_link = kr_link_pollfd(l, &p[n]);
         n += have_link;
         if (stdin_open && ready)
             p[n++] = (struct pollfd){.fd = 0, .events = POLLIN};
+        int stdin_idx = stdin_open && ready ? n - 1 : -1;
+        for (int i = 0; i < 8; i++)
+            if (xfers[i] && kr_transfer_pollfd(xfers[i], &p[n])) {
+                tslot[tn++] = i;
+                n++;
+            }
         poll(p, (nfds_t)n, 100);
+        for (int i = 0; i < 8; i++) {
+            if (!xfers[i])
+                continue;
+            short rev = 0;
+            for (int k = 0; k < tn; k++)
+                if (tslot[k] == i)
+                    rev = p[n - tn + k].revents;
+            const char *why;
+            if (kr_transfer_pump(xfers[i], rev, kr_now(), &why) != KR_TRANSFER_RUNNING) {
+                kr_transfer_free(xfers[i]);
+                xfers[i] = NULL;
+            }
+        }
         const char *why = NULL;
         int ev = kr_link_pump(l, have_link ? p[0].revents : 0, kr_now(), &why);
         if ((ev & KR_LINK_EV_READY) && !ready) {
@@ -138,7 +205,7 @@ int main(int argc, char **argv)
             fflush(stdout);
             return 0;
         }
-        if (stdin_open && ready && n > (have_link ? 1 : 0) && (p[n - 1].revents & (POLLIN | POLLHUP))) {
+        if (stdin_idx >= 0 && (p[stdin_idx].revents & (POLLIN | POLLHUP))) {
             ssize_t r = read(0, buf + blen, sizeof buf - 1 - blen);
             if (r == 0)
                 stdin_open = false;

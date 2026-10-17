@@ -27,7 +27,14 @@ double kr_now(void);
 
 /* $XDG_CONFIG_HOME/kiremote/<rel> (default ~/.config/kiremote/<rel>). */
 bool kr_config_path(char *out, size_t size, const char *rel);
+/* $XDG_CACHE_HOME/kiremote/<rel> (default ~/.cache/kiremote/<rel>). */
+bool kr_cache_path(char *out, size_t size, const char *rel);
 /* $XDG_RUNTIME_DIR/<name>; without it, /tmp/<name>-<uid>. */
 bool kr_runtime_path(char *out, size_t size, const char *name);
+
+/* Is this valid UTF-8 (no overlong forms, no surrogates, up to U+10FFFF)? */
+bool kr_utf8_valid(const char *s, size_t len);
+/* Latin-1 to UTF-8, into a malloc'd string the caller frees. */
+char *kr_latin1_to_utf8(const char *s, size_t len);
 
 #endif

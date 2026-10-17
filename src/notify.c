@@ -22,7 +22,7 @@ struct kr_note {
 
 struct kr_notify {
     kr_bus *bus;
-    bool actions;
+    bool actions, markup;
     kr_note *notes[MAX_NOTES];
     int n_notes;
 };
@@ -69,7 +69,9 @@ static void on_signal(void *ud, DBusMessage *msg)
                 note->cb.on_action(note->ud, key);
         }
     } else if (dbus_message_has_member(msg, "NotificationClosed")) {
-        if (dbus_message_get_args(msg, NULL, DBUS_TYPE_UINT32, &id, DBUS_TYPE_INVALID)) {
+        dbus_uint32_t reason = KR_NOTE_UNKNOWN;
+        if (dbus_message_get_args(msg, NULL, DBUS_TYPE_UINT32, &id, DBUS_TYPE_UINT32, &reason, DBUS_TYPE_INVALID) ||
+            dbus_message_get_args(msg, NULL, DBUS_TYPE_UINT32, &id, DBUS_TYPE_INVALID)) {
             kr_note *note = by_id(n, id);
             if (!note)
                 return;
@@ -78,7 +80,7 @@ static void on_signal(void *ud, DBusMessage *msg)
             bool detached = note->detached;
             forget(n, note);
             if (!detached && cb.on_closed)
-                cb.on_closed(cud);
+                cb.on_closed(cud, (int)reason);
         }
     }
 }
@@ -96,6 +98,8 @@ static void on_caps(void *ud, DBusMessage *reply)
         dbus_message_iter_get_basic(&arr, &cap);
         if (strcmp(cap, "actions") == 0)
             n->actions = true;
+        else if (strcmp(cap, "body-markup") == 0)
+            n->markup = true;
     }
     kr_log_debug("notification server %s actions", n->actions ? "supports" : "does not support");
 }
@@ -121,14 +125,46 @@ void kr_notify_free(kr_notify *n)
         return;
     if (kr_bus_alive(n->bus))
         kr_bus_unlisten(n->bus, on_signal, n);
-    for (int i = 0; i < n->n_notes; i++)
-        free(n->notes[i]);
+    /* The owners of notifications still open are told they are gone, so
+     * what they kept for them (a button's context) is theirs to free. */
+    while (n->n_notes) {
+        kr_note *note = n->notes[--n->n_notes];
+        kr_note_cb cb = note->cb;
+        void *ud = note->ud;
+        bool detached = note->detached;
+        free(note);
+        if (!detached && cb.on_closed)
+            cb.on_closed(ud, KR_NOTE_UNKNOWN);
+    }
     free(n);
 }
 
 bool kr_notify_has_actions(const kr_notify *n)
 {
     return n && n->actions;
+}
+
+bool kr_notify_has_markup(const kr_notify *n)
+{
+    return n && n->markup;
+}
+
+void kr_notify_escape(const kr_notify *n, const char *in, char *out, size_t size)
+{
+    size_t o = 0;
+    for (; *in && o + 1 < size; in++) {
+        const char *rep = !n || !n->markup ? NULL : *in == '&' ? "&amp;" : *in == '<' ? "&lt;" : *in == '>' ? "&gt;" : NULL;
+        if (!rep) {
+            out[o++] = *in;
+            continue;
+        }
+        size_t len = strlen(rep);
+        if (o + len + 1 > size)
+            break;
+        memcpy(out + o, rep, len);
+        o += len;
+    }
+    out[o] = '\0';
 }
 
 static void on_notify_reply(void *ud, DBusMessage *reply)
@@ -143,7 +179,7 @@ static void on_notify_reply(void *ud, DBusMessage *reply)
         bool detached = note->detached;
         forget(n, note);
         if (!detached && cb.on_closed)
-            cb.on_closed(cud);
+            cb.on_closed(cud, KR_NOTE_UNKNOWN);
         return;
     }
     note->id = id;
@@ -151,28 +187,14 @@ static void on_notify_reply(void *ud, DBusMessage *reply)
         send_close(note->n, id);
 }
 
-kr_note *kr_notify_show(kr_notify *n, const kr_note_spec *spec, const kr_note_cb *cb, void *ud)
+/* The Notify call for spec; replaces is the id to replace (0: a new one). */
+static DBusMessage *build_notify(kr_notify *n, const kr_note_spec *spec, dbus_uint32_t replaces)
 {
-    if (!n || !kr_bus_alive(n->bus) || n->n_notes == MAX_NOTES) {
-        kr_log_info("%s%s%s", spec->summary, spec->body ? ": " : "", spec->body ? spec->body : "");
-        return NULL;
-    }
     DBusMessage *m = kr_bus_new_call(NOTIF_DEST, NOTIF_PATH, NOTIF_IFACE, "Notify");
-    kr_note *note = calloc(1, sizeof *note);
-    if (!m || !note) {
-        if (m)
-            dbus_message_unref(m);
-        free(note);
+    if (!m)
         return NULL;
-    }
-    note->n = n;
-    if (cb)
-        note->cb = *cb;
-    note->ud = ud;
-
     const char *app = "Kiremote", *icon = spec->icon ? spec->icon : "", *body = spec->body ? spec->body : "";
     const char *summary = spec->summary;
-    dbus_uint32_t replaces = 0;
     dbus_int32_t timeout = spec->timeout_ms;
     DBusMessageIter it, arr, dict, entry, var;
     dbus_message_iter_init_append(m, &it);
@@ -201,13 +223,47 @@ kr_note *kr_notify_show(kr_notify *n, const kr_note_spec *spec, const kr_note_cb
     }
     dbus_message_iter_close_container(&it, &dict);
     dbus_message_iter_append_basic(&it, DBUS_TYPE_INT32, &timeout);
+    return m;
+}
 
+kr_note *kr_notify_show(kr_notify *n, const kr_note_spec *spec, const kr_note_cb *cb, void *ud)
+{
+    if (!n || !kr_bus_alive(n->bus) || n->n_notes == MAX_NOTES) {
+        kr_log_info("%s%s%s", spec->summary, spec->body ? ": " : "", spec->body ? spec->body : "");
+        return NULL;
+    }
+    DBusMessage *m = build_notify(n, spec, 0);
+    kr_note *note = calloc(1, sizeof *note);
+    if (!m || !note) {
+        if (m)
+            dbus_message_unref(m);
+        free(note);
+        return NULL;
+    }
+    note->n = n;
+    if (cb)
+        note->cb = *cb;
+    note->ud = ud;
     n->notes[n->n_notes++] = note;
     if (!kr_bus_call(n->bus, m, on_notify_reply, note, 5000)) {
         forget(n, note);
         return NULL;
     }
     return note;
+}
+
+static void on_update_reply(void *ud, DBusMessage *reply)
+{
+    (void)ud;
+    (void)reply; /* same id as before: nothing to learn */
+}
+
+bool kr_note_update(kr_note *note, const kr_note_spec *spec)
+{
+    if (!note->id || note->want_close)
+        return false;
+    DBusMessage *m = build_notify(note->n, spec, note->id);
+    return m && kr_bus_call(note->n->bus, m, on_update_reply, NULL, 5000);
 }
 
 void kr_note_close(kr_note *note)

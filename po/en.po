@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kiremote\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-17 17:21-0300\n"
+"POT-Creation-Date: 2026-10-17 19:51-0300\n"
 "PO-Revision-Date: 2026-10-09 08:41-0300\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -67,7 +67,7 @@ msgstr "created a new certificate in %s (device id %s)"
 msgid "%s:%d: unknown device type \"%s\", using \"desktop\""
 msgstr "%s:%d: unknown device type \"%s\", using \"desktop\""
 
-#: src/config.c:79 src/daemon.c:919
+#: src/config.c:79 src/daemon.c:970
 msgid "cannot find the configuration folder (is HOME set?)"
 msgstr "cannot find the configuration folder (is HOME set?)"
 
@@ -84,7 +84,7 @@ msgstr "too much data waiting to be sent"
 msgid "TLS write error"
 msgstr "TLS write error"
 
-#: src/conn.c:346 src/conn.c:400 src/conn.c:429 src/daemon.c:929 src/link.c:229
+#: src/conn.c:346 src/conn.c:400 src/conn.c:429 src/daemon.c:980 src/link.c:229
 msgid "out of memory"
 msgstr "out of memory"
 
@@ -133,41 +133,41 @@ msgstr "invalid JSON"
 msgid "missing \"type\""
 msgstr "missing \"type\""
 
-#: src/control.c:179 src/daemon.c:793
+#: src/control.c:179 src/daemon.c:844
 msgid "unknown request"
 msgstr "unknown request"
 
-#: src/daemon.c:360
+#: src/daemon.c:401
 msgid "the clocks of the two devices are too far apart"
 msgstr "the clocks of the two devices are too far apart"
 
-#: src/daemon.c:362
+#: src/daemon.c:403
 msgid "refused or canceled by the other device"
 msgstr "refused or canceled by the other device"
 
-#: src/daemon.c:364
+#: src/daemon.c:405
 msgid "canceled"
 msgstr "canceled"
 
-#: src/daemon.c:366
+#: src/daemon.c:407
 msgid "timed out"
 msgstr "timed out"
 
-#: src/daemon.c:368
+#: src/daemon.c:409
 msgid "the device is not reachable"
 msgstr "the device is not reachable"
 
-#: src/daemon.c:382
+#: src/daemon.c:423
 #, c-format
 msgid "unpaired from %s"
 msgstr "unpaired from %s"
 
-#: src/daemon.c:385
+#: src/daemon.c:426
 #, c-format
 msgid "pairing with %s failed: %s"
 msgstr "pairing with %s failed: %s"
 
-#: src/daemon.c:389
+#: src/daemon.c:430
 #, c-format
 msgid ""
 "%s wants to pair; verification key %s. Accept with \"kiremote-cli -d %s --"
@@ -176,86 +176,86 @@ msgstr ""
 "%s wants to pair; verification key %s. Accept with \"kiremote-cli -d %s --"
 "pair\", refuse with \"--unpair\"."
 
-#: src/daemon.c:395
+#: src/daemon.c:436
 #, c-format
 msgid "paired with %s, but could not save it"
 msgstr "paired with %s, but could not save it"
 
-#: src/daemon.c:397
+#: src/daemon.c:438
 #, c-format
 msgid "paired with %s"
 msgstr "paired with %s"
 
-#: src/daemon.c:460
+#: src/daemon.c:501
 #, c-format
 msgid "%s connected again with another certificate; refused"
 msgstr "%s connected again with another certificate; refused"
 
-#: src/daemon.c:474
+#: src/daemon.c:515
 #, c-format
 msgid "too many unpaired devices around; ignoring %s"
 msgstr "too many unpaired devices around; ignoring %s"
 
-#: src/daemon.c:502
+#: src/daemon.c:543
 #, c-format
 msgid "connected to %s (%s, %s)"
 msgstr "connected to %s (%s, %s)"
 
-#: src/daemon.c:548
+#: src/daemon.c:589
 #, c-format
 msgid "[network] addresses: not an IPv4 address: %s"
 msgstr "[network] addresses: not an IPv4 address: %s"
 
-#: src/daemon.c:609
+#: src/daemon.c:650
 #, c-format
 msgid "refusing %s: it went back to an older protocol version"
 msgstr "refusing %s: it went back to an older protocol version"
 
-#: src/daemon.c:673
+#: src/daemon.c:714
 #, c-format
 msgid "cannot receive %s: %s"
 msgstr "cannot receive %s: %s"
 
-#: src/daemon.c:689
+#: src/daemon.c:740
 #, c-format
 msgid "no free port for sending %s"
 msgstr "no free port for sending %s"
 
-#: src/daemon.c:697
+#: src/daemon.c:748
 #, c-format
 msgid "sending %s to %s"
 msgstr "sending %s to %s"
 
-#: src/daemon.c:749
+#: src/daemon.c:800
 msgid "missing \"device\""
 msgstr "missing \"device\""
 
-#: src/daemon.c:756
+#: src/daemon.c:807
 msgid "more than one device has that name; use the id"
 msgstr "more than one device has that name; use the id"
 
-#: src/daemon.c:763
+#: src/daemon.c:814
 #, c-format
 msgid "no such device: %s"
 msgstr "no such device: %s"
 
-#: src/daemon.c:802
+#: src/daemon.c:853
 msgid "already paired"
 msgstr "already paired"
 
-#: src/daemon.c:813 src/plugin_find.c:287
+#: src/daemon.c:864 src/plugin_find.c:288 src/plugin_share.c:218
 msgid "the device is not paired"
 msgstr "the device is not paired"
 
-#: src/daemon.c:821
+#: src/daemon.c:872
 msgid "the device does not take pings"
 msgstr "the device does not take pings"
 
-#: src/daemon.c:933
+#: src/daemon.c:984
 msgid "new certificate: forgetting the old pairings"
 msgstr "new certificate: forgetting the old pairings"
 
-#: src/daemon.c:949
+#: src/daemon.c:1000
 #, c-format
 msgid ""
 "UDP port %d is taken (is KDE Connect running?): other devices won't be "
@@ -264,41 +264,41 @@ msgstr ""
 "UDP port %d is taken (is KDE Connect running?): other devices won't be "
 "discovered, but they can still find us"
 
-#: src/daemon.c:956
+#: src/daemon.c:1007
 #, c-format
 msgid "cannot open the network ports (%d-%d): %s"
 msgstr "cannot open the network ports (%d-%d): %s"
 
-#: src/daemon.c:982
+#: src/daemon.c:1033
 msgid "no session bus: notifications and media control are off"
 msgstr "no session bus: notifications and media control are off"
 
-#: src/daemon.c:988
+#: src/daemon.c:1039
 #, c-format
 msgid "this is %s (%s), id %s, TCP port %d"
 msgstr "this is %s (%s), id %s, TCP port %d"
 
-#: src/daemon.c:1167
+#: src/daemon.c:1220
 #, c-format
 msgid "disconnected from %s: %s"
 msgstr "disconnected from %s: %s"
 
-#: src/daemon.c:1200
+#: src/daemon.c:1253
 #, c-format
 msgid "sent %s to %s"
 msgstr "sent %s to %s"
 
-#: src/daemon.c:1200 src/plugin_share.c:76
+#: src/daemon.c:1253 src/plugin_share.c:81
 #, c-format
 msgid "received %s from %s"
 msgstr "received %s from %s"
 
-#: src/daemon.c:1203
+#: src/daemon.c:1256
 #, c-format
 msgid "sending %s to %s failed: %s"
 msgstr "sending %s to %s failed: %s"
 
-#: src/daemon.c:1204
+#: src/daemon.c:1257
 #, c-format
 msgid "receiving %s from %s failed: %s"
 msgstr "receiving %s from %s failed: %s"
@@ -316,6 +316,8 @@ msgid ""
 "      --ping            send a ping\n"
 "      --ping-msg TEXT   send a ping with a message\n"
 "      --share FILE      send a file (may be repeated)\n"
+"      --share-text TEXT send text (it goes to the phone's clipboard)\n"
+"      --share-url URL   send a link (the phone opens it)\n"
 "      --find-phone      make the phone ring\n"
 "      --stop-ring       stop this computer's sound (when the phone looks for "
 "it)\n"
@@ -335,6 +337,8 @@ msgstr ""
 "      --ping            send a ping\n"
 "      --ping-msg TEXT   send a ping with a message\n"
 "      --share FILE      send a file (may be repeated)\n"
+"      --share-text TEXT send text (it goes to the phone's clipboard)\n"
+"      --share-url URL   send a link (the phone opens it)\n"
 "      --find-phone      make the phone ring\n"
 "      --stop-ring       stop this computer's sound (when the phone looks for "
 "it)\n"
@@ -344,63 +348,63 @@ msgstr ""
 "  -V, --version         show the version and exit\n"
 "  -h, --help            show this help and exit\n"
 
-#: src/kiremote-cli.c:57
+#: src/kiremote-cli.c:59
 #, c-format
 msgid "cannot talk to kiremoted at %s: %s"
 msgstr "cannot talk to kiremoted at %s: %s"
 
-#: src/kiremote-cli.c:64
+#: src/kiremote-cli.c:66
 msgid "invalid reply from kiremoted"
 msgstr "invalid reply from kiremoted"
 
-#: src/kiremote-cli.c:108
+#: src/kiremote-cli.c:110
 msgid "asks to pair"
 msgstr "asks to pair"
 
-#: src/kiremote-cli.c:110
+#: src/kiremote-cli.c:112
 msgid "waiting for it to accept the pairing"
 msgstr "waiting for it to accept the pairing"
 
-#: src/kiremote-cli.c:112
+#: src/kiremote-cli.c:114
 msgid "paired and reachable"
 msgstr "paired and reachable"
 
-#: src/kiremote-cli.c:112
+#: src/kiremote-cli.c:114
 msgid "paired, not reachable"
 msgstr "paired, not reachable"
 
-#: src/kiremote-cli.c:114
+#: src/kiremote-cli.c:116
 msgid "reachable, not paired"
 msgstr "reachable, not paired"
 
-#: src/kiremote-cli.c:117
+#: src/kiremote-cli.c:119
 #, c-format
 msgid ", verification key %s"
 msgstr ", verification key %s"
 
-#: src/kiremote-cli.c:121
+#: src/kiremote-cli.c:123
 #, c-format
 msgid ", battery %d%% (charging)"
 msgstr ", battery %d%% (charging)"
 
-#: src/kiremote-cli.c:121
+#: src/kiremote-cli.c:123
 #, c-format
 msgid ", battery %d%%"
 msgstr ", battery %d%%"
 
-#: src/kiremote-cli.c:126
+#: src/kiremote-cli.c:128
 #, c-format
 msgid ", signal %s %d/4"
 msgstr ", signal %s %d/4"
 
-#: src/kiremote-cli.c:139
+#: src/kiremote-cli.c:141
 #, c-format
 msgid "%d device found\n"
 msgid_plural "%d devices found\n"
 msgstr[0] "%d device found\n"
 msgstr[1] "%d devices found\n"
 
-#: src/kiremote-cli.c:191
+#: src/kiremote-cli.c:193
 #, c-format
 msgid ""
 "Verification key: %s\n"
@@ -409,12 +413,12 @@ msgstr ""
 "Verification key: %s\n"
 "Check that %s shows the same key and accept there.\n"
 
-#: src/kiremote-cli.c:204
+#: src/kiremote-cli.c:206
 #, c-format
 msgid "Paired with %s.\n"
 msgstr "Paired with %s.\n"
 
-#: src/kiremote-cli.c:207
+#: src/kiremote-cli.c:209
 #, c-format
 msgid ""
 "pairing with %s did not complete (refused, canceled or timed out; see the "
@@ -423,12 +427,12 @@ msgstr ""
 "pairing with %s did not complete (refused, canceled or timed out; see the "
 "daemon's log)"
 
-#: src/kiremote-cli.c:265 src/plugin_share.c:120
+#: src/kiremote-cli.c:270 src/plugin_share.c:244
 #, c-format
 msgid "cannot send %s: %s"
 msgstr "cannot send %s: %s"
 
-#: src/kiremote-cli.c:304
+#: src/kiremote-cli.c:316
 msgid "say which device with -d"
 msgstr "say which device with -d"
 
@@ -539,85 +543,166 @@ msgstr "%s: Low Battery"
 msgid "cannot play the sound with %s"
 msgstr "cannot play the sound with %s"
 
-#: src/plugin_find.c:236
+#: src/plugin_find.c:237
 msgid "no way to play a sound (install paplay, pw-play or aplay)"
 msgstr "no way to play a sound (install paplay, pw-play or aplay)"
 
-#: src/plugin_find.c:240
+#: src/plugin_find.c:241
 #, c-format
 msgid "%s is looking for this computer"
 msgstr "%s is looking for this computer"
 
-#: src/plugin_find.c:241
+#: src/plugin_find.c:242
 msgid "Stop"
 msgstr "Stop"
 
-#: src/plugin_find.c:247
+#: src/plugin_find.c:248
 msgid "Close this notification to stop the sound."
 msgstr "Close this notification to stop the sound."
 
-#: src/plugin_find.c:286 src/plugin_telephony.c:121
+#: src/plugin_find.c:287 src/plugin_share.c:217 src/plugin_telephony.c:122
 msgid "the device is not reachable or does not take this"
 msgstr "the device is not reachable or does not take this"
+
+#: src/plugin_lock.c:172
+#, c-format
+msgid "the %s command failed"
+msgstr "the %s command failed"
+
+#: src/plugin_lock.c:172
+msgid "lock"
+msgstr "lock"
+
+#: src/plugin_lock.c:172
+msgid "unlock"
+msgstr "unlock"
+
+#: src/plugin_lock.c:189
+#, c-format
+msgid ""
+"%s asked to unlock this computer; refused (set allow_unlock in [lock] to "
+"allow it)"
+msgstr ""
+"%s asked to unlock this computer; refused (set allow_unlock in [lock] to "
+"allow it)"
+
+#: src/plugin_lock.c:243
+msgid "Remote lock successful"
+msgstr "Remote lock successful"
+
+#: src/plugin_lock.c:243
+msgid "Remote lock failed"
+msgstr "Remote lock failed"
 
 #: src/plugin_ping.c:18
 msgid "Ping!"
 msgstr "Ping!"
 
-#: src/plugin_share.c:50
+#: src/plugin_runcommand.c:165
+#, c-format
+msgid "%s asked for a command that is not configured: %s"
+msgstr "%s asked for a command that is not configured: %s"
+
+#: src/plugin_runcommand.c:179
+#, c-format
+msgid "running for %s: %s"
+msgstr "running for %s: %s"
+
+#: src/plugin_runcommand.c:183
+#, c-format
+msgid "cannot run %s: %s"
+msgstr "cannot run %s: %s"
+
+#: src/plugin_screensaver.c:59
+msgid ""
+"cannot keep the screen awake: no screensaver service and no xdg-screensaver"
+msgstr ""
+"cannot keep the screen awake: no screensaver service and no xdg-screensaver"
+
+#: src/plugin_screensaver.c:93
+msgid "Phone is connected"
+msgstr "Phone is connected"
+
+#: src/plugin_share.c:55
 #, c-format
 msgid "%s sent a file, but there is no folder to save it in"
 msgstr "%s sent a file, but there is no folder to save it in"
 
-#: src/plugin_share.c:56
+#: src/plugin_share.c:61
 #, c-format
 msgid "file name too long: %s"
 msgstr "file name too long: %s"
 
-#: src/plugin_share.c:64
+#: src/plugin_share.c:69
 #, c-format
 msgid "receiving %s from %s"
 msgstr "receiving %s from %s"
 
-#: src/plugin_share.c:82
+#: src/plugin_share.c:87
 #, c-format
 msgid "cannot save %s: %s"
 msgstr "cannot save %s: %s"
 
-#: src/plugin_share.c:94
-#, c-format
-msgid "%s shared a text: %s"
-msgstr "%s shared a text: %s"
+#: src/plugin_share.c:109
+msgid "not opening a link with an unknown kind of address"
+msgstr "not opening a link with an unknown kind of address"
 
-#: src/plugin_share.c:96
+#: src/plugin_share.c:114
 #, c-format
-msgid "%s shared a link: %s"
-msgstr "%s shared a link: %s"
+msgid "cannot run xdg-open: %s"
+msgstr "cannot run xdg-open: %s"
 
-#: src/plugin_share.c:121
+#: src/plugin_share.c:155
+#, c-format
+msgid "Shared text from %s copied to clipboard"
+msgstr "Shared text from %s copied to clipboard"
+
+#: src/plugin_share.c:155
+#, c-format
+msgid "Shared text from %s"
+msgstr "Shared text from %s"
+
+#: src/plugin_share.c:158
+msgid "Open Link"
+msgstr "Open Link"
+
+#: src/plugin_share.c:173
+#, c-format
+msgid "Link from %s"
+msgstr "Link from %s"
+
+#: src/plugin_share.c:210
+msgid "missing \"text\""
+msgstr "missing \"text\""
+
+#: src/plugin_share.c:210
+msgid "missing \"url\""
+msgstr "missing \"url\""
+
+#: src/plugin_share.c:245
 msgid "not a regular file"
 msgstr "not a regular file"
 
-#: src/plugin_share.c:151
+#: src/plugin_share.c:275
 #, c-format
 msgid "cannot send %s"
 msgstr "cannot send %s"
 
-#: src/plugin_telephony.c:99
+#: src/plugin_telephony.c:100
 msgid "unknown number"
 msgstr "unknown number"
 
-#: src/plugin_telephony.c:101
+#: src/plugin_telephony.c:102
 #, c-format
 msgid "Incoming call from %s"
 msgstr "Incoming call from %s"
 
-#: src/plugin_telephony.c:101
+#: src/plugin_telephony.c:102
 #, c-format
 msgid "Missed call from %s"
 msgstr "Missed call from %s"
 
-#: src/plugin_telephony.c:104
+#: src/plugin_telephony.c:105
 msgid "Mute Call"
 msgstr "Mute Call"
 
@@ -652,5 +737,9 @@ msgid "cannot write %s: %s"
 msgstr "cannot write %s: %s"
 
 #, c-format
-#~ msgid "ping from %s: %s"
-#~ msgstr "ping from %s: %s"
+#~ msgid "%s shared a text: %s"
+#~ msgstr "%s shared a text: %s"
+
+#, c-format
+#~ msgid "%s shared a link: %s"
+#~ msgstr "%s shared a link: %s"

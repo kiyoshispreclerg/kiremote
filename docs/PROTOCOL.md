@@ -363,7 +363,114 @@ pedido com `playerList` vem de um cliente MPRIS e é ignorado.
 Capa: só `file://`, e só a URL que o player diz estar mostrando agora; sai
 como payload de `{"transferringAlbumArt": true, "player", "albumArtUrl"}`.
 
+### Clipboard
+
+`kde/plugins/clipboard/clipboardplugin.cpp`, `.../README`,
+`and/plugins/clipboard/ClipboardPlugin.kt`
+
+`kdeconnect.clipboard`, nos dois sentidos: `{"content": "texto"}` quando o
+clipboard muda; quem recebe põe o texto no seu. E `kdeconnect.clipboard.connect`,
+mandado ao conectar: `{"content", "timestamp"}` (ms desde a época, de quando o
+clipboard mudou por último). Quem recebe só aplica se o `timestamp` não for 0
+nem anterior ao seu (o clipboard mais novo vence). O kdeconnect-kde ainda tem
+`kdeconnect.clipboard.file` (arquivo ou imagem como payload); esta versão do
+Android não manda nem aceita, então o Kiremote não o implementa. O
+kdeconnect-kde reconhece o aviso de gerenciador de senhas
+(`x-kde-passwordManagerHint`, `secret`) e deixa de enviar se
+`sendPassword` estiver desligado (padrão: ligado).
+
+### Compartilhar: texto e links
+
+`kde/plugins/share/shareplugin.cpp`, `and/plugins/share/SharePlugin.kt`
+
+Além do arquivo (veja Compartilhar acima): `kdeconnect.share.request` com
+`{"text"}` (vai para o clipboard, com notificação que oferece abrir o link se
+a última linha for um) ou `{"url"}` (abre no navegador, `QDesktopServices::openUrl`).
+
+### Notificações do celular
+
+`kde/plugins/notifications/`, `.../README`,
+`and/plugins/notifications/NotificationsPlugin.kt`
+
+Do celular, `kdeconnect.notification`: `id`, `appName`, `title`, `text`,
+`ticker` (para Androids antigos), `isClearable`, `isCancel` (foi dispensada no
+celular), `silent` (o Android marca assim as que já existiam ao conectar),
+`actions` (lista de rótulos), `requestReplyId`, `conversation` (lista de
+`{sender, content}`; `title`/`text` já vêm preenchidos para compatibilidade),
+`payloadHash` e, com ele, o ícone em PNG como payload. O mesmo `id` de novo
+atualiza. O kdeconnect-kde tira o prefixo `org.kde.kdeconnect_tp::` do `id` do
+cancelamento.
+
+Do computador: `kdeconnect.notification.request` com `{"request": true}` ao
+conectar (manda as existentes) e `{"cancel": "<id>"}` quando o usuário
+dispensa uma aqui; `kdeconnect.notification.action` com
+`{"key": "<id>", "action": "<rótulo>"}`; e `kdeconnect.notification.reply`
+(`requestReplyId`, `message`), que o Kiremote ainda não manda. Ao acionar um
+botão, o kdeconnect-kde copia para o clipboard um número de 4 a 10 dígitos
+isolado no rótulo (códigos de verificação; U+2063 entre dígitos é ignorado).
+
+### Mouse e teclado remotos
+
+`kde/plugins/mousepad/x11remoteinput.cpp`, `.../README`,
+`and/plugins/mousepad/MousePadPlugin.kt`
+
+`kdeconnect.mousepad.request` do celular, uma destas formas por pacote:
+`dx`/`dy` (movimento relativo), `x`/`y` (absoluto), `singleclick`,
+`doubleclick`, `middleclick`, `rightclick`, `singlehold`/`singlerelease`
+(arrastar), `scroll` + `dy` (uma volta da roda, para cima se `dy > 0`),
+`key` (texto) ou `specialKey` (1 a 32, tabela `SpecialKeysMap`: BackSpace,
+Tab, Linefeed, setas, Page Up/Down, Home, End, Return, Delete, Escape,
+Sys_Req, Scroll_Lock, Control, Alt, Shift, Super, F1 a F12); as de tecla podem
+trazer `ctrl`, `alt`, `shift`, `super`. Com o ponteiro invertido (canhoto) os
+botões esquerdo e direito trocam. O computador manda
+`kdeconnect.mousepad.keyboardstate` com `{"state": true}` ao conectar.
+
+### Executar comandos
+
+`kde/plugins/runcommand/runcommandplugin.cpp`,
+`and/plugins/runcommand/RunCommandPlugin.java`
+
+Do celular, `kdeconnect.runcommand.request`: `{"requestCommandList": true}`,
+`{"key": "<comando>"}`, `{"stop": ...}`, `{"setup": ...}`. Do computador,
+`kdeconnect.runcommand`: `{"commandList": "<JSON em texto>", "canAddCommand"}`
+(a lista é um objeto JSON **dentro de uma string**: `{"<chave>": {"name",
+"command"}}`), e `kdeconnect.runcommand.output`: `{"commandStarted": true,
+"command", "id"}`, `{"commandOutput": true, "stdout": [..], "stderr": [..],
+"id"}` (de cinco em cinco linhas) e `{"commandFinished": true, "success",
+"exitCode", "id"}`. O celular só escolhe a chave de um comando já
+configurado no computador.
+
+### Apresentação
+
+`kde/plugins/presenter/presenterplugin.cpp`, `and/plugins/presenter/`
+
+`kdeconnect.presenter` do celular: `{"dx", "dy"}` (frações da tela; `dy`
+multiplicado pela proporção largura/altura) move um ponteiro vermelho,
+começando no meio da tela; `{"stop": true}` o esconde; ele some sozinho 0,5 s
+depois do último movimento. As teclas de slide (PageUp/PageDown/F5/Esc) vêm
+como `kdeconnect.mousepad.request`.
+
+### Bloquear
+
+`kde/plugins/lockdevice/lockdeviceplugin.cpp`
+
+`kdeconnect.lock`: `{"isLocked": bool}` (estado de quem manda) e
+`{"lockResult": bool}` (resposta a `setLocked`). `kdeconnect.lock.request`:
+`{"requestLocked": null}` (manda-me o estado) e `{"setLocked": bool}`. O
+estado é o `LockedHint` da sessão no logind (barramento de sistema). O
+Android desta revisão do upstream **não tem** plugin de bloqueio (não há
+`kdeconnect.lock` no código dele); serve a outros clientes.
+
+### Inibir o descanso de tela
+
+`kde/plugins/screensaver-inhibit/`
+
+Sem pacotes: com um aparelho pareado conectado, pede ao serviço de descanso
+de tela da sessão (`org.freedesktop.ScreenSaver.Inhibit`) para não apagar nem
+bloquear a tela, e devolve o pedido (`UnInhibit`, mais `SimulateUserActivity`)
+quando o último vai embora. Desligado por padrão (`EnabledByDefault: false`).
+
 ## Pendente de leitura
 
 - mDNS (`mdnsdiscovery`): serviço, campos TXT (fase 6).
-- Os pacotes dos plugins que faltam na fase 2, conforme forem feitos.
+- sftp (navegar arquivos), `kdeconnect.notification.reply`, SMS e contatos.

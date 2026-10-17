@@ -67,6 +67,8 @@ typedef struct {
     kr_transfer *t;
     char device[KR_NAME_SIZE];
     short revents;
+    kr_download_done_fn done;
+    void *done_ud;
 } xfer;
 
 typedef struct {
@@ -87,6 +89,9 @@ struct kr_daemon {
     kr_notify *notify;
     kr_procs *procs;
     kr_mpris *mpris;
+    kr_bus *sysbus;
+    kr_x11 *x11;
+    bool sysbus_tried, x11_tried;
     struct src {
         kr_source ops;
         void *ud;
@@ -231,7 +236,7 @@ void *kr_device_state(kr_device *dev, const kr_plugin *pl)
 
 static bool plugin_on(const kr_daemon *d, const kr_plugin *pl)
 {
-    return kr_config_plugin_enabled(d->cfg, pl->name);
+    return kr_config_plugin_enabled(d->cfg, pl->name, !pl->off_by_default);
 }
 
 /* A paired device is reachable: tell the plugins, once. */
@@ -300,6 +305,42 @@ kr_notify *kr_daemon_notify(kr_daemon *d)
 kr_procs *kr_daemon_procs(kr_daemon *d)
 {
     return d->procs;
+}
+
+static int x11_pollfds(void *ud, struct pollfd *fds, int max)
+{
+    return kr_x11_pollfds(ud, fds, max);
+}
+
+static void x11_dispatch(void *ud, const struct pollfd *fds, int n)
+{
+    kr_x11_dispatch(ud, fds, n);
+}
+
+kr_x11 *kr_daemon_x11(kr_daemon *d)
+{
+    if (!d->x11 && !d->x11_tried) {
+        d->x11_tried = true;
+        d->x11 = kr_x11_open();
+        if (d->x11)
+            kr_daemon_add_source(d, &(kr_source){x11_pollfds, x11_dispatch, NULL}, d->x11);
+    }
+    return d->x11;
+}
+
+static int bus_pollfds(void *ud, struct pollfd *fds, int max);
+static void bus_dispatch(void *ud, const struct pollfd *fds, int n);
+static double bus_deadline(void *ud);
+
+kr_bus *kr_daemon_system_bus(kr_daemon *d)
+{
+    if (!d->sysbus && !d->sysbus_tried) {
+        d->sysbus_tried = true;
+        d->sysbus = kr_bus_open_system();
+        if (d->sysbus)
+            kr_daemon_add_source(d, &(kr_source){bus_pollfds, bus_dispatch, bus_deadline}, d->sysbus);
+    }
+    return d->sysbus;
 }
 
 kr_mpris *kr_daemon_mpris(kr_daemon *d)
@@ -660,8 +701,8 @@ static bool add_transfer(kr_daemon *d, kr_device *dev, kr_transfer *t)
     return true;
 }
 
-bool kr_daemon_download(kr_daemon *d, kr_device *dev, const kr_packet *p, const char *path,
-                        int64_t mtime_ms)
+bool kr_daemon_download_cb(kr_daemon *d, kr_device *dev, const kr_packet *p, const char *path,
+                           int64_t mtime_ms, kr_download_done_fn done, void *ud)
 {
     if (!dev->link || !dev->cert || !p->payload_port)
         return false;
@@ -673,7 +714,17 @@ bool kr_daemon_download(kr_daemon *d, kr_device *dev, const kr_packet *p, const 
         kr_log_warn(_("cannot receive %s: %s"), path, strerror(errno));
         return false;
     }
-    return add_transfer(d, dev, t);
+    if (!add_transfer(d, dev, t))
+        return false;
+    d->xf[d->n_xf - 1].done = done;
+    d->xf[d->n_xf - 1].done_ud = ud;
+    return true;
+}
+
+bool kr_daemon_download(kr_daemon *d, kr_device *dev, const kr_packet *p, const char *path,
+                        int64_t mtime_ms)
+{
+    return kr_daemon_download_cb(d, dev, p, path, mtime_ms, NULL, NULL);
 }
 
 bool kr_daemon_upload(kr_daemon *d, kr_device *dev, kr_packet *p, int fd, int64_t size,
@@ -1016,7 +1067,9 @@ void kr_daemon_free(kr_daemon *d)
     free(d->slots);
     kr_mpris_free(d->mpris);
     kr_notify_free(d->notify);
+    kr_bus_free(d->sysbus);
     kr_bus_free(d->bus);
+    kr_x11_free(d->x11);
     kr_procs_free(d->procs);
     free(d->srcs);
     kr_control_close(d->control);
@@ -1203,8 +1256,15 @@ static void pump_transfers(kr_daemon *d, double now)
             kr_log_warn(kr_transfer_is_upload(x->t) ? _("sending %s to %s failed: %s")
                                                     : _("receiving %s from %s failed: %s"),
                         kr_transfer_name(x->t), x->device, why);
+        /* Take the callback out first: it may start another transfer. */
+        kr_download_done_fn done = x->done;
+        void *done_ud = x->done_ud;
+        char final_path[KR_PATH_MAX];
+        snprintf(final_path, sizeof final_path, "%s", kr_transfer_name(x->t));
         kr_transfer_free(x->t);
         d->xf[i] = d->xf[--d->n_xf];
+        if (done)
+            done(done_ud, r == KR_TRANSFER_DONE, final_path);
     }
 }
 

@@ -21,6 +21,9 @@ if [ "${1:-}" != --inside ]; then
 fi
 build=$2
 export LC_ALL=C LANGUAGE=en
+# Never the user's desktop: the X and D-Bus sockets are files, reachable from
+# the namespace. Tests that need them start their own.
+unset DISPLAY XAUTHORITY WAYLAND_DISPLAY DBUS_SESSION_BUS_ADDRESS DBUS_SYSTEM_BUS_ADDRESS
 
 tmp=$(mktemp -d /tmp/kiremote-net-XXXXXX)
 pids=""

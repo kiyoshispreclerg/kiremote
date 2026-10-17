@@ -276,7 +276,7 @@ Corrigido (`kr_conn_finish`: close_notify + FIN depois de enviar tudo), com
 teste que lê até o EOF (`tests/unit/test_transfer.c`); falta reconferir no
 celular.
 
-### 2. Plugins do daemon (em andamento)
+### 2. Plugins do daemon (quase pronta)
 
 Os da tabela marcados como fase 2, mais o ícone SNI com menu. Sem GTK
 ainda: tudo pela bandeja, notificações e `kiremote-cli`.
@@ -300,12 +300,21 @@ perdida), pausar na chamada, controle de mídia do desktop (MPRIS) e volume
 do sistema com a lista de saídas (`pactl`). Compartilhar já recebia e
 enviava arquivos.
 
-Falta da fase 2: clipboard, compartilhar texto e link (clipboard e
-`xdg-open`), notificações do celular, mousepad (XTest), apresentação,
-executar comandos, bloquear, navegar arquivos (sftp), inibir descanso de
-tela, e o ícone SNI com menu. Medido ocioso, sem barramento: 8,9 MB de RSS e
-zero acordadas em 5 s; a meta de 5 MB ainda não foi atingida (a maior parte
-é OpenSSL e libdbus carregados).
+Também feitos (testados com o celular falso em `tests/net/desktop.sh`, com
+X, D-Bus de sessão e de "sistema" privados; falta conferir no app de verdade):
+clipboard (texto; nos dois sentidos, com o aviso de gerenciador de senhas),
+compartilhar texto e link, notificações do celular (ícone, atualização,
+botões, dispensar), executar comandos (`[runcommand]` no .ini), mouse e
+teclado remotos (XTest), ponteiro da apresentação (XShape), bloquear (o
+Android desta revisão não tem plugin de bloqueio) e inibir o descanso de tela
+(desligado por padrão).
+
+Falta da fase 2: sftp (navegar arquivos) e responder a notificações
+(`kdeconnect.notification.reply`, que precisa de campo de resposta na
+notificação ou da interface). A bandeja de sistema não é do daemon: fica na
+interface GTK (e, no KiDesktop, num widget do xispanel). Medido ocioso, sem
+barramento: 8,9 MB de RSS e zero acordadas em 5 s; a meta de 5 MB ainda não
+foi atingida (a maior parte é OpenSSL e libs de X e D-Bus carregadas).
 
 ### 3. Interface GTK2
 

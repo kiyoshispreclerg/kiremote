@@ -19,8 +19,11 @@ In development: the protocol core (phase 1) is done and phase 2 (plugins)
 is half way. `kiremoted` discovers devices on the network, pairs, and has:
 ping, files, battery, cellular signal, find my phone and find this
 computer, call notifications (and muting), pausing music during a call,
-the phone controlling the desktop's media players, and system volume.
-`kiremote-cli` drives it from the terminal. There is no interface or tray
+the phone controlling the desktop's media players, system volume, a shared
+clipboard, text and links, the phone's notifications on the desktop, remote
+commands, the phone as mouse and keyboard, a presentation pointer, locking
+and (optionally) keeping the screen awake. `kiremote-cli` drives it from the
+terminal. There is no interface or tray
 icon yet (phase 3). See [PLANO.md](PLANO.md) (in Portuguese) for what is
 planned and in which order.
 
@@ -35,13 +38,17 @@ build/kiremote-cli -d Phone --share photo.jpg
 build/kiremote-cli -d Phone --find-phone     # the phone rings
 build/kiremote-cli -d Phone --mute-call      # silence the ringing call
 build/kiremote-cli --stop-ring               # stop the sound when the phone looks for this computer
+build/kiremote-cli -d Phone --share-text "hi"     # goes to the phone's clipboard
+build/kiremote-cli -d Phone --share-url https://example.org
 ```
 
 Notifications, media control and pause-on-call need a D-Bus session
 (`$DBUS_SESSION_BUS_ADDRESS`); without one the daemon still works but only
 writes to its log. Volume uses `pactl`, and the "find this computer" sound
 uses `paplay`, `pw-play` or `aplay`. Each plugin can be turned off in the
-`[plugins]` section of the .ini.
+`[plugins]` section of the .ini. The clipboard, mouse/keyboard and
+presentation pointer need X11 (`$DISPLAY`); the commands the phone may run
+are only the ones in the `[runcommand]` section.
 
 On the phone, open the KDE Connect app: the computer shows up in the list.
 Either side can start pairing; both show the same verification key. When

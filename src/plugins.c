@@ -16,6 +16,13 @@ const kr_plugin *const kr_plugins[] = {
     &kr_plugin_pausemusic,
     &kr_plugin_mpris,
     &kr_plugin_volume,
+    &kr_plugin_clipboard,
+    &kr_plugin_notifications,
+    &kr_plugin_runcommand,
+    &kr_plugin_mousepad,
+    &kr_plugin_presenter,
+    &kr_plugin_screensaver,
+    &kr_plugin_lock,
     NULL,
 };
 
@@ -31,7 +38,7 @@ cJSON *kr_plugins_capabilities(const kr_config *cfg, bool incoming)
 {
     cJSON *a = cJSON_CreateArray();
     for (const kr_plugin *const *p = kr_plugins; a && *p; p++) {
-        if (!kr_config_plugin_enabled(cfg, (*p)->name))
+        if (!kr_config_plugin_enabled(cfg, (*p)->name, !(*p)->off_by_default))
             continue;
         for (const char *const *t = incoming ? (*p)->incoming : (*p)->outgoing; t && *t; t++) {
             bool dup = false;

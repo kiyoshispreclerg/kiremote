@@ -191,7 +191,17 @@ bool kr_config_get_bool(const kr_config *c, const char *section, const char *key
     return fallback;
 }
 
-bool kr_config_plugin_enabled(const kr_config *c, const char *name)
+bool kr_config_plugin_enabled(const kr_config *c, const char *name, bool fallback)
 {
-    return kr_config_get_bool(c, "plugins", name, true);
+    return kr_config_get_bool(c, "plugins", name, fallback);
+}
+
+bool kr_config_each(const kr_config *c, const char *section, int *i, const char **key, const char **value)
+{
+    const char *sec;
+    int line;
+    while (kr_ini_next(c->ini, i, &sec, key, value, &line))
+        if (strcasecmp(sec, section) == 0)
+            return true;
+    return false;
 }
