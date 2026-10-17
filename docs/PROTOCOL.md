@@ -201,6 +201,11 @@ sha256(a || b || str(timestamp)) → hexa → 8 primeiros caracteres em maiúscu
 - Sem conexão a tempo, a porta fecha: 30 s no kdeconnect-kde
   (`CompositeUploadJob`, `m_timeout`), 10 s no Android (`and/backends/lan/LanLink.java`,
   `server.setSoTimeout`).
+- **Quem envia fecha a conexão ao terminar**: o Android lê o payload até o
+  EOF (`and/plugins/share/CompositeReceiveFileJob.java`, `receiveFile`), e
+  o kdeconnect-kde fecha o socket depois de enviar (`LanLink.java`,
+  `sendPayload`, no `finally`). Quem espera o receptor fechar primeiro trava
+  até o timeout e o Android mostra erro, mesmo com o arquivo completo.
 - O Android só considera que há payload com `payloadSize` diferente de 0;
   arquivo vazio vai sem payload.
 

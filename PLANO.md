@@ -237,7 +237,7 @@ Esqueleto (Makefile, `config.mk`, `-Werror -Wpedantic`, `make test`,
 kdeconnect-android e scrcpy (versões anotadas), `docs/PROTOCOL.md`,
 módulos copiados do kikarinhas, CLAUDE.md.
 
-### 1. Núcleo do protocolo (feita; falta conferir com o app Android)
+### 1. Núcleo do protocolo (feita)
 
 Identidade, descoberta UDP, TCP + TLS com papéis invertidos, só v8,
 geração do certificado, pareamento com chave de verificação, lista de
@@ -269,8 +269,12 @@ Feito:
 - `tests/fuzz/fuzz_packet.c` (`make fuzz` com libFuzzer; o corpus roda no
   `make test`).
 
-Falta: o teste com o app Android de verdade (parear, ping nos dois
-sentidos, arquivo nos dois sentidos).
+Testado com o app Android de verdade: pareamento, ping nos dois sentidos e
+arquivo do celular para o PC funcionam. Do PC para o celular dava erro no
+fim: o Android lê o payload até o EOF e o daemon esperava o celular fechar.
+Corrigido (`kr_conn_finish`: close_notify + FIN depois de enviar tudo), com
+teste que lê até o EOF (`tests/unit/test_transfer.c`); falta reconferir no
+celular.
 
 ### 2. Plugins do daemon
 

@@ -5,7 +5,7 @@ do KDE Connect (o app oficial do Android fica do outro lado), em C11 sem
 Qt/KF5. Leia o `PLANO.md` antes de começar uma fase (arquitetura, estado de
 cada fase) e o `docs/PROTOCOL.md` antes de mexer em qualquer pacote.
 
-Fase atual: 1 feita (falta conferir com o app Android). Próxima: 2
+Fase atual: 1 feita (testada com o app Android). Próxima: 2
 (plugins do daemon).
 
 O usuário escreve em português (pt-BR) e quer as respostas em português.

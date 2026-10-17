@@ -39,6 +39,7 @@ struct kr_conn {
     size_t scan;      /* bytes after in_off already searched for "\n" */
     size_t line_skip; /* the last line kr_conn_line gave, consumed next call */
 
+    bool finishing, wr_shut; /* kr_conn_finish called; FIN sent */
     bool failed; /* closed with an error not reported yet */
     char why[256];
 };
@@ -285,7 +286,20 @@ static bool flush(kr_conn *c)
         memmove(c->out, c->out + sent, c->out_len - sent);
         c->out_len -= sent;
     }
+    if (c->finishing && !c->wr_shut && c->out_len == 0) {
+        shutdown(c->fd, SHUT_WR);
+        c->wr_shut = true;
+    }
     return true;
+}
+
+void kr_conn_finish(kr_conn *c)
+{
+    if (c->st != KR_CONN_OPEN || c->finishing)
+        return;
+    c->finishing = true;
+    SSL_shutdown(c->ssl); /* queues close_notify; the peer's reply is not awaited */
+    flush(c);
 }
 
 bool kr_conn_write(kr_conn *c, const void *data, size_t len)

@@ -59,6 +59,11 @@ X509 *kr_conn_peer_cert(const kr_conn *c);
  * if the connection is closed or the queue overflows (then it closes;
  * the next pump says why). */
 bool kr_conn_write(kr_conn *c, const void *data, size_t len);
+/* Done sending: queues the TLS close_notify and, once everything queued
+ * has left, closes our side for writing (FIN). Reading goes on, so the
+ * peer's last bytes and its own close are still seen. Android reads a
+ * payload until the sender closes, so this is how an upload ends. */
+void kr_conn_finish(kr_conn *c);
 /* Bytes still waiting to leave (encrypted). */
 size_t kr_conn_pending(const kr_conn *c);
 

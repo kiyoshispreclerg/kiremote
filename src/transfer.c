@@ -262,8 +262,11 @@ static int pump_upload(kr_transfer *t, int ev, const char *cwhy, double now, con
         if (wrote || kr_conn_pending(t->conn) < before)
             t->deadline = now + KR_TRANSFER_TIMEOUT_S;
     }
+    /* Android reads until we close, so close once it has all left; then
+     * the receiver hangs up too. */
+    if (t->sent_all && kr_conn_pending(t->conn) == 0)
+        kr_conn_finish(t->conn);
     if (ev & KR_CONN_EV_CLOSED) {
-        /* The receiver hangs up once it has everything. */
         if (t->sent_all && kr_conn_pending(t->conn) == 0)
             return KR_TRANSFER_DONE;
         return failed(t, cwhy ? cwhy : _("connection closed"), why);
