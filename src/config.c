@@ -113,3 +113,58 @@ const char *kr_config_device_type(const kr_config *c)
 {
     return c->type;
 }
+
+const char *kr_config_addresses(const kr_config *c)
+{
+    const char *v = kr_ini_get(c->ini, "network", "addresses");
+    return v && *v ? v : NULL;
+}
+
+/* "~/x" → "$HOME/x"; "$HOME/x" (user-dirs.dirs) too. */
+static bool expand_home(const char *in, char *out, size_t size)
+{
+    const char *home = getenv("HOME");
+    if (strncmp(in, "~/", 2) == 0 || strcmp(in, "~") == 0)
+        return home && kr_pathf(out, size, "%s%s", home, in + 1);
+    if (strncmp(in, "$HOME", 5) == 0 && (in[5] == '/' || !in[5]))
+        return home && kr_pathf(out, size, "%s%s", home, in + 5);
+    return in[0] == '/' && kr_pathf(out, size, "%s", in);
+}
+
+/* XDG_DOWNLOAD_DIR="..." from $XDG_CONFIG_HOME/user-dirs.dirs. */
+static bool xdg_download_dir(char *out, size_t size)
+{
+    char path[KR_PATH_MAX];
+    const char *cfg = getenv("XDG_CONFIG_HOME");
+    const char *home = getenv("HOME");
+    bool ok = cfg && cfg[0] == '/' ? kr_pathf(path, sizeof path, "%s/user-dirs.dirs", cfg)
+                                   : home && kr_pathf(path, sizeof path, "%s/.config/user-dirs.dirs", home);
+    char *text = ok ? kr_read_file(path, NULL) : NULL;
+    if (!text)
+        return false;
+    bool found = false;
+    for (char *line = strtok(text, "\n"); line && !found; line = strtok(NULL, "\n")) {
+        while (*line == ' ' || *line == '\t')
+            line++;
+        if (strncmp(line, "XDG_DOWNLOAD_DIR=\"", 18) != 0)
+            continue;
+        char *v = line + 18, *end = strchr(v, '"');
+        if (end) {
+            *end = '\0';
+            found = expand_home(v, out, size);
+        }
+    }
+    free(text);
+    return found;
+}
+
+bool kr_config_share_dir(const kr_config *c, char *out, size_t size)
+{
+    const char *v = kr_ini_get(c->ini, "share", "dir");
+    if (v && *v && expand_home(v, out, size))
+        return true;
+    if (xdg_download_dir(out, size))
+        return true;
+    const char *home = getenv("HOME");
+    return home && home[0] == '/' && kr_pathf(out, size, "%s/Downloads", home);
+}

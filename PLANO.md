@@ -237,9 +237,9 @@ Esqueleto (Makefile, `config.mk`, `-Werror -Wpedantic`, `make test`,
 kdeconnect-android e scrcpy (versões anotadas), `docs/PROTOCOL.md`,
 módulos copiados do kikarinhas, CLAUDE.md.
 
-### 1. Núcleo do protocolo
+### 1. Núcleo do protocolo (feita; falta conferir com o app Android)
 
-Identidade, descoberta UDP, TCP + TLS com papéis invertidos, v8 e v7,
+Identidade, descoberta UDP, TCP + TLS com papéis invertidos, só v8,
 geração do certificado, pareamento com chave de verificação, lista de
 confiáveis, reconexão, keepalive, payloads. `kiremote-cli` (`-l`, `--pair`,
 `--ping`, `--share`).
@@ -248,6 +248,29 @@ Aceite: parear com o app Android e trocar ping nos dois sentidos; dois
 `kiremoted` pareando entre si num netns (teste de integração); chave de
 verificação igual à do upstream para os mesmos certificados (vetor de
 teste calculado à parte); parsers com alvo de fuzz.
+
+Feito:
+
+- Módulos: `packet` (pacotes e identidades), `cert` (chave EC P-256 e
+  certificado como o upstream, chave de verificação), `conn` (TCP + TLS sem
+  bloquear), `link` (aperto de mão completo), `pair` (máquina de estados),
+  `trust` (`trusted/<id>.pem` + `.ini`), `net` (UDP, TCP, broadcast,
+  netlink), `transfer` (payloads), `control` (socket JSON), `daemon`,
+  plugins `ping` e `share` (só arquivos; texto e link vão para o log).
+- Pedido de pareamento vindo do celular: o daemon mostra a chave no log e
+  aceita com `kiremote-cli -d <id> --pair` (notificação com botões é da
+  fase 2).
+- `tests/net/pair.sh`: dois daemons em network namespaces ligados por veth
+  descobrem um ao outro, pareiam (mesma chave dos dois lados), trocam ping
+  e arquivos nos dois sentidos, reconectam depois de reiniciar sem parear
+  de novo e despareiam. Roda no `make test` (e no `make asan`).
+- Vetor da chave de verificação em `tests/fixtures/pair-*`, gerado por
+  `tools/verification-vector.sh` só com a CLI do `openssl`.
+- `tests/fuzz/fuzz_packet.c` (`make fuzz` com libFuzzer; o corpus roda no
+  `make test`).
+
+Falta: o teste com o app Android de verdade (parear, ping nos dois
+sentidos, arquivo nos dois sentidos).
 
 ### 2. Plugins do daemon
 
@@ -295,7 +318,9 @@ Escolher conforme o custo; nenhum entra no daemon.
   Seguir o `docs/PROTOCOL.md`, atualizar os submódulos com cuidado e testar
   contra o app da loja.
 - **Porta 1716 ocupada** enquanto o KDE Connect estiver instalado e rodando:
-  o Kiremote avisa e não briga pela porta.
+  o Kiremote divide a UDP 1716 com ele (`SO_REUSEADDR`, como o próprio KDE
+  Connect faz), usa a primeira TCP livre (1717) e, se nem a UDP der, avisa
+  e segue só anunciando. O celular vê os dois como computadores diferentes.
 - **Android limita o clipboard em segundo plano** (10+): o envio do
   celular depende de abrir o app/tile, como no KDE Connect. Não é nosso.
 - **scrcpy**: o protocolo entre cliente e servidor muda entre versões.

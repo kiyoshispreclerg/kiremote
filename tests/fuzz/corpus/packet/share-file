@@ -1,0 +1,1 @@
+{"id":1,"type":"kdeconnect.share.request","body":{"filename":"../../etc/passwd","lastModified":1760000000000,"numberOfFiles":1,"totalPayloadSize":5},"payloadSize":5,"payloadTransferInfo":{"port":1739}}

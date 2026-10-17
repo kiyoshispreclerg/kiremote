@@ -20,7 +20,9 @@ JSON compacto numa linha, terminado em `\n`:
 
 - `id`: milissegundos desde a época (`currentMSecsSinceEpoch`).
 - `type` obrigatório; sem ele o pacote é descartado.
-- `body` ausente = objeto vazio.
+- `body` ausente = objeto vazio no kdeconnect-kde; o Android exige o campo
+  (`and/NetworkPacket.kt`, `unserialize` usa `getJSONObject("body")`), então
+  sempre mandamos `body`, mesmo vazio.
 - `payloadSize`/`payloadTransferInfo` só quando há payload.
 - Limites: identidade até 8192 bytes (`MAX_IDENTITY_PACKET_SIZE`,
   `kde/core/backends/lan/lanlinkprovider.cpp`); demais pacotes até 32 MiB
@@ -44,7 +46,7 @@ JSON compacto numa linha, terminado em `\n`:
   (`deviceDiscovered`, `tcpPacketReceived`). Com aparelho já confiável,
   versão menor que a última vista = recusa (`isProtocolDowngrade`).
 
-Três formas do pacote `kdeconnect.identity`:
+Três formas do pacote `kdeconnect.identity` (`kde/core/deviceinfo.h`):
 
 | Forma | Campos do body | Quando |
 |---|---|---|
@@ -53,7 +55,19 @@ Três formas do pacote `kdeconnect.identity`:
 | completa (dentro do TLS) | `deviceId`, `deviceName`, `deviceType`, `protocolVersion`, `incomingCapabilities`, `outgoingCapabilities` | logo após o handshake, nos dois sentidos |
 
 `deviceName` vai nas duas primeiras só para passar na validação de
-implementações antigas.
+implementações antigas — e do Android, que valida tudo com
+`isValidIdentityPacket` (nome não vazio depois do filtro), inclusive o UDP.
+
+O Android manda a identidade **completa** nas três formas
+(`and/backends/lan/LanLinkProvider.kt`): no UDP com `tcpPort` a mais, no TCP
+com `targetDeviceId` e `targetProtocolVersion` a mais. E manda
+`targetProtocolVersion` como **string** (`"8"`, vem de
+`getString("protocolVersion")`); o kdeconnect-kde lê com `get<int>`, que
+converte. O Kiremote aceita número ou string com número.
+
+Validação (`kde/core/deviceinfo.h`): descoberta precisa de `deviceId`
+válido; conexão, de `deviceId` e `targetDeviceId` válidos; completa, de
+`deviceId` válido e `deviceName` não vazio depois do filtro.
 
 ## Descoberta e conexão
 
@@ -68,7 +82,9 @@ implementações antigas.
 - Ao receber descoberta (ignorando loopback e o próprio id): valida,
   descarta `tcpPort` fora de 1716–1764 e `protocolVersion < 8`, e no máximo
   uma conexão por aparelho a cada `MILLIS_DELAY_BETWEEN_CONNECTIONS_TO_SAME_DEVICE`
-  (até 1024 ids lembrados). Abre TCP para `ip:tcpPort`.
+  = 500 ms (até 1024 ids lembrados, `MAX_TRACKED_CONNECTION_TIMES`). Abre
+  TCP para `ip:tcpPort`. O Android limita por IP e por id, 1000 ms, e
+  ignora endereços que não sejam de rede local (`isPrivateAddress`).
   - Se o TCP falha: responde com a própria descoberta por UDP só para
     aquele IP, para o outro lado tentar conectar (`recoverConnectionError`).
 - **Quem abriu o TCP** manda a identidade de conexão em texto puro e vira
@@ -94,16 +110,36 @@ implementações antigas.
   confiável → aceita qualquer um (`QueryPeer`), erro de autoassinado
   ignorado.
 - Nome do par verificado = `deviceId`.
+- Os dois lados apresentam certificado: o Android, como servidor TLS, pede
+  o do cliente (`needClientAuth` se confiável, `wantClientAuth` se não;
+  `and/helpers/security/SslHelper.kt`).
+- O Android usa no máximo **TLS 1.2** (`SSLContext.getInstance("TLSv1.2")`,
+  "1.3 dá problema em aparelhos antigos").
+- O Android dá 10 s a cada leitura do aperto de mão (`setSoTimeout`); o
+  kdeconnect-kde, 1 s para cada identidade.
+
+O Kiremote pede o certificado do outro lado nos dois papéis, não deixa o
+OpenSSL julgá-lo (autoassinado) e confere depois do aperto de mão, antes de
+mandar a identidade: CN igual ao `deviceId` da fase em texto puro e, se
+confiável, certificado idêntico ao guardado.
 
 ## Certificado próprio
 
 `kde/core/sslhelper.cpp`, `kde/core/kdeconnectconfig.cpp`
 
-- Chave RSA 2048 por padrão; EC P-256 (`prime256v1`) se `keyAlgorithm=EC`.
+- Chave nova: EC P-256 (`prime256v1`), e o kdeconnect-kde grava
+  `keyAlgorithm=EC` na config (`generatePrivateKey`). RSA 2048 só existe em
+  chaves antigas, lidas com o algoritmo padrão `RSA`. O Android também gera
+  EC P-256 (`and/helpers/security/RsaHelper.kt`, `secp256r1`) e trata a falta
+  de `keyAlgorithm` como RSA; instalações antigas têm RSA, então o outro
+  lado pode vir com qualquer um dos dois.
 - X.509 v3, serial aleatório de 160 bits, sujeito = emissor =
   `CN=<deviceId>, O=KDE, OU=KDE Connect`, validade de 1 ano atrás até 10
   anos à frente, assinatura SHA-512.
-- O `deviceId` próprio é lido do CN do certificado.
+- O `deviceId` próprio é lido do CN do certificado. Certificado ausente,
+  inválido, expirado ou ainda não válido → gera outro com id novo e apaga os
+  pareamentos (`loadOrGeneratePrivateKeyAndCertificate`).
+- Arquivos `privateKey.pem` e `certificate.pem` com permissão 0600.
 
 ## Pareamento
 
@@ -130,7 +166,15 @@ Estados: `NotPaired`, `Requested` (pedimos), `RequestedByPeer` (pediram),
   `Paired` → despareado.
 - Pedir quando o outro já pediu = aceitar.
 - Prazo de **30 s** em `Requested`/`RequestedByPeer`; esgotado, manda
-  `pair: false`.
+  `pair: false`. (O Android dá 25 s em `RequestedByPeer`, para cair antes
+  do outro lado.)
+- Pacote que não seja `kdeconnect.pair` vindo de aparelho não pareado:
+  descartado, e responde `{"pair": false}` (`Device::privateReceivedPacket`
+  chama `unpair()`): o outro lado acha que está pareado e não está.
+- Só se manda a um aparelho pacote de tipo que esteja nas
+  `incomingCapabilities` dele (`Device::sendPacket`), exceto identidade e
+  pareamento. As capacidades só são atualizadas quando as duas listas
+  vêm não vazias (`updateDeviceInfo`).
 
 ### Chave de verificação
 
@@ -151,16 +195,44 @@ sha256(a || b || str(timestamp)) → hexa → 8 primeiros caracteres em maiúscu
 - Quem envia escuta na primeira porta livre de **1739 a 1764**, manda o
   pacote com `payloadSize` e `payloadTransferInfo: {"port": N}` e, ao
   receber a conexão, é **servidor TLS**.
-- Quem recebe conecta em `ip:port` como **cliente TLS** e lê
-  `payloadSize` bytes.
+- Quem recebe conecta em `ip:port` (o IP do link) como **cliente TLS**, com
+  o certificado do pareamento, e lê `payloadSize` bytes.
 - Vários envios em sequência reaproveitam a mesma porta (job composto).
-- Sem conexão a tempo, a porta fecha (`timeoutTriggered`).
+- Sem conexão a tempo, a porta fecha: 30 s no kdeconnect-kde
+  (`CompositeUploadJob`, `m_timeout`), 10 s no Android (`and/backends/lan/LanLink.java`,
+  `server.setSoTimeout`).
+- O Android só considera que há payload com `payloadSize` diferente de 0;
+  arquivo vazio vai sem payload.
 
-## Pendente de leitura (fase 1)
+## Plugins
 
-- Prazos exatos de `MILLIS_DELAY_BETWEEN_CONNECTIONS_TO_SAME_DEVICE` e do
-  timeout do upload.
-- mDNS (`mdnsdiscovery`): serviço, campos TXT.
-- O que o app Android faz diferente (`and/backends/lan/LanLinkProvider.kt`,
-  `and/PairingHandler.kt`).
-- Capacidades anunciadas e o pacote de configuração dos plugins.
+### Ping
+
+`kde/plugins/ping/pingplugin.cpp`, `and/plugins/ping/PingPlugin.kt`
+
+`kdeconnect.ping`, nos dois sentidos, `{"message": "..."}` opcional. Sem
+mensagem, os dois mostram "Ping!".
+
+### Compartilhar
+
+`kde/plugins/share/shareplugin.cpp`, `and/plugins/share/`
+
+`kdeconnect.share.request`, nos dois sentidos; o Android também aceita
+`kdeconnect.share.request.update` (`numberOfFiles`, `totalPayloadSize`,
+para a barra de progresso).
+
+| Corpo | Significado |
+|---|---|
+| `filename` + payload, `lastModified` e `creationTime` (ms) opcionais, `open` | arquivo; `numberOfFiles` e `totalPayloadSize` do lote inteiro |
+| `text` | texto (o kdeconnect-kde põe no clipboard) |
+| `url` | link (abre no navegador) |
+
+O nome recebido é cortado no último `/`; com nome que já existe o
+kdeconnect-kde renomeia (`setAutoRenameIfDestinationExists`). O Android
+distingue arquivo por `filename`; o kdeconnect-kde, por payload ou
+`filename`.
+
+## Pendente de leitura
+
+- mDNS (`mdnsdiscovery`): serviço, campos TXT (fase 6).
+- Os pacotes de cada plugin da fase 2, conforme forem feitos.

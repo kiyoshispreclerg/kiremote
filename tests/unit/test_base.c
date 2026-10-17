@@ -7,6 +7,7 @@
 #include "config.h"
 #include "ini.h"
 #include "json.h"
+#include "transfer.h"
 #include "util.h"
 
 TEST(pathf_refuses_to_truncate)
@@ -92,6 +93,40 @@ TEST(json_paths)
     cJSON_Delete(j);
 }
 
+TEST(unique_file_names)
+{
+    char buf[KR_PATH_MAX];
+    CHECK(kr_unique_path("/d/foto.jpg", 0, buf, sizeof buf));
+    CHECK_STR_EQ(buf, "/d/foto.jpg");
+    CHECK(kr_unique_path("/d/foto.jpg", 2, buf, sizeof buf));
+    CHECK_STR_EQ(buf, "/d/foto (2).jpg");
+    CHECK(kr_unique_path("/d.x/notas", 1, buf, sizeof buf));
+    CHECK_STR_EQ(buf, "/d.x/notas (1)");
+    CHECK(kr_unique_path("/d/.bashrc", 1, buf, sizeof buf));
+    CHECK_STR_EQ(buf, "/d/.bashrc (1)");
+}
+
+TEST(share_dir)
+{
+    char buf[KR_PATH_MAX];
+    setenv("HOME", "/home/u", 1);
+    setenv("XDG_CONFIG_HOME", "/nonexistent", 1);
+    kr_config *c = kr_config_parse("[share]\ndir = ~/Recebidos\n");
+    CHECK(kr_config_share_dir(c, buf, sizeof buf));
+    CHECK_STR_EQ(buf, "/home/u/Recebidos");
+    kr_config_free(c);
+    /* No setting and no user-dirs.dirs: ~/Downloads. */
+    c = kr_config_parse("");
+    CHECK(kr_config_share_dir(c, buf, sizeof buf));
+    CHECK_STR_EQ(buf, "/home/u/Downloads");
+    CHECK(kr_config_addresses(c) == NULL);
+    kr_config_free(c);
+    c = kr_config_parse("[network]\naddresses = 10.0.0.2\n");
+    CHECK_STR_EQ(kr_config_addresses(c), "10.0.0.2");
+    kr_config_free(c);
+    unsetenv("XDG_CONFIG_HOME");
+}
+
 int main(void)
 {
     RUN(pathf_refuses_to_truncate);
@@ -101,5 +136,7 @@ int main(void)
     RUN(config_values);
     RUN(ini_edit_keeps_comments);
     RUN(json_paths);
+    RUN(unique_file_names);
+    RUN(share_dir);
     return harness_report();
 }

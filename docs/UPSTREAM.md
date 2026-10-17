@@ -24,3 +24,10 @@ Lugares onde o Kiremote faz diferente do kdeconnect-kde de propósito.
 | Assunto | kdeconnect-kde | Kiremote |
 |---|---|---|
 | `deviceType` próprio | sempre `desktop` (exceto por `PLASMA_PLATFORM`) | configurável em `[device] type` |
+| Broadcast de descoberta | `255.255.255.255` a partir de cada endereço IPv4 local | para o endereço de broadcast de cada interface (`getifaddrs`), num socket só; mesmo efeito, sem um socket por interface |
+| Prazo do aperto de mão | 1 s para cada identidade | 10 s para o aperto de mão inteiro (TCP, TLS e as duas identidades), o prazo de leitura do Android |
+| Certificado do par | o Qt verifica no handshake (`VerifyPeer` com o certificado guardado como CA) | o OpenSSL aceita qualquer um e o Kiremote compara com o guardado logo depois do handshake, antes de mandar qualquer coisa |
+| Dois links ao mesmo tempo para o mesmo aparelho | o mais novo substitui o antigo | igual, exceto quando os dois nascem a menos de 5 s um do outro (os dois lados conectaram ao mesmo tempo): fica, nos dois lados, o que foi aberto pelo id maior; senão cada lado podia fechar o link que o outro guardou |
+| Pacote acima de 32 MiB | descarta o que chegou e segue | fecha o link (o aparelho reconecta) |
+| Vários arquivos num envio | uma porta para todos, um depois do outro (`CompositeUploadJob`) | uma porta por arquivo, em paralelo (até as 26 portas de 1739–1764) |
+| Arquivo recebido | escolhe o nome único no começo e grava direto nele, apagando se falhar (`core/filetransferjob.cpp`) | grava em `<nome>.part` e só dá o nome final (único, `nome (1).ext`) quando completo |

@@ -1,3 +1,13 @@
 src/kiremoted.c
+src/kiremote-cli.c
 src/config.c
 src/log.c
+src/cert.c
+src/conn.c
+src/control.c
+src/daemon.c
+src/link.c
+src/plugin_ping.c
+src/plugin_share.c
+src/transfer.c
+src/trust.c

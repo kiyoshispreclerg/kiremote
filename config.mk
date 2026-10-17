@@ -35,3 +35,9 @@ ifeq ($(SANITIZE),1)
 OPTFLAGS = -O1 -g -fno-omit-frame-pointer
 SANFLAGS = -fsanitize=address,undefined -fno-sanitize-recover=all
 endif
+# `make fuzz` sets SANITIZE=fuzz (clang): coverage for libFuzzer everywhere,
+# the fuzzer's main() only in the fuzz targets.
+ifeq ($(SANITIZE),fuzz)
+OPTFLAGS = -O1 -g -fno-omit-frame-pointer
+SANFLAGS = -fsanitize=fuzzer-no-link,address,undefined -fno-sanitize-recover=all
+endif
