@@ -34,6 +34,9 @@ static void usage(FILE *out)
                    "      --ping            send a ping\n"
                    "      --ping-msg TEXT   send a ping with a message\n"
                    "      --share FILE      send a file (may be repeated)\n"
+                   "      --find-phone      make the phone ring\n"
+                   "      --stop-ring       stop this computer's sound (when the phone looks for it)\n"
+                   "      --mute-call       silence the phone's ringing call\n"
                    "      --refresh         announce this computer on the network again\n"
                    "  -s, --socket PATH     the daemon's control socket\n"
                    "  -V, --version         show the version and exit\n"
@@ -112,6 +115,16 @@ static void print_device(const cJSON *dev)
     printf("- %s: %s (%s", str(dev, "name"), str(dev, "id"), what);
     if (*str(dev, "key"))
         printf(_(", verification key %s"), str(dev, "key"));
+    const cJSON *bat = cJSON_GetObjectItem(dev, "battery");
+    if (cJSON_IsObject(bat)) {
+        double charge = cJSON_GetObjectItem(bat, "charge") ? cJSON_GetObjectItem(bat, "charge")->valuedouble : 0;
+        printf(flag(bat, "charging") ? _(", battery %d%% (charging)") : _(", battery %d%%"), (int)charge);
+    }
+    const cJSON *sig = cJSON_GetObjectItem(dev, "signal");
+    if (cJSON_IsObject(sig)) {
+        const cJSON *lv = cJSON_GetObjectItem(sig, "strength");
+        printf(_(", signal %s %d/4"), str(sig, "type"), cJSON_IsNumber(lv) ? (int)lv->valuedouble : 0);
+    }
     printf(")\n");
 }
 
@@ -202,7 +215,7 @@ int main(int argc, char **argv)
     kr_i18n_init();
     kr_log_init("kiremote-cli");
 
-    enum { O_PAIR = 256, O_UNPAIR, O_PING, O_PING_MSG, O_SHARE, O_REFRESH };
+    enum { O_PAIR = 256, O_UNPAIR, O_PING, O_PING_MSG, O_SHARE, O_REFRESH, O_FIND, O_STOP_RING, O_MUTE };
     static const struct option longopts[] = {
         {"list", no_argument, NULL, 'l'},
         {"device", required_argument, NULL, 'd'},
@@ -212,6 +225,9 @@ int main(int argc, char **argv)
         {"ping-msg", required_argument, NULL, O_PING_MSG},
         {"share", required_argument, NULL, O_SHARE},
         {"refresh", no_argument, NULL, O_REFRESH},
+        {"find-phone", no_argument, NULL, O_FIND},
+        {"stop-ring", no_argument, NULL, O_STOP_RING},
+        {"mute-call", no_argument, NULL, O_MUTE},
         {"socket", required_argument, NULL, 's'},
         {"version", no_argument, NULL, 'V'},
         {"help", no_argument, NULL, 'h'},
@@ -219,6 +235,7 @@ int main(int argc, char **argv)
     };
     const char *device = NULL, *ping_msg = NULL;
     bool do_list = false, do_pair = false, do_unpair = false, do_ping = false, do_refresh = false;
+    bool do_find = false, do_stop_ring = false, do_mute = false;
     cJSON *files = cJSON_CreateArray();
     int c;
     while ((c = getopt_long(argc, argv, "ld:s:Vh", longopts, NULL)) != -1) {
@@ -255,6 +272,15 @@ int main(int argc, char **argv)
         case O_REFRESH:
             do_refresh = true;
             break;
+        case O_FIND:
+            do_find = true;
+            break;
+        case O_STOP_RING:
+            do_stop_ring = true;
+            break;
+        case O_MUTE:
+            do_mute = true;
+            break;
         case 's':
             socket_path = optarg;
             break;
@@ -272,8 +298,8 @@ int main(int argc, char **argv)
             return 2;
         }
     }
-    bool per_device = do_pair || do_unpair || do_ping || cJSON_GetArraySize(files);
-    if (optind < argc || (!per_device && !do_list && !do_refresh) || (per_device && !device)) {
+    bool per_device = do_pair || do_unpair || do_ping || do_find || do_mute || cJSON_GetArraySize(files);
+    if (optind < argc || (!per_device && !do_list && !do_refresh && !do_stop_ring) || (per_device && !device)) {
         if (per_device && !device)
             kr_log_error(_("say which device with -d"));
         usage(stderr);
@@ -296,6 +322,11 @@ int main(int argc, char **argv)
         rc |= !r;
         cJSON_Delete(r);
     }
+    if (do_stop_ring) {
+        cJSON *r = request(simple("stop-ring", NULL));
+        rc |= !r;
+        cJSON_Delete(r);
+    }
     if (do_unpair) {
         cJSON *r = request(simple("unpair", device));
         rc |= !r;
@@ -308,6 +339,11 @@ int main(int argc, char **argv)
         if (ping_msg)
             cJSON_AddStringToObject(req, "message", ping_msg);
         cJSON *r = request(req);
+        rc |= !r;
+        cJSON_Delete(r);
+    }
+    if ((do_find || do_mute) && !rc) {
+        cJSON *r = request(simple(do_find ? "find-phone" : "mute-call", device));
         rc |= !r;
         cJSON_Delete(r);
     }

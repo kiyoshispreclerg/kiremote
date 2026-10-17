@@ -14,6 +14,9 @@
  *   [share]
  *   dir = ~/Downloads    # received files; default: XDG download folder
  *
+ *   [plugins]
+ *   battery = false      # any plugin by name; all are on by default
+ *
  * kr_config owns its kr_ini and the strings it hands out; they live until
  * kr_config_free. */
 
@@ -43,6 +46,14 @@ const char *kr_config_addresses(const kr_config *c);
  * download folder (user-dirs.dirs), else ~/Downloads. False if there is
  * no home either. */
 bool kr_config_share_dir(const kr_config *c, char *out, size_t size);
+
+/* [plugins] <name>: false/no/off/0 turns a plugin off. Default on. */
+bool kr_config_plugin_enabled(const kr_config *c, const char *name);
+
+/* A string, bool or int setting of any section, for plugins; the string is
+ * owned by c. */
+const char *kr_config_get(const kr_config *c, const char *section, const char *key);
+bool kr_config_get_bool(const kr_config *c, const char *section, const char *key, bool fallback);
 
 /* True for the device types the protocol knows. "smartphone" is the old
  * spelling of "phone" and is accepted on input. */

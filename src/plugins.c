@@ -9,6 +9,13 @@ extern const kr_plugin kr_plugin_share;
 const kr_plugin *const kr_plugins[] = {
     &kr_plugin_ping,
     &kr_plugin_share,
+    &kr_plugin_battery,
+    &kr_plugin_connectivity,
+    &kr_plugin_find,
+    &kr_plugin_telephony,
+    &kr_plugin_pausemusic,
+    &kr_plugin_mpris,
+    &kr_plugin_volume,
     NULL,
 };
 
@@ -20,10 +27,12 @@ static bool listed(const char *const *types, const char *type)
     return false;
 }
 
-cJSON *kr_plugins_capabilities(bool incoming)
+cJSON *kr_plugins_capabilities(const kr_config *cfg, bool incoming)
 {
     cJSON *a = cJSON_CreateArray();
-    for (const kr_plugin *const *p = kr_plugins; a && *p; p++)
+    for (const kr_plugin *const *p = kr_plugins; a && *p; p++) {
+        if (!kr_config_plugin_enabled(cfg, (*p)->name))
+            continue;
         for (const char *const *t = incoming ? (*p)->incoming : (*p)->outgoing; t && *t; t++) {
             bool dup = false;
             const cJSON *e;
@@ -31,13 +40,11 @@ cJSON *kr_plugins_capabilities(bool incoming)
             if (!dup)
                 cJSON_AddItemToArray(a, cJSON_CreateString(*t));
         }
+    }
     return a;
 }
 
-const kr_plugin *kr_plugin_for(const char *type)
+bool kr_plugin_takes(const kr_plugin *pl, const char *type)
 {
-    for (const kr_plugin *const *p = kr_plugins; *p; p++)
-        if (listed((*p)->incoming, type))
-            return *p;
-    return NULL;
+    return listed(pl->incoming, type);
 }

@@ -15,11 +15,14 @@ do Android** (pelo `scrcpy-server`, com um cliente próprio, sem SDL).
 
 ## Situação
 
-Em desenvolvimento: o núcleo do protocolo (fase 1) está pronto. O
-`kiremoted` descobre os aparelhos na rede, pareia, troca ping e envia e
-recebe arquivos; o `kiremote-cli` controla tudo pelo terminal. Ainda não há
-interface, bandeja nem notificações (fases 2 e 3). Veja o
-[PLANO.md](PLANO.md) para o que está previsto e em que ordem.
+Em desenvolvimento: o núcleo do protocolo (fase 1) está pronto e a fase 2
+(plugins) está no meio. O `kiremoted` descobre os aparelhos na rede, pareia,
+e já tem: ping, arquivos, bateria, sinal da operadora, achar o celular e
+achar o computador, notificação de chamada (e silenciar), pausar a música
+na chamada, controle de mídia do desktop pelo celular e volume do sistema.
+O `kiremote-cli` controla tudo pelo terminal. Ainda não há interface nem
+ícone na bandeja (fase 3). Veja o [PLANO.md](PLANO.md) para o que está
+previsto e em que ordem.
 
 ## Uso
 
@@ -29,7 +32,16 @@ build/kiremote-cli -l           # aparelhos pareados e os que estão por perto
 build/kiremote-cli -d Celular --pair      # pede o pareamento e espera
 build/kiremote-cli -d Celular --ping
 build/kiremote-cli -d Celular --share foto.jpg
+build/kiremote-cli -d Celular --find-phone   # o celular toca
+build/kiremote-cli -d Celular --mute-call    # silencia a chamada que toca
+build/kiremote-cli --stop-ring               # para o som quando o celular procura o computador
 ```
+
+Notificações, controle de mídia e pausar na chamada precisam de uma sessão
+D-Bus (`$DBUS_SESSION_BUS_ADDRESS`); sem ela o daemon funciona, mas só
+escreve no log. O volume usa o `pactl`, e o som de "achar o computador",
+`paplay`, `pw-play` ou `aplay`. Cada plugin pode ser desligado na seção
+`[plugins]` do .ini.
 
 No celular, abra o app do KDE Connect: o computador aparece na lista. Dá
 para parear dos dois lados; os dois mostram a mesma chave de verificação.

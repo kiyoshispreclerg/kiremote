@@ -258,5 +258,15 @@ const char *kr_packet_str(const kr_packet *p, const char *key)
 bool kr_packet_bool(const kr_packet *p, const char *key, bool fallback)
 {
     const cJSON *v = cJSON_GetObjectItemCaseSensitive(p->body, key);
-    return cJSON_IsBool(v) ? cJSON_IsTrue(v) : fallback;
+    if (cJSON_IsBool(v))
+        return cJSON_IsTrue(v);
+    /* The Android app puts isCancel in as the string "true", and QVariant
+     * (the upstream's get<bool>) reads such strings as booleans. */
+    if (cJSON_IsString(v)) {
+        if (strcmp(v->valuestring, "true") == 0)
+            return true;
+        if (strcmp(v->valuestring, "false") == 0)
+            return false;
+    }
+    return fallback;
 }

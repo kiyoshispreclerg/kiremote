@@ -1,0 +1,17 @@
+#!/bin/sh
+# SPDX-License-Identifier: GPL-3.0-or-later
+# A stand-in for `pactl`, for tests/net. State lives in $FAKE_PACTL_DIR:
+#   sinks.json   what `list sinks` prints;  default   the default sink name
+#   events       `subscribe` prints new lines appended here
+#   log          every command, one per line
+d=${FAKE_PACTL_DIR:?}
+case "$*" in
+"--format=json list sinks") echo "list sinks" >>"$d/log"; cat "$d/sinks.json" ;;
+"--format=json info") echo "info" >>"$d/log"; printf '{"default_sink_name":"%s"}\n' "$(cat "$d/default")" ;;
+"get-sink-mute @DEFAULT_SINK@") echo "get-sink-mute" >>"$d/log"; cat "$d/mute" 2>/dev/null || echo "Mute: no" ;;
+subscribe)
+    echo "subscribe" >>"$d/log"
+    : >"$d/events.pos"
+    exec tail -n 0 -F "$d/events" 2>/dev/null ;;
+*) echo "$*" >>"$d/log" ;;
+esac

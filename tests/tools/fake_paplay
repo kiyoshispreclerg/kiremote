@@ -1,0 +1,5 @@
+#!/bin/sh
+# SPDX-License-Identifier: GPL-3.0-or-later
+# A stand-in sound player: logs that it ran and plays for half a second.
+echo "play $*" >>"${FAKE_PLAY_LOG:?}"
+sleep 0.5

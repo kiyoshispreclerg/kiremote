@@ -81,7 +81,8 @@ bool kr_identity_valid(const kr_packet *p, kr_identity_kind kind);
 bool kr_packet_int(const kr_packet *p, const char *key, int64_t *out);
 /* String field of the body, or NULL. */
 const char *kr_packet_str(const kr_packet *p, const char *key);
-/* Boolean field of the body, or fallback when absent or not a boolean. */
+/* Boolean field of the body (JSON true/false, or the strings "true" and
+ * "false"), or fallback when absent or anything else. */
 bool kr_packet_bool(const kr_packet *p, const char *key, bool fallback);
 
 #endif

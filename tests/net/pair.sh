@@ -74,7 +74,10 @@ start() { # who
     # A plain command (not a function), so $! is the daemon itself:
     # nsenter only forks to enter a PID namespace.
     if [ "$1" = a ]; then run=""; else run="nsenter -t $holder -n"; fi
-    XDG_CONFIG_HOME=$tmp/$1/cfg XDG_RUNTIME_DIR=$tmp/$1/run HOME=$tmp/$1 \
+    # Never the user's own session bus: its socket is a file, so it is
+    # reachable from the namespace.
+    env -u DBUS_SESSION_BUS_ADDRESS \
+        XDG_CONFIG_HOME=$tmp/$1/cfg XDG_RUNTIME_DIR=$tmp/$1/run HOME=$tmp/$1 \
         $run "$build/kiremoted" -v -c "$tmp/$1/kiremote.ini" >>"$tmp/$1.log" 2>&1 &
     pids="$pids $!"
     eval "pid_$1=\$!"
@@ -119,8 +122,8 @@ test -f "$tmp/a/cfg/kiremote/trusted/$id_b.pem" || fail "Alfa did not save Beta'
 # ---- ping --------------------------------------------------------------------
 cli a -d Beta --ping || fail "ping Alfa -> Beta"
 cli b -d "$id_a" --ping-msg "oi, tudo bem?" || fail "ping Beta -> Alfa"
-wait_for 5 grep -q "ping from Alfa: Ping!" "$tmp/b.log" || fail "Beta got no ping"
-wait_for 5 grep -q "ping from Beta: oi, tudo bem?" "$tmp/a.log" || fail "Alfa got no ping"
+wait_for 5 grep -q "Alfa: Ping!" "$tmp/b.log" || fail "Beta got no ping"
+wait_for 5 grep -q "Beta: oi, tudo bem?" "$tmp/a.log" || fail "Alfa got no ping"
 
 # ---- files -------------------------------------------------------------------
 head -c 3000000 /dev/urandom >"$tmp/big file.bin"
@@ -146,7 +149,7 @@ start b
 wait_for 10 lists a "Beta: .*(paired and reachable)" || fail "no reconnection"
 wait_for 5 lists b "Alfa: .*(paired and reachable)" || fail "Beta forgot the pairing"
 cli b -d Alfa --ping-msg "voltei" || fail "ping after reconnecting"
-wait_for 5 grep -q "ping from Beta: voltei" "$tmp/a.log" || fail "no ping after reconnecting"
+wait_for 5 grep -q "Beta: voltei" "$tmp/a.log" || fail "no ping after reconnecting"
 echo "reconnected without pairing again"
 
 # ---- unpairing ---------------------------------------------------------------

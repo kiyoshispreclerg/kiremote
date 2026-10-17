@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: GPL-3.0-or-later */
 /* kdeconnect.ping, both ways: {"message": "..."} is optional
- * (plugins/ping/pingplugin.cpp upstream). Phase 1 only logs what arrives;
- * the notification comes with D-Bus in phase 2. */
+ * (plugins/ping/pingplugin.cpp upstream): a notification with the message,
+ * or "Ping!". */
 #include "i18n.h"
 #include "log.h"
 #include "plugin.h"
@@ -12,9 +12,15 @@ static const char *const types[] = {PING, NULL};
 
 static void on_packet(kr_daemon *d, kr_device *dev, const kr_packet *p)
 {
-    (void)d;
     const char *msg = kr_packet_str(p, "message");
-    kr_log_info(_("ping from %s: %s"), kr_device_name(dev), msg ? msg : _("Ping!"));
+    kr_note *n = kr_notify_show(kr_daemon_notify(d),
+                                &(kr_note_spec){.summary = kr_device_name(dev),
+                                                .body = msg ? msg : _("Ping!"),
+                                                .icon = "dialog-ok",
+                                                .timeout_ms = -1},
+                                NULL, NULL);
+    if (n)
+        kr_note_detach(n);
 }
 
 bool kr_ping_send(kr_daemon *d, kr_device *dev, const char *message)

@@ -24,7 +24,18 @@ LIB_SRC = src/log.c \
       src/daemon.c \
       src/plugins.c \
       src/plugin_ping.c \
-      src/plugin_share.c
+      src/plugin_share.c \
+      src/proc.c \
+      src/bus.c \
+      src/notify.c \
+      src/mpris.c \
+      src/plugin_battery.c \
+      src/plugin_connectivity.c \
+      src/plugin_find.c \
+      src/plugin_telephony.c \
+      src/plugin_pausemusic.c \
+      src/plugin_mpris.c \
+      src/plugin_volume.c
 VENDOR_SRC = vendor/cjson/cJSON.c
 LIBKR = $(BUILD)/libkr.a
 
@@ -93,7 +104,12 @@ $(BUILD)/tests/fuzz-run-%: tests/fuzz/fuzz_%.c tests/fuzz/driver.c $(LIBKR)
 	$(CC) $(CPPFLAGS) $(ALL_CFLAGS) $(WARNFLAGS) $(ALL_LDFLAGS) -o $@ \
 		tests/fuzz/fuzz_$*.c tests/fuzz/driver.c $(LIBKR) $(LDLIBS)
 
-test: all $(UNIT_TESTS) $(FUZZ_RUNNERS)
+# The scriptable phone that tests/net drives the daemon with.
+$(BUILD)/tests/fakephone: tests/tools/fakephone.c $(LIBKR)
+	@mkdir -p $(@D)
+	$(CC) $(CPPFLAGS) $(ALL_CFLAGS) $(WARNFLAGS) $(ALL_LDFLAGS) -o $@ $< $(LIBKR) $(LDLIBS)
+
+test: all $(UNIT_TESTS) $(FUZZ_RUNNERS) $(BUILD)/tests/fakephone
 	@fail=0; for t in $(UNIT_TESTS); do \
 		$$t || fail=1; \
 	done; \
@@ -101,12 +117,14 @@ test: all $(UNIT_TESTS) $(FUZZ_RUNNERS)
 		$(BUILD)/tests/fuzz-run-$$f tests/fuzz/corpus/$$f || fail=1; \
 	done; \
 	tests/net/pair.sh $(BUILD) || fail=1; \
+	tests/net/plugins.sh $(BUILD) || fail=1; \
 	if [ $$fail -ne 0 ]; then echo "*** tests FAILED"; exit 1; fi; \
 	echo "*** all tests passed"
 
 # Only the two daemons in network namespaces (tests/net/pair.sh).
-test-net: all
+test-net: all $(BUILD)/tests/fakephone
 	tests/net/pair.sh $(BUILD)
+	tests/net/plugins.sh $(BUILD)
 
 run: $(BUILD)/kiremoted
 	$(BUILD)/kiremoted $(ARGS)

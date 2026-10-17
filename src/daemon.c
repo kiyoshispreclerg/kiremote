@@ -27,6 +27,8 @@
 #include "trust.h"
 #include "util.h"
 
+#define KR_MAX_PLUGINS 24
+
 /* lanlinkprovider.cpp */
 #define MAX_UNPAIRED_LINKS 42
 #define SAME_DEVICE_DELAY_S 0.5 /* MILLIS_DELAY_BETWEEN_CONNECTIONS_TO_SAME_DEVICE */
@@ -52,6 +54,8 @@ struct kr_device {
     double link_since;
     short revents;
     kr_pair pair;
+    bool up; /* the plugins were told it is connected */
+    void *state[KR_MAX_PLUGINS];
 };
 
 typedef struct {
@@ -79,6 +83,17 @@ struct kr_daemon {
     kr_link_env env;
     kr_control *control;
 
+    kr_bus *bus;
+    kr_notify *notify;
+    kr_procs *procs;
+    kr_mpris *mpris;
+    struct src {
+        kr_source ops;
+        void *ud;
+        int first, count; /* its slice of the pollfds of the last turn */
+    } *srcs;
+    int n_srcs, cap_srcs;
+
     int udp, tcp, nl;
     int tcp_port;
     double announce_at; /* 0: none scheduled */
@@ -94,7 +109,7 @@ struct kr_daemon {
 
     /* What each pollfd of the last kr_daemon_pollfds was. */
     struct slot {
-        enum { S_UDP, S_TCP, S_NL, S_CONTROL, S_PEND, S_DEV, S_XFER } kind;
+        enum { S_UDP, S_TCP, S_NL, S_CONTROL, S_PEND, S_DEV, S_XFER, S_SRC } kind;
         void *ptr;
     } *slots;
     int n_slots, cap_slots;
@@ -173,6 +188,8 @@ static kr_device *add_device(kr_daemon *d, const char *id)
 
 static void free_device(kr_device *dev)
 {
+    for (int i = 0; i < KR_MAX_PLUGINS; i++)
+        free(dev->state[i]);
     kr_link_free(dev->link);
     X509_free(dev->cert);
     cJSON_Delete(dev->incoming);
@@ -194,6 +211,102 @@ static void verification_key(const kr_daemon *d, const kr_device *dev, char out[
     if (kr_pair_deadline(&dev->pair) && dev->cert &&
         !kr_verification_key(kr_cert_x509(d->cert), dev->cert, dev->pair.timestamp, out))
         out[0] = '\0';
+}
+
+/* ---- plugins ------------------------------------------------------------- */
+
+static int plugin_index(const kr_plugin *pl)
+{
+    for (int i = 0; kr_plugins[i]; i++)
+        if (kr_plugins[i] == pl)
+            return i;
+    return -1;
+}
+
+void *kr_device_state(kr_device *dev, const kr_plugin *pl)
+{
+    int i = plugin_index(pl);
+    return dev->up && i >= 0 && i < KR_MAX_PLUGINS ? dev->state[i] : NULL;
+}
+
+static bool plugin_on(const kr_daemon *d, const kr_plugin *pl)
+{
+    return kr_config_plugin_enabled(d->cfg, pl->name);
+}
+
+/* A paired device is reachable: tell the plugins, once. */
+static void device_up(kr_daemon *d, kr_device *dev)
+{
+    if (dev->up || !dev->link || dev->pair.state != KR_PAIR_PAIRED)
+        return;
+    dev->up = true;
+    for (int i = 0; i < KR_MAX_PLUGINS && kr_plugins[i]; i++) {
+        const kr_plugin *pl = kr_plugins[i];
+        if (!plugin_on(d, pl))
+            continue;
+        if (pl->state_size)
+            dev->state[i] = calloc(1, pl->state_size);
+        if (pl->on_connect && (!pl->state_size || dev->state[i]))
+            pl->on_connect(d, dev);
+    }
+}
+
+/* It is gone (or unpaired): tell the plugins, once. */
+static void device_down(kr_daemon *d, kr_device *dev)
+{
+    if (!dev->up)
+        return;
+    for (int i = 0; i < KR_MAX_PLUGINS && kr_plugins[i]; i++) {
+        const kr_plugin *pl = kr_plugins[i];
+        if (plugin_on(d, pl) && pl->on_disconnect && (!pl->state_size || dev->state[i]))
+            pl->on_disconnect(d, dev);
+        free(dev->state[i]);
+        dev->state[i] = NULL;
+    }
+    dev->up = false;
+}
+
+kr_device *kr_daemon_find_device(kr_daemon *d, const char *id)
+{
+    return find_device(d, id);
+}
+
+int kr_daemon_device_count(const kr_daemon *d)
+{
+    int n = 0;
+    for (int i = 0; i < d->n_dev; i++)
+        n += d->dev[i]->up;
+    return n;
+}
+
+kr_device *kr_daemon_device_at(const kr_daemon *d, int k)
+{
+    for (int i = 0; i < d->n_dev; i++)
+        if (d->dev[i]->up && k-- == 0)
+            return d->dev[i];
+    return NULL;
+}
+
+kr_bus *kr_daemon_bus(kr_daemon *d)
+{
+    return d->bus;
+}
+
+kr_notify *kr_daemon_notify(kr_daemon *d)
+{
+    return d->notify;
+}
+
+kr_procs *kr_daemon_procs(kr_daemon *d)
+{
+    return d->procs;
+}
+
+kr_mpris *kr_daemon_mpris(kr_daemon *d)
+{
+    if (!d->mpris && kr_bus_alive(d->bus))
+        d->mpris = kr_mpris_new(d->bus);
+    return d->mpris;
 }
 
 /* ---- sending ------------------------------------------------------------- */
@@ -264,6 +377,7 @@ static void apply_pair(kr_daemon *d, kr_device *dev, kr_pair_out out)
 {
     send_pair(dev, out.send);
     if (out.events & KR_PAIR_EV_UNPAIRED) {
+        device_down(d, dev);
         kr_trust_remove(d->trust, dev->id);
         kr_log_info(_("unpaired from %s"), dev->name);
     }
@@ -281,6 +395,7 @@ static void apply_pair(kr_daemon *d, kr_device *dev, kr_pair_out out)
             kr_log_error(_("paired with %s, but could not save it"), dev->name);
         else
             kr_log_info(_("paired with %s"), dev->name);
+        device_up(d, dev);
     }
 }
 
@@ -303,10 +418,16 @@ static void handle_packet(kr_daemon *d, kr_device *dev, const kr_packet *p)
         send_pair(dev, KR_PAIR_SEND_REFUSE);
         return;
     }
-    const kr_plugin *pl = kr_plugin_for(p->type);
-    if (pl)
-        pl->on_packet(d, dev, p);
-    else
+    bool taken = false;
+    for (int i = 0; kr_plugins[i]; i++) {
+        const kr_plugin *pl = kr_plugins[i];
+        if (plugin_on(d, pl) && pl->on_packet && kr_plugin_takes(pl, p->type)) {
+            taken = true;
+            if (dev->up)
+                pl->on_packet(d, dev, p);
+        }
+    }
+    if (!taken)
         kr_log_debug("%s: no plugin takes %s", dev->name, p->type);
 }
 
@@ -346,6 +467,7 @@ static bool adopt(kr_daemon *d, kr_link *l)
             kr_log_debug("%s: keeping the earlier link", dev->name);
             return false;
         }
+        device_down(d, dev);
         kr_link_free(dev->link);
         dev->link = NULL;
     } else if (!kr_trust_has(d->trust, id) && unpaired_links(d) >= MAX_UNPAIRED_LINKS) {
@@ -379,6 +501,7 @@ static bool adopt(kr_daemon *d, kr_link *l)
     char addr[INET_ADDRSTRLEN];
     kr_log_info(_("connected to %s (%s, %s)"), dev->name, dev->type,
                 kr_addr_str(&kr_link_peer(l)->sin_addr, addr, sizeof addr));
+    device_up(d, dev);
     return true;
 }
 
@@ -612,11 +735,14 @@ static cJSON *device_json(const kr_daemon *d, const kr_device *dev)
         cJSON_AddStringToObject(o, "address",
                                 kr_addr_str(&kr_link_peer(dev->link)->sin_addr, addr, sizeof addr));
     }
+    for (int i = 0; dev->up && kr_plugins[i]; i++)
+        if (kr_plugins[i]->describe && plugin_on(d, kr_plugins[i]))
+            kr_plugins[i]->describe((kr_daemon *)d, dev, o);
     return o;
 }
 
 /* The device named by req's "device" (an id, or a unique name). */
-static kr_device *request_device(kr_daemon *d, const cJSON *req, cJSON *reply)
+kr_device *kr_daemon_request_device(kr_daemon *d, const cJSON *req, cJSON *reply)
 {
     const cJSON *v = cJSON_GetObjectItemCaseSensitive(req, "device");
     if (!cJSON_IsString(v)) {
@@ -660,11 +786,15 @@ static void on_request(void *ud, const char *type, const cJSON *req, cJSON *repl
     }
     if (strcmp(type, "pair") != 0 && strcmp(type, "unpair") != 0 && strcmp(type, "ping") != 0 &&
         strcmp(type, "share") != 0) {
+        for (int i = 0; kr_plugins[i]; i++)
+            if (kr_plugins[i]->request && plugin_on(d, kr_plugins[i]) &&
+                kr_plugins[i]->request(d, type, req, reply))
+                return;
         kr_control_fail(reply, _("unknown request"));
         return;
     }
 
-    kr_device *dev = request_device(d, req, reply);
+    kr_device *dev = kr_daemon_request_device(d, req, reply);
     if (!dev)
         return;
     if (strcmp(type, "pair") == 0) {
@@ -706,6 +836,56 @@ static void on_request(void *ud, const char *type, const cJSON *req, cJSON *repl
         cJSON_AddItemToObject(reply, "device", o);
 }
 
+/* ---- sources ------------------------------------------------------------- */
+
+bool kr_daemon_add_source(kr_daemon *d, const kr_source *s, void *ud)
+{
+    if (!grow((void **)&d->srcs, &d->cap_srcs, d->n_srcs + 1, sizeof *d->srcs))
+        return false;
+    d->srcs[d->n_srcs++] = (struct src){.ops = *s, .ud = ud};
+    return true;
+}
+
+void kr_daemon_remove_source(kr_daemon *d, void *ud)
+{
+    for (int i = 0; i < d->n_srcs; i++)
+        if (d->srcs[i].ud == ud) {
+            memmove(&d->srcs[i], &d->srcs[i + 1], (size_t)(d->n_srcs - i - 1) * sizeof *d->srcs);
+            d->n_srcs--;
+            return;
+        }
+}
+
+static int procs_pollfds(void *ud, struct pollfd *fds, int max)
+{
+    return kr_procs_pollfds(ud, fds, max);
+}
+
+static void procs_dispatch(void *ud, const struct pollfd *fds, int n)
+{
+    kr_procs_dispatch(ud, fds, n);
+}
+
+static double procs_deadline(void *ud)
+{
+    return kr_procs_deadline(ud);
+}
+
+static int bus_pollfds(void *ud, struct pollfd *fds, int max)
+{
+    return kr_bus_pollfds(ud, fds, max);
+}
+
+static void bus_dispatch(void *ud, const struct pollfd *fds, int n)
+{
+    kr_bus_dispatch(ud, fds, n);
+}
+
+static double bus_deadline(void *ud)
+{
+    return kr_bus_deadline(ud);
+}
+
 /* ---- setup --------------------------------------------------------------- */
 
 static kr_packet *make_identity(const kr_config *cfg, const char *id)
@@ -721,8 +901,8 @@ static kr_packet *make_identity(const kr_config *cfg, const char *id)
     cJSON_AddStringToObject(p->body, "deviceName", name);
     cJSON_AddStringToObject(p->body, "deviceType", kr_config_device_type(cfg));
     cJSON_AddNumberToObject(p->body, "protocolVersion", KR_PROTOCOL_VERSION);
-    cJSON_AddItemToObject(p->body, "incomingCapabilities", kr_plugins_capabilities(true));
-    cJSON_AddItemToObject(p->body, "outgoingCapabilities", kr_plugins_capabilities(false));
+    cJSON_AddItemToObject(p->body, "incomingCapabilities", kr_plugins_capabilities(cfg, true));
+    cJSON_AddItemToObject(p->body, "outgoingCapabilities", kr_plugins_capabilities(cfg, false));
     return p;
 }
 
@@ -791,6 +971,20 @@ kr_daemon *kr_daemon_new(const kr_config *cfg, const char *socket_path)
         kr_pair_init(&dev->pair, true);
     }
 
+    /* Services the plugins share. */
+    d->procs = kr_procs_new();
+    if (d->procs)
+        kr_daemon_add_source(d, &(kr_source){procs_pollfds, procs_dispatch, procs_deadline}, d->procs);
+    d->bus = kr_bus_open();
+    if (d->bus)
+        kr_daemon_add_source(d, &(kr_source){bus_pollfds, bus_dispatch, bus_deadline}, d->bus);
+    else
+        kr_log_info(_("no session bus: notifications and media control are off"));
+    d->notify = kr_notify_new(d->bus);
+    for (int i = 0; kr_plugins[i]; i++)
+        if (kr_plugins[i]->init && plugin_on(d, kr_plugins[i]))
+            kr_plugins[i]->init(d);
+
     kr_log_info(_("this is %s (%s), id %s, TCP port %d"), kr_packet_str(d->identity, "deviceName"),
                 kr_config_device_type(cfg), kr_cert_device_id(d->cert), d->tcp_port);
     kr_daemon_announce(d);
@@ -808,6 +1002,11 @@ void kr_daemon_free(kr_daemon *d)
     for (int i = 0; i < d->n_pend; i++)
         kr_link_free(d->pend[i].link);
     for (int i = 0; i < d->n_dev; i++)
+        device_down(d, d->dev[i]);
+    for (int i = 0; d->procs && kr_plugins[i]; i++)
+        if (kr_plugins[i]->shutdown && plugin_on(d, kr_plugins[i]))
+            kr_plugins[i]->shutdown(d);
+    for (int i = 0; i < d->n_dev; i++)
         free_device(d->dev[i]);
     for (int i = 0; i < d->n_xf; i++)
         kr_transfer_free(d->xf[i].t);
@@ -815,6 +1014,11 @@ void kr_daemon_free(kr_daemon *d)
     free(d->dev);
     free(d->xf);
     free(d->slots);
+    kr_mpris_free(d->mpris);
+    kr_notify_free(d->notify);
+    kr_bus_free(d->bus);
+    kr_procs_free(d->procs);
+    free(d->srcs);
     kr_control_close(d->control);
     if (d->udp >= 0)
         close(d->udp);
@@ -874,6 +1078,15 @@ int kr_daemon_pollfds(kr_daemon *d, struct pollfd *fds, int max)
         else
             d->flush_now = true;
     }
+    for (int i = 0; i < d->n_srcs; i++) {
+        struct src *sr = &d->srcs[i];
+        sr->first = n;
+        struct pollfd tmp[32];
+        int k = sr->ops.pollfds ? sr->ops.pollfds(sr->ud, tmp, 32) : 0;
+        for (int j = 0; j < k; j++)
+            add_slot(d, fds, &n, max, tmp[j], S_SRC, sr);
+        sr->count = n - sr->first;
+    }
     d->n_slots = n;
     return n;
 }
@@ -896,6 +1109,9 @@ int kr_daemon_timeout(const kr_daemon *d)
         CONSIDER(kr_pair_deadline(&d->dev[i]->pair));
     for (int i = 0; i < d->n_xf; i++)
         CONSIDER(kr_transfer_deadline(d->xf[i].t));
+    for (int i = 0; i < d->n_srcs; i++)
+        if (d->srcs[i].ops.deadline)
+            CONSIDER(d->srcs[i].ops.deadline(d->srcs[i].ud));
 #undef CONSIDER
     if (next == 0)
         return -1;
@@ -949,6 +1165,7 @@ static void pump_devices(kr_daemon *d, double now)
             }
             if (dev->link && ((ev & KR_LINK_EV_CLOSED) || !kr_link_ready(dev->link))) {
                 kr_log_info(_("disconnected from %s: %s"), dev->name, why ? why : "?");
+                device_down(d, dev);
                 kr_link_free(dev->link);
                 dev->link = NULL;
             }
@@ -1025,6 +1242,8 @@ void kr_daemon_dispatch(kr_daemon *d, const struct pollfd *fds, int n)
                 if (d->xf[k].t == s->ptr)
                     d->xf[k].revents = fds[i].revents;
             break;
+        case S_SRC:
+            break;
         }
     }
 
@@ -1049,4 +1268,15 @@ void kr_daemon_dispatch(kr_daemon *d, const struct pollfd *fds, int n)
     kr_control_dispatch(d->control, cfds, nc);
 
     pump_transfers(d, now);
+
+    /* Sources last: what they report (a bus reply, a process that ended)
+     * may start more work, and they see the devices as the packets left
+     * them. A source may add or remove sources, so index, don't hold. */
+    for (int i = 0; i < d->n_srcs; i++) {
+        struct src sr = d->srcs[i];
+        const struct pollfd *mine = fds + sr.first;
+        int cnt = sr.first + sr.count <= n ? sr.count : 0;
+        if (sr.ops.dispatch)
+            sr.ops.dispatch(sr.ud, mine, cnt);
+    }
 }

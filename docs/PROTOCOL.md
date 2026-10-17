@@ -237,7 +237,133 @@ kdeconnect-kde renomeia (`setAutoRenameIfDestinationExists`). O Android
 distingue arquivo por `filename`; o kdeconnect-kde, por payload ou
 `filename`.
 
+### Bateria
+
+`kde/plugins/battery/batteryplugin.cpp`, `kde/plugins/battery/README`,
+`and/plugins/battery/BatteryPlugin.kt`
+
+`kdeconnect.battery`, nos dois sentidos:
+
+| Campo | Significado |
+|---|---|
+| `isCharging` (bool) | carregando |
+| `currentCharge` (int) | porcentagem; no kdeconnect-kde é a média das baterias do computador |
+| `thresholdEvent` (int) | 0 = nada, 1 = entrou no estado "baixa" (≤ 15% e descarregando no kdeconnect-kde; o Android usa `ACTION_BATTERY_LOW`) |
+| `batteryQuantity` (int) | só o kdeconnect-kde manda |
+| `request` (bool) | pede ao outro lado que mande o estado dele (README do plugin; o código do kdeconnect-kde não trata, o Android responde) |
+
+Sem bateria no computador, não se manda nada (`slotChargeChanged` só avisa).
+Um periférico (mouse sem fio) não é a bateria do computador: no Solid só entra
+`isPowerSupply()`; no sysfs, `scope` = `Device`.
+
+### Sinal da operadora
+
+`kde/plugins/connectivity-report/connectivity_reportplugin.cpp`,
+`and/plugins/connectivityreport/ConnectivityReportPlugin.kt`
+
+`kdeconnect.connectivity_report`, só do celular para o computador:
+`{"signalStrengths": {"<id da assinatura>": {"networkType": "LTE",
+"signalStrength": 0-4}, ...}}`. Um celular com dois chips manda uma entrada
+por chip; o kdeconnect-kde mostra a primeira (`subscriptions.first()`).
+`networkType`: `5G`, `LTE`, `HSPA`, `UMTS`, `EDGE`, `GPRS`, `Unknown`... (o
+ícone do kdeconnect-kde só distingue esses).
+
+### Achar o celular / achar este computador
+
+`kde/plugins/findmyphone`, `kde/plugins/findthisdevice`,
+`and/plugins/findmyphone`, `and/plugins/findremotedevice`
+
+Um pacote só, `kdeconnect.findmyphone.request`, de corpo vazio, nos dois
+sentidos: quem recebe toca um som. No kdeconnect-kde são dois plugins
+(`findmyphone` só envia, `findthisdevice` só recebe); no Android também
+(`FindRemoteDevicePlugin` envia, `FindMyPhonePlugin` recebe). Não é o ping:
+o celular toca no volume máximo até alguém dispensar, mesmo no silencioso.
+O `findthisdevice` toca o som uma vez e desmuta as saídas que estavam no
+mudo.
+
+### Telefonia
+
+`kde/plugins/telephony/telephonyplugin.cpp`, `kde/plugins/telephony/README`,
+`and/plugins/telephony/TelephonyPlugin.kt`
+
+`kdeconnect.telephony`, do celular: `event` (`ringing`, `talking`,
+`missedCall`; `sms` é o formato antigo e o kdeconnect-kde ignora),
+`phoneNumber`, `contactName` (nome ou, sem contato, o número),
+`phoneThumbnail` (JPEG em base64) e `isCancel`. **O Android manda `isCancel`
+como a string `"true"`** (`lastPacket["isCancel"] = "true"`); o
+kdeconnect-kde lê com `get<bool>`, que converte. O Kiremote aceita as duas
+formas. Ao fim da chamada o Android reenvia o último pacote com `isCancel`.
+
+`kdeconnect.telephony.request_mute` (do computador, corpo vazio) silencia o
+toque (`TelephonyPlugin.kt`, `muteRinger`).
+
+### Pausar na chamada
+
+`kde/plugins/pausemusic/pausemusicplugin.cpp`, `.../README`
+
+Não tem pacote próprio: usa o `kdeconnect.telephony`. `ringing` ou `talking`
+(só `talking` se a opção `conditionTalking` estiver ligada) pausa os
+players MPRIS que estão tocando (`Pause`, ou `Stop` se `CanPause` for falso);
+o pacote com `isCancel` volta a tocar os que foram pausados. O
+kdeconnect-kde ainda tem uma opção para mudar o volume do sistema para mudo.
+
+### Volume do sistema
+
+`kde/plugins/systemvolume/systemvolumeplugin-pulse.cpp`,
+`and/plugins/systemvolume/SystemVolumePlugin.kt`
+
+O computador recebe `kdeconnect.systemvolume.request` e manda
+`kdeconnect.systemvolume`:
+
+- `{"requestSinks": true}` → `{"sinkList": [{"name", "description", "volume",
+  "maxVolume", "muted", "enabled"}, ...]}`. `volume` está na escala do
+  PulseAudio (`maxVolume` = 65536 = 100%); `enabled` = é a saída padrão. A
+  lista também vai ao conectar e quando uma saída entra ou sai.
+- `{"name": "<saída>", "volume": n}` define o volume **e desmuta**;
+  `{"name", "muted": bool}`; `{"name", "enabled": true}` torna padrão.
+  O nome tem que ser de uma saída da última lista (`sinksMap`).
+- Mudanças feitas por outro programa saem como `{"name", "volume"}`,
+  `{"name", "muted"}` ou `{"name", "enabled"}`.
+
+### Controle de mídia do desktop
+
+`kde/plugins/mpriscontrol/mpriscontrolplugin.cpp`, `.../README`,
+`and/plugins/mprisreceiver/`
+
+O computador manda `kdeconnect.mpris` e recebe `kdeconnect.mpris.request`.
+Players são os `org.mpris.MediaPlayer2.*` no D-Bus de sessão, menos
+`kdeconnect.*` e `playerctld`. O nome mostrado é o `Identity` do player, com
+` [2]`, ` [3]` se repetir.
+
+Computador → celular (campos de um mesmo pacote, só os que mudaram):
+
+| Campo | Origem MPRIS |
+|---|---|
+| `playerList` (nomes), `supportAlbumArtPayload` (true) | lista de players |
+| `title`, `artist` (juntos com ", "), `album`, `albumArtUrl`, `url`, `length` (ms) | `Metadata` (`xesam:*`, `mpris:artUrl`, `mpris:length`/1000) |
+| `isPlaying` | `PlaybackStatus` = `Playing` |
+| `canPause`, `canPlay`, `canGoNext`, `canGoPrevious`, `canSeek` | `Can*` |
+| `loopStatus`, `shuffle` | `LoopStatus`, `Shuffle` (opcionais) |
+| `volume` (0–100) | `Volume` × 100 |
+| `pos` (ms) | `Position`/1000, junto com qualquer mudança; sozinho após `Seeked` |
+| `player` | nome do player, em todo pacote que não é a lista |
+
+Sem título nem artista e com `xesam:url` de arquivo local, o título é o nome
+do arquivo e o álbum a pasta (`mprisPlayerMetadataToNetworkPacket`). Com a
+integração do Plasma no navegador, o player simples do Firefox/Chromium fica
+de fora da lista (`getFilteredPlayerKeys`).
+
+Celular → computador (`kdeconnect.mpris.request`), com `player`:
+`requestPlayerList`; `action` (nome do método MPRIS); `setLoopStatus`;
+`setShuffle`; `setVolume` (0–100); `Seek` (µs, relativo); `SetPosition` (ms,
+absoluto: o kdeconnect-kde converte em `Seek` pela diferença para a posição
+atual); `requestNowPlaying`; `requestVolume`; `albumArtUrl` (pede a capa). Um
+pedido com `playerList` vem de um cliente MPRIS e é ignorado.
+
+Capa: só `file://`, e só a URL que o player diz estar mostrando agora; sai
+como payload de `{"transferringAlbumArt": true, "player", "albumArtUrl"}`.
+
 ## Pendente de leitura
 
 - mDNS (`mdnsdiscovery`): serviço, campos TXT (fase 6).
-- Os pacotes de cada plugin da fase 2, conforme forem feitos.
+- Os pacotes dos plugins que faltam na fase 2, conforme forem feitos.

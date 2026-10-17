@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kiremote\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-17 16:37-0300\n"
-"PO-Revision-Date: 2026-10-17 17:00-0300\n"
+"POT-Creation-Date: 2026-10-17 17:21-0300\n"
+"PO-Revision-Date: 2026-10-17 20:00-0300\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
 "Language: pt_BR\n"
@@ -17,168 +17,6 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
-
-#: src/kiremoted.c:23
-#, c-format
-msgid ""
-"Usage: %s [OPTION]...\n"
-"Connects this computer to your phone (KDE Connect protocol).\n"
-"\n"
-"  -c, --config FILE  configuration file\n"
-"                     (default ~/.config/kiremote/kiremote.ini)\n"
-"  -s, --socket PATH  control socket\n"
-"                     (default $XDG_RUNTIME_DIR/kiremote.sock)\n"
-"  -v, --verbose      debug messages\n"
-"  -V, --version      show the version and exit\n"
-"  -h, --help         show this help and exit\n"
-msgstr ""
-"Uso: %s [OPÇÃO]...\n"
-"Conecta este computador ao seu celular (protocolo do KDE Connect).\n"
-"\n"
-"  -c, --config ARQUIVO  arquivo de configuração\n"
-"                        (padrão ~/.config/kiremote/kiremote.ini)\n"
-"  -s, --socket CAMINHO  socket de controle\n"
-"                        (padrão $XDG_RUNTIME_DIR/kiremote.sock)\n"
-"  -v, --verbose         mensagens de depuração\n"
-"  -V, --version         mostra a versão e sai\n"
-"  -h, --help            mostra esta ajuda e sai\n"
-
-#: src/kiremoted.c:96
-#, c-format
-msgid "cannot watch signals: %s"
-msgstr "não foi possível observar os sinais: %s"
-
-#: src/kiremote-cli.c:27
-#, c-format
-msgid ""
-"Usage: %s [OPTION]...\n"
-"Controls kiremoted, the phone connection daemon.\n"
-"\n"
-"  -l, --list            list the devices (paired, and the ones around)\n"
-"  -d, --device ID       the device for the options below (id or name)\n"
-"      --pair            ask to pair (or accept its request) and wait\n"
-"      --unpair          unpair (or refuse its request)\n"
-"      --ping            send a ping\n"
-"      --ping-msg TEXT   send a ping with a message\n"
-"      --share FILE      send a file (may be repeated)\n"
-"      --refresh         announce this computer on the network again\n"
-"  -s, --socket PATH     the daemon's control socket\n"
-"  -V, --version         show the version and exit\n"
-"  -h, --help            show this help and exit\n"
-msgstr ""
-"Uso: %s [OPÇÃO]...\n"
-"Controla o kiremoted, o daemon de conexão com o celular.\n"
-"\n"
-"  -l, --list             lista os dispositivos (pareados e os que estão por "
-"perto)\n"
-"  -d, --device ID        o dispositivo das opções abaixo (id ou nome)\n"
-"      --pair             pede o pareamento (ou aceita o pedido dele) e "
-"espera\n"
-"      --unpair           desfaz o pareamento (ou recusa o pedido dele)\n"
-"      --ping             manda um ping\n"
-"      --ping-msg TEXTO   manda um ping com uma mensagem\n"
-"      --share ARQUIVO    envia um arquivo (pode repetir)\n"
-"      --refresh          anuncia este computador na rede de novo\n"
-"  -s, --socket CAMINHO   o socket de controle do daemon\n"
-"  -V, --version          mostra a versão e sai\n"
-"  -h, --help             mostra esta ajuda e sai\n"
-
-#: src/kiremote-cli.c:54
-#, c-format
-msgid "cannot talk to kiremoted at %s: %s"
-msgstr "não foi possível falar com o kiremoted em %s: %s"
-
-#: src/kiremote-cli.c:61
-msgid "invalid reply from kiremoted"
-msgstr "resposta inválida do kiremoted"
-
-#: src/kiremote-cli.c:105
-msgid "asks to pair"
-msgstr "pede para parear"
-
-#: src/kiremote-cli.c:107
-msgid "waiting for it to accept the pairing"
-msgstr "esperando ele aceitar o pareamento"
-
-#: src/kiremote-cli.c:109
-msgid "paired and reachable"
-msgstr "pareado e acessível"
-
-#: src/kiremote-cli.c:109
-msgid "paired, not reachable"
-msgstr "pareado, fora de alcance"
-
-#: src/kiremote-cli.c:111
-msgid "reachable, not paired"
-msgstr "acessível, não pareado"
-
-#: src/kiremote-cli.c:114
-#, c-format
-msgid ", verification key %s"
-msgstr ", chave de verificação %s"
-
-#: src/kiremote-cli.c:126
-#, c-format
-msgid "%d device found\n"
-msgid_plural "%d devices found\n"
-msgstr[0] "%d dispositivo encontrado\n"
-msgstr[1] "%d dispositivos encontrados\n"
-
-#: src/kiremote-cli.c:178
-#, c-format
-msgid ""
-"Verification key: %s\n"
-"Check that %s shows the same key and accept there.\n"
-msgstr ""
-"Chave de verificação: %s\n"
-"Confira se %s mostra a mesma chave e aceite lá.\n"
-
-#: src/kiremote-cli.c:191
-#, c-format
-msgid "Paired with %s.\n"
-msgstr "Pareado com %s.\n"
-
-#: src/kiremote-cli.c:194
-#, c-format
-msgid ""
-"pairing with %s did not complete (refused, canceled or timed out; see the "
-"daemon's log)"
-msgstr ""
-"o pareamento com %s não se completou (recusado, cancelado ou tempo esgotado; "
-"veja o log do daemon)"
-
-#: src/kiremote-cli.c:248 src/plugin_share.c:120
-#, c-format
-msgid "cannot send %s: %s"
-msgstr "não foi possível enviar %s: %s"
-
-#: src/kiremote-cli.c:278
-msgid "say which device with -d"
-msgstr "diga qual dispositivo com -d"
-
-#: src/config.c:59
-#, c-format
-msgid "%s:%d: unknown device type \"%s\", using \"desktop\""
-msgstr "%s:%d: tipo de dispositivo desconhecido \"%s\", usando \"desktop\""
-
-#: src/config.c:78 src/daemon.c:739
-msgid "cannot find the configuration folder (is HOME set?)"
-msgstr "pasta de configuração não encontrada (HOME está definido?)"
-
-#: src/config.c:87
-#, c-format
-msgid "cannot read %s: %s"
-msgstr "não foi possível ler %s: %s"
-
-#. TRANSLATORS: log prefix, keep the trailing ": ".
-#: src/log.c:58
-msgid "warning: "
-msgstr "aviso: "
-
-#. TRANSLATORS: log prefix, keep the trailing ": ".
-#: src/log.c:67
-msgid "error: "
-msgstr "erro: "
 
 #: src/cert.c:184
 #, c-format
@@ -225,32 +63,46 @@ msgstr "chave privada nova criada em %s"
 msgid "created a new certificate in %s (device id %s)"
 msgstr "certificado novo criado em %s (id do dispositivo %s)"
 
-#: src/conn.c:269 src/conn.c:295
+#: src/config.c:60
+#, c-format
+msgid "%s:%d: unknown device type \"%s\", using \"desktop\""
+msgstr "%s:%d: tipo de dispositivo desconhecido \"%s\", usando \"desktop\""
+
+#: src/config.c:79 src/daemon.c:919
+msgid "cannot find the configuration folder (is HOME set?)"
+msgstr "pasta de configuração não encontrada (HOME está definido?)"
+
+#: src/config.c:88
+#, c-format
+msgid "cannot read %s: %s"
+msgstr "não foi possível ler %s: %s"
+
+#: src/conn.c:270 src/conn.c:309
 msgid "too much data waiting to be sent"
 msgstr "dados demais esperando para sair"
 
-#: src/conn.c:307
+#: src/conn.c:321
 msgid "TLS write error"
 msgstr "erro de escrita no TLS"
 
-#: src/conn.c:332 src/conn.c:386 src/conn.c:415 src/daemon.c:749 src/link.c:229
+#: src/conn.c:346 src/conn.c:400 src/conn.c:429 src/daemon.c:929 src/link.c:229
 msgid "out of memory"
 msgstr "sem memória"
 
-#: src/conn.c:359 src/conn.c:378 src/link.c:207 src/link.c:271
-#: src/transfer.c:201 src/transfer.c:285
+#: src/conn.c:373 src/conn.c:392 src/link.c:207 src/link.c:271
+#: src/transfer.c:201 src/transfer.c:288
 msgid "TLS handshake failed"
 msgstr "falha no aperto de mão do TLS"
 
-#: src/conn.c:398 src/conn.c:467
+#: src/conn.c:412 src/conn.c:481
 msgid "connection closed by the other side"
 msgstr "conexão encerrada pelo outro lado"
 
-#: src/conn.c:399
+#: src/conn.c:413
 msgid "TLS read error"
 msgstr "erro de leitura no TLS"
 
-#: src/conn.c:472 src/link.c:296 src/transfer.c:230 src/transfer.c:269
+#: src/conn.c:486 src/link.c:296 src/transfer.c:230 src/transfer.c:272
 msgid "connection closed"
 msgstr "conexão encerrada"
 
@@ -282,41 +134,41 @@ msgstr "JSON inválido"
 msgid "missing \"type\""
 msgstr "faltou \"type\""
 
-#: src/control.c:179 src/daemon.c:663
+#: src/control.c:179 src/daemon.c:793
 msgid "unknown request"
 msgstr "pedido desconhecido"
 
-#: src/daemon.c:247
+#: src/daemon.c:360
 msgid "the clocks of the two devices are too far apart"
 msgstr "os relógios dos dois dispositivos estão muito diferentes"
 
-#: src/daemon.c:249
+#: src/daemon.c:362
 msgid "refused or canceled by the other device"
 msgstr "recusado ou cancelado pelo outro dispositivo"
 
-#: src/daemon.c:251
+#: src/daemon.c:364
 msgid "canceled"
 msgstr "cancelado"
 
-#: src/daemon.c:253
+#: src/daemon.c:366
 msgid "timed out"
 msgstr "tempo esgotado"
 
-#: src/daemon.c:255
+#: src/daemon.c:368
 msgid "the device is not reachable"
 msgstr "o dispositivo está fora de alcance"
 
-#: src/daemon.c:268
+#: src/daemon.c:382
 #, c-format
 msgid "unpaired from %s"
 msgstr "pareamento com %s desfeito"
 
-#: src/daemon.c:271
+#: src/daemon.c:385
 #, c-format
 msgid "pairing with %s failed: %s"
 msgstr "o pareamento com %s falhou: %s"
 
-#: src/daemon.c:275
+#: src/daemon.c:389
 #, c-format
 msgid ""
 "%s wants to pair; verification key %s. Accept with \"kiremote-cli -d %s --"
@@ -325,86 +177,86 @@ msgstr ""
 "%s quer parear; chave de verificação %s. Aceite com \"kiremote-cli -d %s --"
 "pair\", recuse com \"--unpair\"."
 
-#: src/daemon.c:281
+#: src/daemon.c:395
 #, c-format
 msgid "paired with %s, but could not save it"
 msgstr "pareado com %s, mas não foi possível salvar o pareamento"
 
-#: src/daemon.c:283
+#: src/daemon.c:397
 #, c-format
 msgid "paired with %s"
 msgstr "pareado com %s"
 
-#: src/daemon.c:339
+#: src/daemon.c:460
 #, c-format
 msgid "%s connected again with another certificate; refused"
 msgstr "%s conectou de novo com outro certificado; recusado"
 
-#: src/daemon.c:352
+#: src/daemon.c:474
 #, c-format
 msgid "too many unpaired devices around; ignoring %s"
 msgstr "dispositivos não pareados demais por perto; ignorando %s"
 
-#: src/daemon.c:380
+#: src/daemon.c:502
 #, c-format
 msgid "connected to %s (%s, %s)"
 msgstr "conectado a %s (%s, %s)"
 
-#: src/daemon.c:425
+#: src/daemon.c:548
 #, c-format
 msgid "[network] addresses: not an IPv4 address: %s"
 msgstr "[network] addresses: não é um endereço IPv4: %s"
 
-#: src/daemon.c:486
+#: src/daemon.c:609
 #, c-format
 msgid "refusing %s: it went back to an older protocol version"
 msgstr "recusando %s: voltou para uma versão mais antiga do protocolo"
 
-#: src/daemon.c:550
+#: src/daemon.c:673
 #, c-format
 msgid "cannot receive %s: %s"
 msgstr "não foi possível receber %s: %s"
 
-#: src/daemon.c:566
+#: src/daemon.c:689
 #, c-format
 msgid "no free port for sending %s"
 msgstr "nenhuma porta livre para enviar %s"
 
-#: src/daemon.c:574
+#: src/daemon.c:697
 #, c-format
 msgid "sending %s to %s"
 msgstr "enviando %s para %s"
 
-#: src/daemon.c:623
+#: src/daemon.c:749
 msgid "missing \"device\""
 msgstr "faltou \"device\""
 
-#: src/daemon.c:630
+#: src/daemon.c:756
 msgid "more than one device has that name; use the id"
 msgstr "mais de um dispositivo tem esse nome; use o id"
 
-#: src/daemon.c:637
+#: src/daemon.c:763
 #, c-format
 msgid "no such device: %s"
 msgstr "dispositivo desconhecido: %s"
 
-#: src/daemon.c:672
+#: src/daemon.c:802
 msgid "already paired"
 msgstr "já está pareado"
 
-#: src/daemon.c:683
+#: src/daemon.c:813 src/plugin_find.c:287
 msgid "the device is not paired"
 msgstr "o dispositivo não está pareado"
 
-#: src/daemon.c:691
+#: src/daemon.c:821
 msgid "the device does not take pings"
 msgstr "o dispositivo não aceita pings"
 
-#: src/daemon.c:753
+#: src/daemon.c:933
 msgid "new certificate: forgetting the old pairings"
 msgstr "certificado novo: esquecendo os pareamentos antigos"
 
-#: src/daemon.c:769
+#: src/daemon.c:949
 #, c-format
 msgid ""
 "UDP port %d is taken (is KDE Connect running?): other devices won't be "
@@ -413,40 +265,205 @@ msgstr ""
 "a porta UDP %d está ocupada (o KDE Connect está rodando?): os outros "
 "dispositivos não serão descobertos, mas ainda podem nos achar"
 
-#: src/daemon.c:776
+#: src/daemon.c:956
 #, c-format
 msgid "cannot open the network ports (%d-%d): %s"
 msgstr "não foi possível abrir as portas de rede (%d-%d): %s"
 
-#: src/daemon.c:794
+#: src/daemon.c:982
+msgid "no session bus: notifications and media control are off"
+msgstr "sem barramento de sessão: notificações e controle de mídia desligados"
+
+#: src/daemon.c:988
 #, c-format
 msgid "this is %s (%s), id %s, TCP port %d"
 msgstr "este é %s (%s), id %s, porta TCP %d"
 
-#: src/daemon.c:951
+#: src/daemon.c:1167
 #, c-format
 msgid "disconnected from %s: %s"
 msgstr "desconectado de %s: %s"
 
-#: src/daemon.c:983
+#: src/daemon.c:1200
 #, c-format
 msgid "sent %s to %s"
 msgstr "%s enviado para %s"
 
-#: src/daemon.c:983 src/plugin_share.c:76
+#: src/daemon.c:1200 src/plugin_share.c:76
 #, c-format
 msgid "received %s from %s"
 msgstr "%s recebido de %s"
 
-#: src/daemon.c:986
+#: src/daemon.c:1203
 #, c-format
 msgid "sending %s to %s failed: %s"
 msgstr "o envio de %s para %s falhou: %s"
 
-#: src/daemon.c:987
+#: src/daemon.c:1204
 #, c-format
 msgid "receiving %s from %s failed: %s"
 msgstr "o recebimento de %s de %s falhou: %s"
+
+#: src/kiremote-cli.c:27
+#, c-format
+msgid ""
+"Usage: %s [OPTION]...\n"
+"Controls kiremoted, the phone connection daemon.\n"
+"\n"
+"  -l, --list            list the devices (paired, and the ones around)\n"
+"  -d, --device ID       the device for the options below (id or name)\n"
+"      --pair            ask to pair (or accept its request) and wait\n"
+"      --unpair          unpair (or refuse its request)\n"
+"      --ping            send a ping\n"
+"      --ping-msg TEXT   send a ping with a message\n"
+"      --share FILE      send a file (may be repeated)\n"
+"      --find-phone      make the phone ring\n"
+"      --stop-ring       stop this computer's sound (when the phone looks for "
+"it)\n"
+"      --mute-call       silence the phone's ringing call\n"
+"      --refresh         announce this computer on the network again\n"
+"  -s, --socket PATH     the daemon's control socket\n"
+"  -V, --version         show the version and exit\n"
+"  -h, --help            show this help and exit\n"
+msgstr ""
+"Uso: %s [OPÇÃO]...\n"
+"Controla o kiremoted, o daemon de conexão com o celular.\n"
+"\n"
+"  -l, --list             lista os dispositivos (pareados e os que estão por "
+"perto)\n"
+"  -d, --device ID        o dispositivo das opções abaixo (id ou nome)\n"
+"      --pair             pede o pareamento (ou aceita o pedido dele) e "
+"espera\n"
+"      --unpair           desfaz o pareamento (ou recusa o pedido dele)\n"
+"      --ping             manda um ping\n"
+"      --ping-msg TEXTO   manda um ping com uma mensagem\n"
+"      --share ARQUIVO    envia um arquivo (pode repetir)\n"
+"      --find-phone       faz o celular tocar\n"
+"      --stop-ring        para o som deste computador (quando o celular o "
+"procura)\n"
+"      --mute-call        silencia a chamada que está tocando no celular\n"
+"      --refresh          anuncia este computador na rede de novo\n"
+"  -s, --socket CAMINHO   o socket de controle do daemon\n"
+"  -V, --version          mostra a versão e sai\n"
+"  -h, --help             mostra esta ajuda e sai\n"
+
+#: src/kiremote-cli.c:57
+#, c-format
+msgid "cannot talk to kiremoted at %s: %s"
+msgstr "não foi possível falar com o kiremoted em %s: %s"
+
+#: src/kiremote-cli.c:64
+msgid "invalid reply from kiremoted"
+msgstr "resposta inválida do kiremoted"
+
+#: src/kiremote-cli.c:108
+msgid "asks to pair"
+msgstr "pede para parear"
+
+#: src/kiremote-cli.c:110
+msgid "waiting for it to accept the pairing"
+msgstr "esperando ele aceitar o pareamento"
+
+#: src/kiremote-cli.c:112
+msgid "paired and reachable"
+msgstr "pareado e acessível"
+
+#: src/kiremote-cli.c:112
+msgid "paired, not reachable"
+msgstr "pareado, fora de alcance"
+
+#: src/kiremote-cli.c:114
+msgid "reachable, not paired"
+msgstr "acessível, não pareado"
+
+#: src/kiremote-cli.c:117
+#, c-format
+msgid ", verification key %s"
+msgstr ", chave de verificação %s"
+
+#: src/kiremote-cli.c:121
+#, c-format
+msgid ", battery %d%% (charging)"
+msgstr ", bateria %d%% (carregando)"
+
+#: src/kiremote-cli.c:121
+#, c-format
+msgid ", battery %d%%"
+msgstr ", bateria %d%%"
+
+#: src/kiremote-cli.c:126
+#, c-format
+msgid ", signal %s %d/4"
+msgstr ", sinal %s %d/4"
+
+#: src/kiremote-cli.c:139
+#, c-format
+msgid "%d device found\n"
+msgid_plural "%d devices found\n"
+msgstr[0] "%d dispositivo encontrado\n"
+msgstr[1] "%d dispositivos encontrados\n"
+
+#: src/kiremote-cli.c:191
+#, c-format
+msgid ""
+"Verification key: %s\n"
+"Check that %s shows the same key and accept there.\n"
+msgstr ""
+"Chave de verificação: %s\n"
+"Confira se %s mostra a mesma chave e aceite lá.\n"
+
+#: src/kiremote-cli.c:204
+#, c-format
+msgid "Paired with %s.\n"
+msgstr "Pareado com %s.\n"
+
+#: src/kiremote-cli.c:207
+#, c-format
+msgid ""
+"pairing with %s did not complete (refused, canceled or timed out; see the "
+"daemon's log)"
+msgstr ""
+"o pareamento com %s não se completou (recusado, cancelado ou tempo esgotado; "
+"veja o log do daemon)"
+
+#: src/kiremote-cli.c:265 src/plugin_share.c:120
+#, c-format
+msgid "cannot send %s: %s"
+msgstr "não foi possível enviar %s: %s"
+
+#: src/kiremote-cli.c:304
+msgid "say which device with -d"
+msgstr "diga qual dispositivo com -d"
+
+#: src/kiremoted.c:23
+#, c-format
+msgid ""
+"Usage: %s [OPTION]...\n"
+"Connects this computer to your phone (KDE Connect protocol).\n"
+"\n"
+"  -c, --config FILE  configuration file\n"
+"                     (default ~/.config/kiremote/kiremote.ini)\n"
+"  -s, --socket PATH  control socket\n"
+"                     (default $XDG_RUNTIME_DIR/kiremote.sock)\n"
+"  -v, --verbose      debug messages\n"
+"  -V, --version      show the version and exit\n"
+"  -h, --help         show this help and exit\n"
+msgstr ""
+"Uso: %s [OPÇÃO]...\n"
+"Conecta este computador ao seu celular (protocolo do KDE Connect).\n"
+"\n"
+"  -c, --config ARQUIVO  arquivo de configuração\n"
+"                        (padrão ~/.config/kiremote/kiremote.ini)\n"
+"  -s, --socket CAMINHO  socket de controle\n"
+"                        (padrão $XDG_RUNTIME_DIR/kiremote.sock)\n"
+"  -v, --verbose         mensagens de depuração\n"
+"  -V, --version         mostra a versão e sai\n"
+"  -h, --help            mostra esta ajuda e sai\n"
+
+#: src/kiremoted.c:96
+#, c-format
+msgid "cannot watch signals: %s"
+msgstr "não foi possível observar os sinais: %s"
 
 #: src/link.c:159
 msgid "identity packet too large"
@@ -500,12 +517,53 @@ msgstr "o aperto de mão demorou demais"
 msgid "packet too large"
 msgstr "pacote grande demais"
 
-#: src/plugin_ping.c:17
-#, c-format
-msgid "ping from %s: %s"
-msgstr "ping de %s: %s"
+#. TRANSLATORS: log prefix, keep the trailing ": ".
+#: src/log.c:58
+msgid "warning: "
+msgstr "aviso: "
 
-#: src/plugin_ping.c:17
+#. TRANSLATORS: log prefix, keep the trailing ": ".
+#: src/log.c:67
+msgid "error: "
+msgstr "erro: "
+
+#: src/plugin_battery.c:246
+#, c-format
+msgid "Battery at %d%%"
+msgstr "Bateria em %d%%"
+
+#: src/plugin_battery.c:248
+#, c-format
+msgid "%s: Low Battery"
+msgstr "%s: bateria baixa"
+
+#: src/plugin_find.c:131
+#, c-format
+msgid "cannot play the sound with %s"
+msgstr "não foi possível tocar o som com %s"
+
+#: src/plugin_find.c:236
+msgid "no way to play a sound (install paplay, pw-play or aplay)"
+msgstr "não há como tocar um som (instale paplay, pw-play ou aplay)"
+
+#: src/plugin_find.c:240
+#, c-format
+msgid "%s is looking for this computer"
+msgstr "%s está procurando este computador"
+
+#: src/plugin_find.c:241
+msgid "Stop"
+msgstr "Parar"
+
+#: src/plugin_find.c:247
+msgid "Close this notification to stop the sound."
+msgstr "Feche esta notificação para parar o som."
+
+#: src/plugin_find.c:286 src/plugin_telephony.c:121
+msgid "the device is not reachable or does not take this"
+msgstr "o dispositivo está fora de alcance ou não aceita isso"
+
+#: src/plugin_ping.c:18
 msgid "Ping!"
 msgstr "Ping!"
 
@@ -548,6 +606,28 @@ msgstr "não é um arquivo comum"
 msgid "cannot send %s"
 msgstr "não foi possível enviar %s"
 
+#: src/plugin_telephony.c:99
+msgid "unknown number"
+msgstr "número desconhecido"
+
+#: src/plugin_telephony.c:101
+#, c-format
+msgid "Incoming call from %s"
+msgstr "Chamada de %s"
+
+#: src/plugin_telephony.c:101
+#, c-format
+msgid "Missed call from %s"
+msgstr "Chamada perdida de %s"
+
+#: src/plugin_telephony.c:104
+msgid "Mute Call"
+msgstr "Silenciar chamada"
+
+#: src/plugin_volume.c:107
+msgid "pactl not found: the volume control is off"
+msgstr "pactl não encontrado: o controle de volume está desligado"
+
 #: src/transfer.c:190
 msgid "no free file name"
 msgstr "nenhum nome de arquivo livre"
@@ -556,11 +636,11 @@ msgstr "nenhum nome de arquivo livre"
 msgid "the file got shorter"
 msgstr "o arquivo diminuiu"
 
-#: src/transfer.c:292
+#: src/transfer.c:295
 msgid "the other side never fetched the file"
 msgstr "o outro lado não veio buscar o arquivo"
 
-#: src/transfer.c:301
+#: src/transfer.c:304
 msgid "the transfer stalled"
 msgstr "a transferência parou"
 
@@ -573,3 +653,7 @@ msgstr "ignorando %s: não é um certificado desse dispositivo"
 #, c-format
 msgid "cannot write %s: %s"
 msgstr "não foi possível gravar %s: %s"
+
+#, c-format
+#~ msgid "ping from %s: %s"
+#~ msgstr "ping de %s: %s"

@@ -31,3 +31,9 @@ Lugares onde o Kiremote faz diferente do kdeconnect-kde de propósito.
 | Pacote acima de 32 MiB | descarta o que chegou e segue | fecha o link (o aparelho reconecta) |
 | Vários arquivos num envio | uma porta para todos, um depois do outro (`CompositeUploadJob`) | uma porta por arquivo, em paralelo (até as 26 portas de 1739–1764) |
 | Arquivo recebido | escolhe o nome único no começo e grava direto nele, apagando se falhar (`core/filetransferjob.cpp`) | grava em `<nome>.part` e só dá o nome final (único, `nome (1).ext`) quando completo |
+| Ação do controle de mídia | `mprisInterface.call(action)` com o que o celular mandar ("TODO: check valid actions") | só `Play`, `Pause`, `PlayPause`, `Stop`, `Next` e `Previous`; `setLoopStatus` só `None`, `Track`, `Playlist` |
+| Áudio (volume, desmutar) | PulseAudioQt | `pactl` (o servidor do PipeWire também responde); só aceita nomes de saída da última lista lida |
+| Bateria própria | Solid (UPower) | `/sys/class/power_supply` (tipo `Battery`, fora `scope=Device`) e uevents do kernel; sem polling |
+| Achar este computador | toca o som uma vez | repete até 30 s ou até fechar a notificação / `kiremote-cli --stop-ring`; o som é um player externo (paplay, pw-play, aplay) |
+| Pausar na chamada | pausa e, opcionalmente, muda o volume para mudo | só pausa (a opção de mudo fica para depois) |
+| Chamada tocando | notificação persistente com botão "Mute Call" | igual, mas o botão só existe se o servidor de notificações tiver `actions`; `kiremote-cli --mute-call` cobre o resto |

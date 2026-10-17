@@ -4,6 +4,7 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <unistd.h>
 
 #include "i18n.h"
@@ -167,4 +168,30 @@ bool kr_config_share_dir(const kr_config *c, char *out, size_t size)
         return true;
     const char *home = getenv("HOME");
     return home && home[0] == '/' && kr_pathf(out, size, "%s/Downloads", home);
+}
+
+const char *kr_config_get(const kr_config *c, const char *section, const char *key)
+{
+    return kr_ini_get(c->ini, section, key);
+}
+
+bool kr_config_get_bool(const kr_config *c, const char *section, const char *key, bool fallback)
+{
+    const char *v = kr_ini_get(c->ini, section, key);
+    if (!v || !*v)
+        return fallback;
+    static const char *const no[] = {"false", "no", "off", "0"};
+    static const char *const yes[] = {"true", "yes", "on", "1"};
+    for (size_t i = 0; i < 4; i++) {
+        if (strcasecmp(v, no[i]) == 0)
+            return false;
+        if (strcasecmp(v, yes[i]) == 0)
+            return true;
+    }
+    return fallback;
+}
+
+bool kr_config_plugin_enabled(const kr_config *c, const char *name)
+{
+    return kr_config_get_bool(c, "plugins", name, true);
 }

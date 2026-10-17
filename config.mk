@@ -22,7 +22,7 @@ OPTFLAGS ?= -O2 -g
 
 # Daemon libraries. Library headers go in as -isystem so -Wpedantic/-Werror
 # only judge our code.
-PKGS       = openssl
+PKGS       = openssl dbus-1
 PKG_CFLAGS = $(shell $(PKG_CONFIG) --cflags $(PKGS) | sed 's/-I/-isystem /g')
 PKG_LIBS   = $(shell $(PKG_CONFIG) --libs $(PKGS))
 

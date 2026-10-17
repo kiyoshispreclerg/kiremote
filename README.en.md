@@ -15,11 +15,14 @@ screen** (through `scrcpy-server`, with its own client, no SDL).
 
 ## Status
 
-In development: the protocol core (phase 1) is done. `kiremoted` discovers
-devices on the network, pairs, exchanges pings and sends and receives
-files; `kiremote-cli` drives it from the terminal. There is no interface,
-tray icon or notifications yet (phases 2 and 3). See [PLANO.md](PLANO.md)
-(in Portuguese) for what is planned and in which order.
+In development: the protocol core (phase 1) is done and phase 2 (plugins)
+is half way. `kiremoted` discovers devices on the network, pairs, and has:
+ping, files, battery, cellular signal, find my phone and find this
+computer, call notifications (and muting), pausing music during a call,
+the phone controlling the desktop's media players, and system volume.
+`kiremote-cli` drives it from the terminal. There is no interface or tray
+icon yet (phase 3). See [PLANO.md](PLANO.md) (in Portuguese) for what is
+planned and in which order.
 
 ## Usage
 
@@ -29,7 +32,16 @@ build/kiremote-cli -l           # paired devices and the ones around
 build/kiremote-cli -d Phone --pair        # ask to pair and wait
 build/kiremote-cli -d Phone --ping
 build/kiremote-cli -d Phone --share photo.jpg
+build/kiremote-cli -d Phone --find-phone     # the phone rings
+build/kiremote-cli -d Phone --mute-call      # silence the ringing call
+build/kiremote-cli --stop-ring               # stop the sound when the phone looks for this computer
 ```
+
+Notifications, media control and pause-on-call need a D-Bus session
+(`$DBUS_SESSION_BUS_ADDRESS`); without one the daemon still works but only
+writes to its log. Volume uses `pactl`, and the "find this computer" sound
+uses `paplay`, `pw-play` or `aplay`. Each plugin can be turned off in the
+`[plugins]` section of the .ini.
 
 On the phone, open the KDE Connect app: the computer shows up in the list.
 Either side can start pairing; both show the same verification key. When

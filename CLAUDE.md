@@ -5,8 +5,8 @@ do KDE Connect (o app oficial do Android fica do outro lado), em C11 sem
 Qt/KF5. Leia o `PLANO.md` antes de começar uma fase (arquitetura, estado de
 cada fase) e o `docs/PROTOCOL.md` antes de mexer em qualquer pacote.
 
-Fase atual: 1 feita (testada com o app Android). Próxima: 2
-(plugins do daemon).
+Fase atual: 1 feita (testada com o app Android). Fase 2 (plugins do
+daemon) em andamento: veja o `PLANO.md` para o que já foi e o que falta.
 
 O usuário escreve em português (pt-BR) e quer as respostas em português.
 Comentários e identificadores no código, em inglês. Todo texto que o usuário
@@ -49,6 +49,12 @@ LANGUAGE=en build/kiremoted --help   # o catálogo vem de build/locale
   usuário sem pedir.
 - Teste novo de comportamento entre daemons vai no `tests/net/pair.sh`;
   lógica sem rede (estados, parsers), em teste de unidade.
+- Testes de rede **nunca** usam o D-Bus ou o áudio do usuário: o socket do
+  barramento de sessão é um arquivo e atravessa o network namespace. Rode os
+  daemons com `env -u DBUS_SESSION_BUS_ADDRESS` ou num `dbus-daemon` privado
+  (`tests/net/plugins.sh`), com `pactl`/`paplay` falsos no PATH
+  (`tests/tools/`). Ao testar à mão, também não rode `pactl set-*` no som do
+  usuário.
 - Testes que gravam arquivos: `-c` e `XDG_CONFIG_HOME` apontando para um
   diretório temporário, nunca o `~/.config/kiremote` do usuário. Não leia o
   `~/.config/kdeconnect/privateKey.pem`.
@@ -71,7 +77,11 @@ LANGUAGE=en build/kiremoted --help   # o catálogo vem de build/locale
 | `src/net.c` | UDP 1716, TCP 1716–1764, endereços de broadcast, netlink |
 | `src/transfer.c` | payloads (portas 1739–1764) |
 | `src/control.c` | socket de controle, JSON por linha (veio do kikarinhas) |
-| `src/plugin*.c` | `plugins.c` (lista e capacidades), um arquivo por plugin |
+| `src/plugins.c`, `src/plugin_*.c` | lista de plugins e capacidades; um arquivo por plugin (ping, share, battery, connectivity, find, telephony, pausemusic, mpris, volume) |
+| `src/proc.c` | processos filhos sem bloquear (`pactl`, player de som), `pidfd` |
+| `src/bus.c` | D-Bus de sessão no `poll()`: chamadas assíncronas, sinais |
+| `src/notify.c` | notificações (`Notify`), cai para o log sem servidor |
+| `src/mpris.c` | players MPRIS: modelo e comandos |
 | `src/config.c` | `kiremote.ini`: dispositivo, `[network]`, `[share]` |
 | `src/ini.c` | .ini lido e editado no lugar (mantém comentários; veio do kikarinhas) |
 | `src/json.c`, `vendor/cjson/` | cJSON e caminhos `a.b[0]` |
@@ -79,6 +89,7 @@ LANGUAGE=en build/kiremoted --help   # o catálogo vem de build/locale
 | `src/i18n.c` | `setlocale` + `bindtextdomain` (procura `locale/` ao lado do executável) |
 | `src/util.c` | arquivos, caminhos (`kr_pathf` falha em vez de truncar), XDG, relógio |
 | `tests/net/pair.sh` | integração: dois daemons em network namespaces |
+| `tests/net/plugins.sh`, `tests/tools/` | integração dos plugins: celular falso (`fakephone.c`), D-Bus privado com notificações e player falsos (Python), `pactl` e `paplay` falsos |
 | `tests/fuzz/` | alvos de fuzz, `driver.c` (sem libFuzzer) e corpus |
 | `docs/PROTOCOL.md` | o protocolo, conferido no upstream |
 | `docs/UPSTREAM.md` | versões dos submódulos e divergências |

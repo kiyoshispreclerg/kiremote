@@ -276,13 +276,36 @@ Corrigido (`kr_conn_finish`: close_notify + FIN depois de enviar tudo), com
 teste que lê até o EOF (`tests/unit/test_transfer.c`); falta reconferir no
 celular.
 
-### 2. Plugins do daemon
+### 2. Plugins do daemon (em andamento)
 
 Os da tabela marcados como fase 2, mais o ícone SNI com menu. Sem GTK
 ainda: tudo pela bandeja, notificações e `kiremote-cli`.
 
 Aceite: cada plugin testado contra o app Android; medir RSS e wakeups do
 daemon ocioso (meta: < 5 MB, nenhum wakeup além do keepalive).
+
+Infraestrutura feita: fontes no laço (`kr_source`: o D-Bus, os processos
+filhos e os vigias dos plugins entram no mesmo `poll()`), `proc` (filhos sem
+bloquear, `pidfd`), `bus` (libdbus de sessão, sem autolaunch), `notify`
+(`Notify`, botões só se o servidor tiver `actions`), `mpris` (modelo dos
+players), gancho de plugins (`init`, `on_connect`, `on_disconnect`,
+`on_packet`, `request`, `describe`, estado por dispositivo) e `[plugins]` no
+.ini para ligar e desligar cada um.
+
+Feitos (testados com um celular falso em `tests/net/plugins.sh`; falta
+conferir no app de verdade): ping com notificação, bateria (nos dois
+sentidos, aviso de bateria baixa), sinal da operadora, achar o celular e
+achar este computador, telefonia (notificação da chamada, silenciar, chamada
+perdida), pausar na chamada, controle de mídia do desktop (MPRIS) e volume
+do sistema com a lista de saídas (`pactl`). Compartilhar já recebia e
+enviava arquivos.
+
+Falta da fase 2: clipboard, compartilhar texto e link (clipboard e
+`xdg-open`), notificações do celular, mousepad (XTest), apresentação,
+executar comandos, bloquear, navegar arquivos (sftp), inibir descanso de
+tela, e o ícone SNI com menu. Medido ocioso, sem barramento: 8,9 MB de RSS e
+zero acordadas em 5 s; a meta de 5 MB ainda não foi atingida (a maior parte
+é OpenSSL e libdbus carregados).
 
 ### 3. Interface GTK2
 
