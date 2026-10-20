@@ -163,6 +163,15 @@ bool kr_device_reachable(const kr_device *dev)
     return dev->link != NULL;
 }
 
+bool kr_device_address(const kr_device *dev, char *out, size_t size)
+{
+    if (size)
+        out[0] = '\0';
+    if (!dev->link || size < INET_ADDRSTRLEN)
+        return false;
+    return kr_addr_str(&kr_link_peer(dev->link)->sin_addr, out, (int)size) != NULL;
+}
+
 const kr_config *kr_daemon_config(const kr_daemon *d)
 {
     return d->cfg;

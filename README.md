@@ -45,7 +45,9 @@ escreve no log. O volume usa o `pactl`, e o som de "achar o computador",
 `paplay`, `pw-play` ou `aplay`. Cada plugin pode ser desligado na seção
 `[plugins]` do .ini. Clipboard, mouse/teclado e ponteiro de apresentação
 precisam de X11 (`$DISPLAY`); os comandos que o celular pode rodar são só os
-da seção `[runcommand]`.
+da seção `[runcommand]`. Para navegar pelos arquivos do celular
+(`kiremote-cli -d CELULAR --browse-files`) o ideal é ter o `sshfs`
+instalado; sem ele o daemon entrega o endereço `sftp://` ao `xdg-open`.
 
 No celular, abra o app do KDE Connect: o computador aparece na lista. Dá
 para parear dos dois lados; os dois mostram a mesma chave de verificação.

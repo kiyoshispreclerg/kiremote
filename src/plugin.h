@@ -60,6 +60,16 @@ extern const kr_plugin kr_plugin_mousepad;
 extern const kr_plugin kr_plugin_presenter;
 extern const kr_plugin kr_plugin_screensaver;
 extern const kr_plugin kr_plugin_lock;
+extern const kr_plugin kr_plugin_sftp;
+
+/* sftp: what we accept from the phone's kdeconnect.sftp packet before it
+ * reaches sshfs or xdg-open. */
+bool kr_sftp_user_ok(const char *user);
+bool kr_sftp_path_ok(const char *path); /* absolute, no ".." component */
+/* sftp://user:password@ip:port/path with the parts percent-encoded
+ * (password may be NULL); false if it does not fit. */
+bool kr_sftp_url(char *out, size_t size, const char *user, const char *password, const char *ip, int port,
+                 const char *path);
 
 /* clipboard: makes text the X clipboard (the phone's text, or shared text).
  * False if there is no X connection. */

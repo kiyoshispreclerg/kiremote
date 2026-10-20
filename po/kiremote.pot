@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kiremote\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-17 19:51-0300\n"
+"POT-Creation-Date: 2026-10-20 16:59-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -68,7 +68,7 @@ msgstr ""
 msgid "%s:%d: unknown device type \"%s\", using \"desktop\""
 msgstr ""
 
-#: src/config.c:79 src/daemon.c:970
+#: src/config.c:79 src/daemon.c:979
 msgid "cannot find the configuration folder (is HOME set?)"
 msgstr ""
 
@@ -85,7 +85,7 @@ msgstr ""
 msgid "TLS write error"
 msgstr ""
 
-#: src/conn.c:346 src/conn.c:400 src/conn.c:429 src/daemon.c:980 src/link.c:229
+#: src/conn.c:346 src/conn.c:400 src/conn.c:429 src/daemon.c:989 src/link.c:229
 msgid "out of memory"
 msgstr ""
 
@@ -134,168 +134,169 @@ msgstr ""
 msgid "missing \"type\""
 msgstr ""
 
-#: src/control.c:179 src/daemon.c:844
+#: src/control.c:179 src/daemon.c:853
 msgid "unknown request"
 msgstr ""
 
-#: src/daemon.c:401
+#: src/daemon.c:410
 msgid "the clocks of the two devices are too far apart"
 msgstr ""
 
-#: src/daemon.c:403
+#: src/daemon.c:412
 msgid "refused or canceled by the other device"
 msgstr ""
 
-#: src/daemon.c:405
+#: src/daemon.c:414
 msgid "canceled"
 msgstr ""
 
-#: src/daemon.c:407
+#: src/daemon.c:416 src/plugin_sftp.c:380
 msgid "timed out"
 msgstr ""
 
-#: src/daemon.c:409
+#: src/daemon.c:418
 msgid "the device is not reachable"
 msgstr ""
 
-#: src/daemon.c:423
+#: src/daemon.c:432
 #, c-format
 msgid "unpaired from %s"
 msgstr ""
 
-#: src/daemon.c:426
+#: src/daemon.c:435
 #, c-format
 msgid "pairing with %s failed: %s"
 msgstr ""
 
-#: src/daemon.c:430
+#: src/daemon.c:439
 #, c-format
 msgid ""
 "%s wants to pair; verification key %s. Accept with \"kiremote-cli -d %s --"
 "pair\", refuse with \"--unpair\"."
 msgstr ""
 
-#: src/daemon.c:436
+#: src/daemon.c:445
 #, c-format
 msgid "paired with %s, but could not save it"
 msgstr ""
 
-#: src/daemon.c:438
+#: src/daemon.c:447
 #, c-format
 msgid "paired with %s"
 msgstr ""
 
-#: src/daemon.c:501
+#: src/daemon.c:510
 #, c-format
 msgid "%s connected again with another certificate; refused"
 msgstr ""
 
-#: src/daemon.c:515
+#: src/daemon.c:524
 #, c-format
 msgid "too many unpaired devices around; ignoring %s"
 msgstr ""
 
-#: src/daemon.c:543
+#: src/daemon.c:552
 #, c-format
 msgid "connected to %s (%s, %s)"
 msgstr ""
 
-#: src/daemon.c:589
+#: src/daemon.c:598
 #, c-format
 msgid "[network] addresses: not an IPv4 address: %s"
 msgstr ""
 
-#: src/daemon.c:650
+#: src/daemon.c:659
 #, c-format
 msgid "refusing %s: it went back to an older protocol version"
 msgstr ""
 
-#: src/daemon.c:714
+#: src/daemon.c:723
 #, c-format
 msgid "cannot receive %s: %s"
 msgstr ""
 
-#: src/daemon.c:740
+#: src/daemon.c:749
 #, c-format
 msgid "no free port for sending %s"
 msgstr ""
 
-#: src/daemon.c:748
+#: src/daemon.c:757
 #, c-format
 msgid "sending %s to %s"
 msgstr ""
 
-#: src/daemon.c:800
+#: src/daemon.c:809
 msgid "missing \"device\""
 msgstr ""
 
-#: src/daemon.c:807
+#: src/daemon.c:816
 msgid "more than one device has that name; use the id"
 msgstr ""
 
-#: src/daemon.c:814
+#: src/daemon.c:823
 #, c-format
 msgid "no such device: %s"
 msgstr ""
 
-#: src/daemon.c:853
+#: src/daemon.c:862
 msgid "already paired"
 msgstr ""
 
-#: src/daemon.c:864 src/plugin_find.c:288 src/plugin_share.c:218
+#: src/daemon.c:873 src/plugin_find.c:288 src/plugin_sftp.c:596
+#: src/plugin_share.c:218
 msgid "the device is not paired"
 msgstr ""
 
-#: src/daemon.c:872
+#: src/daemon.c:881
 msgid "the device does not take pings"
 msgstr ""
 
-#: src/daemon.c:984
+#: src/daemon.c:993
 msgid "new certificate: forgetting the old pairings"
 msgstr ""
 
-#: src/daemon.c:1000
+#: src/daemon.c:1009
 #, c-format
 msgid ""
 "UDP port %d is taken (is KDE Connect running?): other devices won't be "
 "discovered, but they can still find us"
 msgstr ""
 
-#: src/daemon.c:1007
+#: src/daemon.c:1016
 #, c-format
 msgid "cannot open the network ports (%d-%d): %s"
 msgstr ""
 
-#: src/daemon.c:1033
+#: src/daemon.c:1042
 msgid "no session bus: notifications and media control are off"
 msgstr ""
 
-#: src/daemon.c:1039
+#: src/daemon.c:1048
 #, c-format
 msgid "this is %s (%s), id %s, TCP port %d"
 msgstr ""
 
-#: src/daemon.c:1220
+#: src/daemon.c:1229
 #, c-format
 msgid "disconnected from %s: %s"
 msgstr ""
 
-#: src/daemon.c:1253
+#: src/daemon.c:1262
 #, c-format
 msgid "sent %s to %s"
 msgstr ""
 
-#: src/daemon.c:1253 src/plugin_share.c:81
+#: src/daemon.c:1262 src/plugin_share.c:81
 #, c-format
 msgid "received %s from %s"
 msgstr ""
 
-#: src/daemon.c:1256
+#: src/daemon.c:1265
 #, c-format
 msgid "sending %s to %s failed: %s"
 msgstr ""
 
-#: src/daemon.c:1257
+#: src/daemon.c:1266
 #, c-format
 msgid "receiving %s from %s failed: %s"
 msgstr ""
@@ -316,6 +317,8 @@ msgid ""
 "      --share-text TEXT send text (it goes to the phone's clipboard)\n"
 "      --share-url URL   send a link (the phone opens it)\n"
 "      --find-phone      make the phone ring\n"
+"      --browse-files    mount the phone's files and open them\n"
+"      --unmount-files   unmount the phone's files\n"
 "      --stop-ring       stop this computer's sound (when the phone looks for "
 "it)\n"
 "      --mute-call       silence the phone's ringing call\n"
@@ -325,87 +328,87 @@ msgid ""
 "  -h, --help            show this help and exit\n"
 msgstr ""
 
-#: src/kiremote-cli.c:59
+#: src/kiremote-cli.c:61
 #, c-format
 msgid "cannot talk to kiremoted at %s: %s"
 msgstr ""
 
-#: src/kiremote-cli.c:66
+#: src/kiremote-cli.c:68
 msgid "invalid reply from kiremoted"
 msgstr ""
 
-#: src/kiremote-cli.c:110
+#: src/kiremote-cli.c:112
 msgid "asks to pair"
 msgstr ""
 
-#: src/kiremote-cli.c:112
+#: src/kiremote-cli.c:114
 msgid "waiting for it to accept the pairing"
 msgstr ""
 
-#: src/kiremote-cli.c:114
+#: src/kiremote-cli.c:116
 msgid "paired and reachable"
 msgstr ""
 
-#: src/kiremote-cli.c:114
+#: src/kiremote-cli.c:116
 msgid "paired, not reachable"
 msgstr ""
 
-#: src/kiremote-cli.c:116
+#: src/kiremote-cli.c:118
 msgid "reachable, not paired"
 msgstr ""
 
-#: src/kiremote-cli.c:119
+#: src/kiremote-cli.c:121
 #, c-format
 msgid ", verification key %s"
 msgstr ""
 
-#: src/kiremote-cli.c:123
+#: src/kiremote-cli.c:125
 #, c-format
 msgid ", battery %d%% (charging)"
 msgstr ""
 
-#: src/kiremote-cli.c:123
+#: src/kiremote-cli.c:125
 #, c-format
 msgid ", battery %d%%"
 msgstr ""
 
-#: src/kiremote-cli.c:128
+#: src/kiremote-cli.c:130
 #, c-format
 msgid ", signal %s %d/4"
 msgstr ""
 
-#: src/kiremote-cli.c:141
+#: src/kiremote-cli.c:143
 #, c-format
 msgid "%d device found\n"
 msgid_plural "%d devices found\n"
 msgstr[0] ""
 msgstr[1] ""
 
-#: src/kiremote-cli.c:193
+#: src/kiremote-cli.c:195
 #, c-format
 msgid ""
 "Verification key: %s\n"
 "Check that %s shows the same key and accept there.\n"
 msgstr ""
 
-#: src/kiremote-cli.c:206
+#: src/kiremote-cli.c:208
 #, c-format
 msgid "Paired with %s.\n"
 msgstr ""
 
-#: src/kiremote-cli.c:209
+#: src/kiremote-cli.c:211
 #, c-format
 msgid ""
 "pairing with %s did not complete (refused, canceled or timed out; see the "
 "daemon's log)"
 msgstr ""
 
-#: src/kiremote-cli.c:270 src/plugin_share.c:244
+#: src/kiremote-cli.c:274 src/plugin_share.c:244
 #, c-format
 msgid "cannot send %s: %s"
 msgstr ""
 
-#: src/kiremote-cli.c:316
+#: src/kiremote-cli.c:326
 msgid "say which device with -d"
 msgstr ""
 
@@ -523,7 +526,8 @@ msgstr ""
 msgid "Close this notification to stop the sound."
 msgstr ""
 
-#: src/plugin_find.c:287 src/plugin_share.c:217 src/plugin_telephony.c:122
+#: src/plugin_find.c:287 src/plugin_sftp.c:576 src/plugin_sftp.c:595
+#: src/plugin_share.c:217 src/plugin_telephony.c:122
 msgid "the device is not reachable or does not take this"
 msgstr ""
 
@@ -583,6 +587,103 @@ msgstr ""
 msgid "Phone is connected"
 msgstr ""
 
+#: src/plugin_sftp.c:196
+#, c-format
+msgid "%s: cannot browse the files: %s"
+msgstr ""
+
+#: src/plugin_sftp.c:211 src/plugin_share.c:114
+#, c-format
+msgid "cannot run xdg-open: %s"
+msgstr ""
+
+#: src/plugin_sftp.c:267
+#, c-format
+msgid "sshfs failed: %s"
+msgstr ""
+
+#: src/plugin_sftp.c:267
+msgid "no message"
+msgstr ""
+
+#: src/plugin_sftp.c:270
+#, c-format
+msgid "%s: the phone's files were unmounted (status %d)"
+msgstr ""
+
+#: src/plugin_sftp.c:295
+msgid "the path of the private key cannot be given to sshfs"
+msgstr ""
+
+#: src/plugin_sftp.c:300
+msgid "cannot prepare the folder to mount the phone's files"
+msgstr ""
+
+#: src/plugin_sftp.c:317
+#, c-format
+msgid "mounting the files of %s at %s"
+msgstr ""
+
+#: src/plugin_sftp.c:335
+#, c-format
+msgid "unmounting the files of %s"
+msgstr ""
+
+#: src/plugin_sftp.c:361
+#, c-format
+msgid "%s has been away for a while"
+msgstr ""
+
+#: src/plugin_sftp.c:368
+msgid "the device is not responding (is the permission to see files granted?)"
+msgstr ""
+
+#: src/plugin_sftp.c:375
+#, c-format
+msgid "%s: files mounted at %s"
+msgstr ""
+
+#: src/plugin_sftp.c:453
+#, c-format
+msgid "%s: the file server restarted"
+msgstr ""
+
+#: src/plugin_sftp.c:480
+#, c-format
+msgid "%s sent an incomplete sftp packet"
+msgstr ""
+
+#: src/plugin_sftp.c:485
+msgid "the device has no network address"
+msgstr ""
+
+#: src/plugin_sftp.c:490
+#, c-format
+msgid "%s sent a user name we will not use"
+msgstr ""
+
+#: src/plugin_sftp.c:504
+#, c-format
+msgid "%s sent a path we will not use"
+msgstr ""
+
+#: src/plugin_sftp.c:514
+msgid "the address is too long"
+msgstr ""
+
+#: src/plugin_sftp.c:517
+msgid "sshfs is not installed: opening the phone's address instead"
+msgstr ""
+
+#: src/plugin_sftp.c:528
+msgid "the path is too long"
+msgstr ""
+
+#: src/plugin_sftp.c:557
+#, c-format
+msgid "%s went away; its files stay mounted for %d s"
+msgstr ""
+
 #: src/plugin_share.c:55
 #, c-format
 msgid "%s sent a file, but there is no folder to save it in"
@@ -605,11 +706,6 @@ msgstr ""
 
 #: src/plugin_share.c:109
 msgid "not opening a link with an unknown kind of address"
-msgstr ""
-
-#: src/plugin_share.c:114
-#, c-format
-msgid "cannot run xdg-open: %s"
 msgstr ""
 
 #: src/plugin_share.c:155
@@ -666,7 +762,7 @@ msgstr ""
 msgid "Mute Call"
 msgstr ""
 
-#: src/plugin_volume.c:107
+#: src/plugin_volume.c:108
 msgid "pactl not found: the volume control is off"
 msgstr ""
 

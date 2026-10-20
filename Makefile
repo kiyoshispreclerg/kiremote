@@ -43,7 +43,8 @@ LIB_SRC = src/log.c \
       src/plugin_mousepad.c \
       src/plugin_presenter.c \
       src/plugin_screensaver.c \
-      src/plugin_lock.c
+      src/plugin_lock.c \
+      src/plugin_sftp.c
 VENDOR_SRC = vendor/cjson/cJSON.c
 LIBKR = $(BUILD)/libkr.a
 

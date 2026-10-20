@@ -470,7 +470,25 @@ de tela da sessão (`org.freedesktop.ScreenSaver.Inhibit`) para não apagar nem
 bloquear a tela, e devolve o pedido (`UnInhibit`, mais `SimulateUserActivity`)
 quando o último vai embora. Desligado por padrão (`EnabledByDefault: false`).
 
+### Navegar pelos arquivos (sftp)
+
+`kde/plugins/sftp/{sftpplugin,mounter}.cpp`, `and/plugins/sftp/SftpPlugin.kt`,
+`SimpleSftpServer.kt`
+
+Quem navega manda `kdeconnect.sftp.request` `{"startBrowsing": true}`. O
+celular sobe um servidor SSH e responde `kdeconnect.sftp`:
+`{"ip", "port", "user", "password", "path"}` e, com mais de um
+armazenamento, `"multiPaths": [...]` e `"pathNames": [...]` (nomes para
+mostrar). `user` é fixo (`kdeconnect`), a senha é nova a cada pedido, a porta
+fica em 1739–1764. O servidor aceita a chave pública do certificado do
+aparelho pareado (a nossa `privateKey.pem`) ou a senha. Outros pacotes do
+celular: `{"serverRunning": false}` (ao ligar o plugin e quando o servidor
+parou: quem tem a montagem pede de novo) e `{"errorMessage": "..."}` (sem
+permissão de arquivos, sem armazenamento configurado). O desktop monta com
+`sshfs user@ip:path` (com `multiPaths`, a raiz `/`) e mostra os `multiPaths`
+como pastas; só aceita o pacote se tiver pedido (`startBrowsing`) antes.
+
 ## Pendente de leitura
 
 - mDNS (`mdnsdiscovery`): serviço, campos TXT (fase 6).
-- sftp (navegar arquivos), `kdeconnect.notification.reply`, SMS e contatos.
+- `kdeconnect.notification.reply`, SMS e contatos.

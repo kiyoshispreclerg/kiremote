@@ -23,6 +23,7 @@ const kr_plugin *const kr_plugins[] = {
     &kr_plugin_presenter,
     &kr_plugin_screensaver,
     &kr_plugin_lock,
+    &kr_plugin_sftp,
     NULL,
 };
 

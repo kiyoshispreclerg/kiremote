@@ -203,6 +203,35 @@ TEST(links_xdg_open_may_get)
     CHECK(!kr_url_openable(""));
 }
 
+TEST(sftp_phone_input_is_checked)
+{
+    CHECK(kr_sftp_user_ok("kdeconnect"));
+    CHECK(kr_sftp_user_ok("a.b_c-d"));
+    CHECK(!kr_sftp_user_ok("-oProxyCommand=x"));
+    CHECK(!kr_sftp_user_ok("a@b"));
+    CHECK(!kr_sftp_user_ok("a b"));
+    CHECK(!kr_sftp_user_ok(""));
+    CHECK(!kr_sftp_user_ok(NULL));
+
+    CHECK(kr_sftp_path_ok("/"));
+    CHECK(kr_sftp_path_ok("/storage/emulated/0"));
+    CHECK(kr_sftp_path_ok("/a/..b/c.."));
+    CHECK(!kr_sftp_path_ok("storage"));
+    CHECK(!kr_sftp_path_ok("/storage/../../etc"));
+    CHECK(!kr_sftp_path_ok("/.."));
+    CHECK(!kr_sftp_path_ok("/a/.."));
+    CHECK(!kr_sftp_path_ok("/a\nb"));
+    CHECK(!kr_sftp_path_ok(NULL));
+
+    char url[128];
+    CHECK(kr_sftp_url(url, sizeof url, "kdeconnect", "p@ss:w/rd", "192.168.0.5", 1740, "/storage/emulated/0/My Files"));
+    CHECK_STR_EQ(url, "sftp://kdeconnect:p%40ss%3Aw%2Frd@192.168.0.5:1740/storage/emulated/0/My%20Files");
+    CHECK(kr_sftp_url(url, sizeof url, "u", NULL, "10.0.0.1", 22, "/"));
+    CHECK_STR_EQ(url, "sftp://u@10.0.0.1:22/");
+    CHECK(!kr_sftp_url(url, 20, "kdeconnect", "x", "192.168.0.5", 1740, "/storage"));
+    CHECK_STR_EQ(url, "");
+}
+
 TEST(utf8_validation)
 {
     CHECK(kr_utf8_valid("olá, ção 😀", strlen("olá, ção 😀")));
@@ -239,6 +268,7 @@ TEST(config_sections_can_be_walked)
 int main(void)
 {
     RUN(links_xdg_open_may_get);
+    RUN(sftp_phone_input_is_checked);
     RUN(utf8_validation);
     RUN(config_sections_can_be_walked);
     RUN(battery_from_sysfs);

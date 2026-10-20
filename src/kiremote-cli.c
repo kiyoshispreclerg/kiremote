@@ -37,6 +37,8 @@ static void usage(FILE *out)
                    "      --share-text TEXT send text (it goes to the phone's clipboard)\n"
                    "      --share-url URL   send a link (the phone opens it)\n"
                    "      --find-phone      make the phone ring\n"
+                   "      --browse-files    mount the phone's files and open them\n"
+                   "      --unmount-files   unmount the phone's files\n"
                    "      --stop-ring       stop this computer's sound (when the phone looks for it)\n"
                    "      --mute-call       silence the phone's ringing call\n"
                    "      --refresh         announce this computer on the network again\n"
@@ -217,7 +219,7 @@ int main(int argc, char **argv)
     kr_i18n_init();
     kr_log_init("kiremote-cli");
 
-    enum { O_PAIR = 256, O_UNPAIR, O_PING, O_PING_MSG, O_SHARE, O_REFRESH, O_FIND, O_STOP_RING, O_MUTE, O_SHARE_TEXT, O_SHARE_URL };
+    enum { O_PAIR = 256, O_UNPAIR, O_PING, O_PING_MSG, O_SHARE, O_REFRESH, O_FIND, O_STOP_RING, O_MUTE, O_SHARE_TEXT, O_SHARE_URL, O_BROWSE, O_UNMOUNT };
     static const struct option longopts[] = {
         {"list", no_argument, NULL, 'l'},
         {"device", required_argument, NULL, 'd'},
@@ -230,6 +232,8 @@ int main(int argc, char **argv)
         {"share-text", required_argument, NULL, O_SHARE_TEXT},
         {"share-url", required_argument, NULL, O_SHARE_URL},
         {"find-phone", no_argument, NULL, O_FIND},
+        {"browse-files", no_argument, NULL, O_BROWSE},
+        {"unmount-files", no_argument, NULL, O_UNMOUNT},
         {"stop-ring", no_argument, NULL, O_STOP_RING},
         {"mute-call", no_argument, NULL, O_MUTE},
         {"socket", required_argument, NULL, 's'},
@@ -239,7 +243,7 @@ int main(int argc, char **argv)
     };
     const char *device = NULL, *ping_msg = NULL;
     bool do_list = false, do_pair = false, do_unpair = false, do_ping = false, do_refresh = false;
-    bool do_find = false, do_stop_ring = false, do_mute = false;
+    bool do_find = false, do_stop_ring = false, do_mute = false, do_browse = false, do_unmount = false;
     const char *share_text = NULL, *share_url = NULL;
     cJSON *files = cJSON_CreateArray();
     int c;
@@ -286,6 +290,12 @@ int main(int argc, char **argv)
         case O_FIND:
             do_find = true;
             break;
+        case O_BROWSE:
+            do_browse = true;
+            break;
+        case O_UNMOUNT:
+            do_unmount = true;
+            break;
         case O_STOP_RING:
             do_stop_ring = true;
             break;
@@ -309,7 +319,7 @@ int main(int argc, char **argv)
             return 2;
         }
     }
-    bool per_device = do_pair || do_unpair || do_ping || do_find || do_mute || share_text || share_url ||
+    bool per_device = do_pair || do_unpair || do_ping || do_find || do_mute || do_browse || do_unmount || share_text || share_url ||
                       cJSON_GetArraySize(files);
     if (optind < argc || (!per_device && !do_list && !do_refresh && !do_stop_ring) || (per_device && !device)) {
         if (per_device && !device)
@@ -370,6 +380,11 @@ int main(int argc, char **argv)
     }
     if ((do_find || do_mute) && !rc) {
         cJSON *r = request(simple(do_find ? "find-phone" : "mute-call", device));
+        rc |= !r;
+        cJSON_Delete(r);
+    }
+    if ((do_browse || do_unmount) && !rc) {
+        cJSON *r = request(simple(do_browse ? "browse-files" : "unmount-files", device));
         rc |= !r;
         cJSON_Delete(r);
     }

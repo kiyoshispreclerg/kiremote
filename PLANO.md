@@ -309,9 +309,11 @@ teclado remotos (XTest), ponteiro da apresentação (XShape), bloquear (o
 Android desta revisão não tem plugin de bloqueio) e inibir o descanso de tela
 (desligado por padrão).
 
-Falta da fase 2: sftp (navegar arquivos) e responder a notificações
-(`kdeconnect.notification.reply`, que precisa de campo de resposta na
-notificação ou da interface). A bandeja de sistema não é do daemon: fica na
+Navegar arquivos (sftp) feito: `kiremote-cli --browse-files` monta com
+`sshfs` (testado só com `sshfs` falso no `tests/net/plugins.sh`; falta
+conferir no app de verdade) ou abre `sftp://`. Falta da fase 2: responder a
+notificações (`kdeconnect.notification.reply`, que precisa de campo de
+resposta na notificação ou da interface). A bandeja de sistema não é do daemon: fica na
 interface GTK (e, no KiDesktop, num widget do xispanel). Medido ocioso, sem
 barramento: 8,9 MB de RSS e zero acordadas em 5 s; a meta de 5 MB ainda não
 foi atingida (a maior parte é OpenSSL e libs de X e D-Bus carregadas).

@@ -88,6 +88,9 @@ const char *kr_device_id(const kr_device *dev);
 const char *kr_device_name(const kr_device *dev);
 bool kr_device_paired(const kr_device *dev);
 bool kr_device_reachable(const kr_device *dev);
+/* Its IPv4 address as text ("192.168.0.5") while a link is up; false (and
+ * an empty string) otherwise. */
+bool kr_device_address(const kr_device *dev, char *out, size_t size);
 
 const kr_config *kr_daemon_config(const kr_daemon *d);
 

@@ -95,8 +95,8 @@ pids="$pids $!"
 wait_for 10 has "$tmp/notes.log" READY || fail "notification mock did not start"
 wait_for 10 has "$tmp/player.log" READY || fail "player mock did not start"
 
-printf '[device]\nname = Alfa\n[share]\ndir = %s\n[battery]\npower_supply_dir = %s\n' \
-    "$tmp/share" "$tmp/power" >"$tmp/kiremote.ini"
+printf '[device]\nname = Alfa\n[share]\ndir = %s\n[battery]\npower_supply_dir = %s\n[sftp]\nsshfs = %s/bin/sshfs\n' \
+    "$tmp/share" "$tmp/power" "$tmp" >"$tmp/kiremote.ini"
 XDG_CONFIG_HOME=$tmp/cfg XDG_RUNTIME_DIR=$tmp/run HOME=$tmp \
     "$build/kiremoted" -v -c "$tmp/kiremote.ini" >"$tmp/a.log" 2>&1 &
 daemon=$!
@@ -107,8 +107,8 @@ id_a=$(sed -n 's/.*this is Alfa.*id \([0-9a-f]*\),.*/\1/p' "$tmp/a.log")
 cli() { "$build/kiremote-cli" -s "$tmp/run/kiremote.sock" "$@"; }
 
 # ---- the phone ------------------------------------------------------------------------
-IN="kdeconnect.ping,kdeconnect.share.request,kdeconnect.battery,kdeconnect.findmyphone.request,kdeconnect.telephony.request_mute,kdeconnect.mpris,kdeconnect.systemvolume"
-OUT="kdeconnect.ping,kdeconnect.share.request,kdeconnect.battery,kdeconnect.connectivity_report,kdeconnect.findmyphone.request,kdeconnect.telephony,kdeconnect.mpris.request,kdeconnect.systemvolume.request"
+IN="kdeconnect.ping,kdeconnect.share.request,kdeconnect.battery,kdeconnect.findmyphone.request,kdeconnect.telephony.request_mute,kdeconnect.mpris,kdeconnect.systemvolume,kdeconnect.sftp.request"
+OUT="kdeconnect.ping,kdeconnect.share.request,kdeconnect.battery,kdeconnect.connectivity_report,kdeconnect.findmyphone.request,kdeconnect.telephony,kdeconnect.mpris.request,kdeconnect.systemvolume.request,kdeconnect.sftp"
 mkfifo "$tmp/phone.in"
 "$build/tests/fakephone" -d "$tmp/phone" -t 127.0.0.1:1716 -i "$id_a" -n "Fake Phone" -I "$IN" -O "$OUT" \
     <>"$tmp/phone.in" >"$tmp/phone.out" 2>&1 &
@@ -222,6 +222,8 @@ wait_for 5 phone_has '"isPlaying":false' || fail "status change was not pushed"
 
 # ---- volume --------------------------------------------------------------------------------------------------
 has "$tmp/pactl/log" subscribe || fail "pactl subscribe is not running while a phone is connected"
+# the Android app never asks: the list comes with the connection
+wait_for 5 phone_has '"sinkList"' || fail "the sink list was not sent on connect"
 send '{"type":"kdeconnect.systemvolume.request","body":{"requestSinks":true}}'
 wait_for 5 phone_has '"sinkList"' || fail "sink list"
 phone_has '"name":"sink-a","muted":false,"description":"Speakers","volume":20000,"maxVolume":65536,"enabled":true' ||
@@ -242,6 +244,51 @@ has "$tmp/pactl/log" "evil" && fail "a name that is not a sink reached pactl"
 sed -i 's/"value":16373/"value":40000/; s/"value":20000/"value":40000/' "$tmp/pactl/sinks.json"
 echo "Event 'change' on sink #0" >>"$tmp/pactl/events"
 wait_for 5 phone_has '"volume":40000,"name":"sink-a"' || fail "volume change was not pushed"
+
+# ---- sftp: sshfs gets what the phone said, and nothing it should not ----------------------
+cat >"$tmp/bin/sshfs" <<FAKE
+#!/bin/sh
+echo "\$*" >>"$tmp/sshfs.log"
+echo "fuse: bad mount point" >&2
+exit 1
+FAKE
+printf '#!/bin/sh\necho "$*" >>"%s/xdg-open.log"\n' "$tmp" >"$tmp/bin/xdg-open"
+chmod +x "$tmp/bin/sshfs" "$tmp/bin/xdg-open"
+: >"$tmp/sshfs.log"; : >"$tmp/xdg-open.log"
+SFTP='"user":"kdeconnect","password":"s3cr3t","port":1745,"path":"/storage/emulated/0"'
+# a packet nobody asked for is ignored
+send "{\"type\":\"kdeconnect.sftp\",\"body\":{$SFTP}}"
+sleep 0.5
+[ ! -s "$tmp/sshfs.log" ] || fail "an unrequested sftp packet reached sshfs"
+cli -d "$id_p" --browse-files || fail "browse-files"
+wait_for 5 phone_has '"startBrowsing":true' || fail "the phone was not asked to start its server"
+send '{"type":"kdeconnect.sftp","body":{"user":"-oProxyCommand=x","password":"p","port":1745,"path":"/"}}'
+sleep 0.5
+[ ! -s "$tmp/sshfs.log" ] || fail "a user name that looks like an option reached sshfs"
+cli -d "$id_p" --browse-files || fail "browse-files (2)"
+send "{\"type\":\"kdeconnect.sftp\",\"body\":{$SFTP}}"
+wait_for 5 test -s "$tmp/sshfs.log" || fail "sshfs was not run"
+has "$tmp/sshfs.log" "kdeconnect@127.0.0.1:/storage/emulated/0 $tmp/run/kiremote-sftp-$id_p -p 1745 -s -f" ||
+    fail "sshfs arguments: $(cat "$tmp/sshfs.log")"
+has "$tmp/sshfs.log" "IdentityFile=$tmp/cfg/kiremote/privateKey.pem" || fail "sshfs key"
+has "$tmp/sshfs.log" "s3cr3t" && fail "the password went to sshfs"
+wait_for 5 has "$tmp/notes.log" "sshfs failed: fuse: bad mount point" || fail "no notification for the sshfs failure"
+# multiPaths: "/" is mounted, the first storage is what would open
+: >"$tmp/sshfs.log"
+cli -d "$id_p" --browse-files || fail "browse-files (3)"
+send '{"type":"kdeconnect.sftp","body":{"user":"kdeconnect","password":"p","port":1746,"path":"/storage/emulated/0","multiPaths":["/storage/emulated/0","/storage/ABCD-1234"],"pathNames":["Internal","SD"]}}'
+wait_for 5 has "$tmp/sshfs.log" "kdeconnect@127.0.0.1:/ " || fail "multiPaths should mount /: $(cat "$tmp/sshfs.log")"
+# without sshfs, the address goes to xdg-open
+rm "$tmp/bin/sshfs"
+cli -d "$id_p" --browse-files || fail "browse-files (4)"
+send "{\"type\":\"kdeconnect.sftp\",\"body\":{$SFTP}}"
+wait_for 5 has "$tmp/xdg-open.log" "sftp://kdeconnect:s3cr3t@127.0.0.1:1745/storage/emulated/0" ||
+    fail "sftp:// was not opened: $(cat "$tmp/xdg-open.log")"
+# an error from the phone becomes a notification
+cli -d "$id_p" --browse-files || fail "browse-files (5)"
+send '{"type":"kdeconnect.sftp","body":{"errorMessage":"No storage permission"}}'
+wait_for 5 has "$tmp/notes.log" "No storage permission" || fail "the phone's error was not shown"
+echo "sftp ok"
 
 # ---- clean exit ------------------------------------------------------------------------------------------------
 exec 7>&-

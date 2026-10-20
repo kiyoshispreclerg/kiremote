@@ -6,8 +6,8 @@ Qt/KF5. Leia o `PLANO.md` antes de começar uma fase (arquitetura, estado de
 cada fase) e o `docs/PROTOCOL.md` antes de mexer em qualquer pacote.
 
 Fase atual: 1 feita (testada com o app Android). Fase 2 (plugins do
-daemon) quase pronta: falta sftp e a resposta a notificações; veja o
-`PLANO.md`.
+daemon) quase pronta: falta a resposta a notificações (sftp feito, só testado
+com `sshfs` falso); veja o `PLANO.md`.
 
 O usuário escreve em português (pt-BR) e quer as respostas em português.
 Comentários e identificadores no código, em inglês. Todo texto que o usuário
@@ -64,6 +64,9 @@ LANGUAGE=en build/kiremoted --help   # o catálogo vem de build/locale
 - Testes que gravam arquivos: `-c` e `XDG_CONFIG_HOME` apontando para um
   diretório temporário, nunca o `~/.config/kiremote` do usuário. Não leia o
   `~/.config/kdeconnect/privateKey.pem`.
+- O daemon e a CLI fixam `LC_NUMERIC=C` (`kr_i18n_init`): sem isso, em pt_BR
+  o cJSON não lê nem escreve números fracionários. Código novo que use
+  `strtod`/`printf("%f")` herda isso; não chame `setlocale(LC_ALL, ...)` depois.
 - Mudar `VERSION` ou outro `-D` de `config.mk` não força recompilação: dê
   `make clean`.
 
@@ -83,7 +86,7 @@ LANGUAGE=en build/kiremoted --help   # o catálogo vem de build/locale
 | `src/net.c` | UDP 1716, TCP 1716–1764, endereços de broadcast, netlink |
 | `src/transfer.c` | payloads (portas 1739–1764) |
 | `src/control.c` | socket de controle, JSON por linha (veio do kikarinhas) |
-| `src/plugins.c`, `src/plugin_*.c` | lista de plugins e capacidades; um arquivo por plugin (ping, share, battery, connectivity, find, telephony, pausemusic, mpris, volume, clipboard, notifications, runcommand, mousepad, presenter, screensaver, lock) |
+| `src/plugins.c`, `src/plugin_*.c` | lista de plugins e capacidades; um arquivo por plugin (ping, share, battery, connectivity, find, telephony, pausemusic, mpris, volume, clipboard, notifications, runcommand, mousepad, presenter, screensaver, lock, sftp) |
 | `src/proc.c` | processos filhos sem bloquear (`pactl`, player de som), `pidfd` |
 | `src/bus.c` | D-Bus de sessão no `poll()`: chamadas assíncronas, sinais |
 | `src/notify.c` | notificações (`Notify`), cai para o log sem servidor |

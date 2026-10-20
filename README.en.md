@@ -21,7 +21,7 @@ ping, files, battery, cellular signal, find my phone and find this
 computer, call notifications (and muting), pausing music during a call,
 the phone controlling the desktop's media players, system volume, a shared
 clipboard, text and links, the phone's notifications on the desktop, remote
-commands, the phone as mouse and keyboard, a presentation pointer, locking
+commands, the phone as mouse and keyboard, browsing the phone's files, a presentation pointer, locking
 and (optionally) keeping the screen awake. `kiremote-cli` drives it from the
 terminal. There is no interface or tray
 icon yet (phase 3). See [PLANO.md](PLANO.md) (in Portuguese) for what is
@@ -48,7 +48,9 @@ writes to its log. Volume uses `pactl`, and the "find this computer" sound
 uses `paplay`, `pw-play` or `aplay`. Each plugin can be turned off in the
 `[plugins]` section of the .ini. The clipboard, mouse/keyboard and
 presentation pointer need X11 (`$DISPLAY`); the commands the phone may run
-are only the ones in the `[runcommand]` section.
+are only the ones in the `[runcommand]` section. To browse the phone's files
+(`kiremote-cli -d PHONE --browse-files`) `sshfs` is the best way; without it
+the daemon hands the `sftp://` address to `xdg-open`.
 
 On the phone, open the KDE Connect app: the computer shows up in the list.
 Either side can start pairing; both show the same verification key. When

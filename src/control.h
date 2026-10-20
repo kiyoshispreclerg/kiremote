@@ -12,6 +12,8 @@
  *   {"type":"unpair","device":...}              unpair, or refuse a request
  *   {"type":"ping","device":...,"message":"opt"}
  *   {"type":"share","device":...,"paths":["/abs/file",...]}
+ *   {"type":"browse-files","device":...}        mount the phone's files and open them
+ *   {"type":"unmount-files","device":...}
  *   {"type":"refresh"}                          announce ourselves again
  *   {"type":"version"}                          → {"ok":true,"version":"..."}
  *

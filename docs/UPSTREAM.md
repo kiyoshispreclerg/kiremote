@@ -47,3 +47,5 @@ Lugares onde o Kiremote faz diferente do kdeconnect-kde de propósito.
 | Digitar texto | libfakekey | XTest; caracteres fora do layout usam um keycode livre emprestado, com espera entre eles |
 | Movimento fracionário do mouse | trunca cada `dx`/`dy` | guarda a fração e soma no próximo |
 | Comandos do celular | lista em JSON no config do KDE | seção `[runcommand]` do .ini (o nome da linha é a chave) |
+| Navegar pelos arquivos | `sshfs` com a chave do aparelho e `password_stdin`; abre `kdeconnect://` no Dolphin | `sshfs` só com a chave (`BatchMode`, `IdentitiesOnly`; a senha não vai a processo nenhum); abre a pasta montada com `xdg-open`. Sem `sshfs`, `xdg-open sftp://usuário:senha@ip:porta/caminho`. Usa o endereço do link, não o `ip` do pacote; valida `user` (`[A-Za-z0-9_.-]`, sem `-` no começo) e `path` (absoluto, sem `..`); ignora pacotes que não pediu; `[sftp] sshfs = PROGRAMA` troca o programa |
+| Número com vírgula decimal (locale pt_BR) | o Qt lê JSON sem olhar o locale | `LC_NUMERIC` fica em `C` no daemon e na CLI (`kr_i18n_init`): o cJSON usa `strtod`/`printf`, e com vírgula decimal rejeitava todo `dx`/`dy` do ponteiro da apresentação |
