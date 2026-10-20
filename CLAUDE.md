@@ -7,7 +7,10 @@ cada fase) e o `docs/PROTOCOL.md` antes de mexer em qualquer pacote.
 
 Fase atual: 1 feita (testada com o app Android). Fase 2 (plugins do
 daemon) quase pronta: falta a resposta a notificações (sftp feito, só testado
-com `sshfs` falso); veja o `PLANO.md`.
+com `sshfs` falso). Fase 3 (interfaces `kiremote-gtk` e
+`kiremote-kidesktop`, que compartilham a `libkrui`) em andamento: 3a (API do
+daemon) e 3b (`krclient`/`krmodel`) feitas; próxima, 3c (`libkrui` e o
+`kiremote`). Veja o `PLANO.md`, seção 3.
 
 O usuário escreve em português (pt-BR) e quer as respostas em português.
 Comentários e identificadores no código, em inglês. Todo texto que o usuário
@@ -85,7 +88,10 @@ LANGUAGE=en build/kiremoted --help   # o catálogo vem de build/locale
 | `src/trust.c` | aparelhos confiáveis (`trusted/<id>.pem` e `.ini`) |
 | `src/net.c` | UDP 1716, TCP 1716–1764, endereços de broadcast, netlink |
 | `src/transfer.c` | payloads (portas 1739–1764) |
-| `src/control.c` | socket de controle, JSON por linha (veio do kikarinhas) |
+| `src/control.c` | socket de controle, JSON por linha (veio do kikarinhas); assinantes de eventos com fila de saída limitada |
+| `src/schema.c` | a lista das opções do `.ini` (tipo, validação, padrão, texto traduzido): as interfaces e a CLI se montam dela |
+| `ui/krmodel.c` | estado dos aparelhos, ordem, textos e ações, sem GTK (as duas interfaces e o widget do xispanel usam) |
+| `ui/krclient.c` | cliente assíncrono do socket com reconexão, sem GLib; quem hospeda liga o fd no laço |
 | `src/plugins.c`, `src/plugin_*.c` | lista de plugins e capacidades; um arquivo por plugin (ping, share, battery, connectivity, find, telephony, pausemusic, mpris, volume, clipboard, notifications, runcommand, mousepad, presenter, screensaver, lock, sftp) |
 | `src/proc.c` | processos filhos sem bloquear (`pactl`, player de som), `pidfd` |
 | `src/bus.c` | D-Bus de sessão no `poll()`: chamadas assíncronas, sinais |
@@ -98,7 +104,7 @@ LANGUAGE=en build/kiremoted --help   # o catálogo vem de build/locale
 | `src/log.c` | log em stderr com nome do programa; `-v` liga o debug |
 | `src/i18n.c` | `setlocale` + `bindtextdomain` (procura `locale/` ao lado do executável) |
 | `src/util.c` | arquivos, caminhos (`kr_pathf` falha em vez de truncar), XDG, relógio |
-| `tests/net/pair.sh` | integração: dois daemons em network namespaces |
+| `tests/net/pair.sh` | integração: dois daemons em network namespaces (também eventos, arquivo de estado e `--set`) |
 | `tests/net/plugins.sh`, `tests/net/desktop.sh`, `tests/tools/` | integração dos plugins: celular falso (`fakephone.c`, serve payloads), D-Bus de sessão e de sistema privados com serviços falsos (Python), Xvfb, `xtool.c`, `pactl`/`paplay`/`xdg-*` falsos |
 | `tests/fuzz/` | alvos de fuzz, `driver.c` (sem libFuzzer) e corpus |
 | `docs/PROTOCOL.md` | o protocolo, conferido no upstream |

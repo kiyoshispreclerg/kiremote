@@ -37,6 +37,11 @@ build/kiremote-cli -d Celular --mute-call    # silencia a chamada que toca
 build/kiremote-cli --stop-ring               # para o som quando o celular procura o computador
 build/kiremote-cli -d Celular --share-text "oi"   # vai para o clipboard do celular
 build/kiremote-cli -d Celular --share-url https://exemplo.org
+build/kiremote-cli --status                  # o daemon e os aparelhos (com --json, para scripts)
+build/kiremote-cli --schema                  # todas as configurações, com o texto de cada uma
+build/kiremote-cli --get clipboard.auto_share
+build/kiremote-cli --set clipboard.auto_share=off   # grava no .ini, mantendo os comentários
+build/kiremote-cli --watch                   # eventos (aparelho mudou, pedido de pareamento...) em JSON
 ```
 
 Notificações, controle de mídia e pausar na chamada precisam de uma sessão

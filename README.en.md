@@ -40,6 +40,11 @@ build/kiremote-cli -d Phone --mute-call      # silence the ringing call
 build/kiremote-cli --stop-ring               # stop the sound when the phone looks for this computer
 build/kiremote-cli -d Phone --share-text "hi"     # goes to the phone's clipboard
 build/kiremote-cli -d Phone --share-url https://example.org
+build/kiremote-cli --status                  # the daemon and the devices (--json for scripts)
+build/kiremote-cli --schema                  # every setting, with its description
+build/kiremote-cli --get clipboard.auto_share
+build/kiremote-cli --set clipboard.auto_share=off   # written to the .ini, comments kept
+build/kiremote-cli --watch                   # events (device changed, pairing request...) as JSON
 ```
 
 Notifications, media control and pause-on-call need a D-Bus session

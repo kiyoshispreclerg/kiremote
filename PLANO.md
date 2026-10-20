@@ -43,7 +43,8 @@ kiremoted         (C11, sem GTK; laço único com poll(), sem threads)
  ├─ D-Bus          Notify, MPRIS, item da bandeja (SNI + DBusMenu)
  └─ socket unix    $XDG_RUNTIME_DIR/kiremote.sock, JSON por linha
 kiremote          (GTK2, abre sob demanda: dispositivos, pareamento, SMS,
-                   envio de arquivos, controle de mídia, configurações)
+                   envio de arquivos, controle de mídia, configurações;
+                   a fase 3 também o oferece como módulos do KiDesktop)
 kiremote-cli      (sem GTK: listar, parear, ping, enviar arquivo, scripts)
 kiremote-mirror   (Xlib + Xv/XShm + libavcodec + ALSA; um processo por
                    celular espelhado, iniciado pelo daemon ou pela interface)
@@ -202,7 +203,10 @@ Metas: 1080p60 decodificado por software com uma fração de um núcleo;
 RSS do `kiremote-mirror` dominado pelo libavcodec, e ele só existe com a
 janela aberta.
 
-## Interface (kiremote, GTK2)
+## Interface (kiremote, GTK2; e a versão KiDesktop)
+
+O conteúdo abaixo vale para as duas interfaces: ambas montam as mesmas
+telas a partir da `libkrui` (ver fase 3).
 
 - Lista de dispositivos (pareados e visíveis), estado, bateria, sinal.
 - Diálogo de pareamento com a chave de verificação (o daemon abre a
@@ -318,10 +322,143 @@ interface GTK (e, no KiDesktop, num widget do xispanel). Medido ocioso, sem
 barramento: 8,9 MB de RSS e zero acordadas em 5 s; a meta de 5 MB ainda não
 foi atingida (a maior parte é OpenSSL e libs de X e D-Bus carregadas).
 
-### 3. Interface GTK2
+### 3. Interfaces: `kiremote-gtk` e `kiremote-kidesktop`
 
-`kiremote`: dispositivos, pareamento, envio de arquivos, controle de
-mídia do celular, teclado remoto, configurações.
+Duas interfaces equivalentes (mesmas funções, mesmas configurações), em
+dois pacotes. Uma é para qualquer desktop; a outra é a mesma coisa
+integrada ao KiDesktop. O ponto é que **só o hospedeiro muda**: nada de
+lógica, de lista de configurações nem de texto é escrito duas vezes.
+
+```
+kiremoted ── socket ──┬─ libkrui.a (GTK2, -fPIC)  ← toda a interface vive aqui
+                      │    krclient  cliente assíncrono do socket (GLib)
+                      │    krmodel   estado → structs/textos, sem GTK (testado)
+                      │    widgets   kr_ui_devices_new(), kr_ui_settings_new(),
+                      │              kr_ui_pair_dialog(), kr_ui_device_menu()...
+                      ├─ kiremote            hospedeiro 1: janela + GtkStatusIcon
+                      └─ kiremote-kidesktop  hospedeiro 2: três módulos finos
+                           kiconf   aba "Kiremote"      (settings)
+                           xisserve página --kiremote   (devices + ações)
+                           xispanel widget kiremote     (ícone/badge, sem GTK)
+```
+
+Os pontos de extensão do KiDesktop já existem e preveem o Kiremote pelo
+nome (`xispanel_widget.h`, `xisserve_page.h`, `kiconf/plugins.h`):
+
+- **kiconf**: `kiremote.desktop` em `<datadir>/kiconf/tabs` com
+  `X-KiConf-Module=kiremote-tab.so`, que exporta
+  `GtkWidget *kiconf_tab_build(void)` → `kr_ui_settings_new()`.
+- **xisserve**: `kiremote.so` em `<libdir>/xisserve/pages`
+  (`xisserve --kiremote`), exporta `xisserve_page_entry()` →
+  `kr_ui_devices_new()` em versão compacta (lista, bateria, sinal, menu
+  de ações: ping, achar, enviar arquivo, navegar arquivos, mais; botões de
+  desconectar e de parear/conectar novo).
+- **xispanel**: `kiremote.so` em `<libdir>/xispanel/widgets` (+
+  `kiremote.widget`), exporta `xispanel_widget_entry()`. Roda dentro do
+  xispanel, sem GTK e sem bloquear: só desenha o ícone com o badge
+  (aparelhos conectados / pedido de pareamento) e o tooltip; o clique chama
+  `xpw_open_xisserve(w, NULL, "--kiremote")`. Usa o `krmodel`, não o GTK.
+
+**Decisões de desenho**
+
+1. *Uma verdade só: o daemon.* Nenhuma interface lê o `.ini` nem fala o
+   protocolo; tudo passa pelo socket de controle. Assim as duas veem as
+   mesmas coisas e uma mudança de configuração vale para ambas e para a
+   CLI.
+2. *Configurações geradas de um esquema.* O daemon declara cada chave
+   (seção, nome, tipo, padrão, texto traduzido, dependência de plugin) e
+   responde por `config-schema`/`config-get`/`config-set`. `kr_ui_settings_new()`
+   monta a tela a partir disso. Plugin novo ou opção nova aparece nas duas
+   interfaces sem tocar em código de interface, e o `kiremote-cli --set`
+   ganha de graça.
+3. *Biblioteca estática privada (`libkrui.a`), não `.so` compartilhada.*
+   Ela é ligada nos módulos e no `kiremote`. As duas interfaces
+   dependem de `kiremote (= ${binary:Version})`, então não há ABI para
+   versionar nem pacote `libkrui0` para manter. Custo: o código vai
+   duplicado em até 3 objetos (alguns KB), aceitável.
+4. *Estado para o widget sem socket.* O `xispanel` não deixa o módulo
+   registrar fds, só `xpw_async()` e ticks. O daemon mantém
+   `$XDG_RUNTIME_DIR/kiremote-status.json` (escrito por rename, só quando
+   algo muda); o widget confere o mtime no tick e relê. Sem processo filho
+   por atualização e sem GTK no xispanel. (Plano B: `xpw_async("kiremote-cli
+   --status")`.)
+5. *Bandeja sem duplicar.* `[ui] tray = auto`: o `kiremote` só põe o
+   `GtkStatusIcon` se não estiver no KiDesktop (onde o widget do xispanel
+   faz isso). Os dois pacotes podem ficar instalados juntos.
+6. *Gettext único.* O mesmo domínio `kiremote`; `ui/` entra no
+   `po/POTFILES.in`. Os `.mo` ficam no pacote `kiremote`.
+
+**Árvore e build**
+
+```
+src/        daemon e CLI (como hoje; sem GTK)
+ui/         libkrui: krclient.c, krmodel.c, widgets, settings.c  (GTK2)
+ui/gtk/     main do kiremote (janela, status icon, --pair <id>)
+kidesktop/  tab.c, page.c, widget.c + .desktop/.widget
+debian/     um fonte, quatro binários (abaixo)
+```
+
+O Makefile liga as partes por `pkg-config`: `gtk+-2.0` → `libkrui` e
+`kiremote`; cabeçalhos `xisserve_page.h`/`xispanel_widget.h`/`plugins.h`
+presentes → módulos do KiDesktop. Sem eles, o daemon e a CLI continuam
+compilando sozinhos.
+
+**Pacotes** (fonte único `kiremote`)
+
+| Pacote | Conteúdo | Depende de |
+|---|---|---|
+| `kiremote` | `kiremoted`, `kiremote-cli`, `.mo`, autostart | openssl, dbus, x11… |
+| `kiremote-gtk` | `kiremote`, `.desktop`, ícones | `kiremote (= v)`, GTK2 |
+| `kiremote-kidesktop` | `kiremote-tab.so` + `.desktop`, página, widget | `kiremote (= v)`, `kidesktop-core (>= ABI)` |
+| `kiremote-mirror` (fase 5) | `kiremote-mirror` | libavcodec, Xv… |
+
+O ABI do widget/página (`XISPANEL_WIDGET_ABI`, `XISSERVE_PAGE_ABI` = 1) é
+verificado em tempo de execução pelo KiDesktop; o pacote registra o ABI
+contra o qual foi compilado no `Depends`.
+
+**Etapas**
+
+- **3a. API do daemon para interfaces (feita).** Sem GTK. No socket:
+  `status` (nome, versão, pid e os aparelhos com bateria, sinal, `plugins`
+  que fazem algo com aquele aparelho, `locked`), `subscribe` (eventos
+  `device`, `removed`, `pair-request`, `config`, uma linha cada; cliente que
+  não lê é derrubado depois de 256 KB pendentes), `config-schema`,
+  `config-get`, `config-set` (valor vazio ou nulo volta ao padrão; a
+  resposta diz se precisa reiniciar) e o arquivo
+  `$XDG_RUNTIME_DIR/kiremote-status.json` ao lado do socket (escrito por
+  rename quando algo muda, apagado ao sair; com outro `-s`, fica ao lado
+  desse socket, então os testes não tocam o do usuário). O esquema
+  (`src/schema.c`) é a única lista de opções: tipo, validação, padrão,
+  texto traduzido, se precisa reiniciar, de qual plugin depende; um teste
+  garante que todo plugin tem seu interruptor. `kr_config_set/unset/save`
+  editam o `.ini` no lugar, mantendo comentários. CLI: `--status`,
+  `--schema`, `--get [KEY]`, `--set KEY=VALUE`, `--unset KEY`, `--watch`,
+  `--json`. Não entrou: eventos de chamada (a telefonia segue só por
+  notificação) e o diálogo de resposta a notificações.
+- **3b. `krclient` e `krmodel` (feitas).** Em `ui/`, C puro (sem GTK nem
+  GLib; hoje dentro do `libkr.a`, a `libkrui` com widgets vem na 3c).
+  `krmodel`: estado → structs, ordem da lista (pedidos de pareamento,
+  conectados, ausentes, os outros; por nome), textos (“80% (carregando)”,
+  “LTE 3/4”, “Conectado”), dica do painel, **ações** de cada aparelho
+  (`kr_dev_actions`: o mesmo menu nas duas interfaces) e os pedidos que elas
+  mandam, e leitura do arquivo de estado para o widget (com checagem do pid).
+  `krclient`: assina os eventos, mantém o modelo, manda pedidos com
+  resposta por callback na ordem, reconecta sozinho (1 s, até 5 s); quem
+  hospeda só liga o fd no seu laço. Testes: `test_schema`, `test_control`,
+  `test_model`, `test_client` e os eventos/configuração no `pair.sh`.
+- **3c. `libkrui` e `kiremote`**: lista, diálogo de pareamento (a chave de
+  verificação), menu de ações, configurações, envio de arquivos
+  (diálogo e arrastar-soltar), texto/URL. Teste no Xvfb (como o
+  `tests/net/desktop.sh`).
+- **3d. Módulos do KiDesktop**: aba do kiconf, página do xisserve, widget
+  do xispanel. Teste: `XISSERVE_PAGE_PATH`/`XISPANEL_WIDGET_PATH`/
+  `KICONF` apontando para `build/`, em Xvfb.
+- **3e. Empacotamento e CI**: `debian/`, `.deb` dos quatro pacotes, CI
+  rodando `make test`/`asan` com gcc e clang e conferindo que o pacote
+  `-kidesktop` instala sem o `-gtk` e vice-versa.
+- Depois (já na fase 3 pelo escopo original): controle de mídia do celular
+  e teclado remoto na interface; resposta a notificações (fecha o que
+  falta da fase 2).
 
 ### 4. SMS e contatos
 

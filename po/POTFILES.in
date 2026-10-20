@@ -17,5 +17,8 @@ src/plugin_sftp.c
 src/plugin_share.c
 src/plugin_telephony.c
 src/plugin_volume.c
+src/schema.c
 src/transfer.c
+ui/krclient.c
+ui/krmodel.c
 src/trust.c
