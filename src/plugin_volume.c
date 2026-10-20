@@ -15,6 +15,7 @@
  *                  "enabled"}, ...]}
  *   {"name", "volume"} | {"name", "muted"} | {"name", "enabled"}  on changes
  *
+ * The list is also sent on every connection (the Android app does not ask).
  * `pactl subscribe` runs only while a paired device is connected. Sink
  * names are only accepted if they were in the last list we read. */
 #include <stdio.h>
@@ -314,7 +315,12 @@ static void on_connect(kr_daemon *d, kr_device *dev)
         st.source = kr_daemon_add_source(d, &(kr_source){NULL, src_dispatch, src_deadline}, d);
     if (st.users++ == 0)
         start_subscribe(d);
-    start_refresh(d); /* a first read, so requests have names to match */
+    /* The list goes to the phone as soon as it is read, without being asked:
+     * the Android app never sends requestSinks (the upstream desktop sends
+     * the list from connected()). Without send_full, a second connection
+     * would see an unchanged list and get nothing. */
+    st.send_full = true;
+    start_refresh(d);
 }
 
 static void on_disconnect(kr_daemon *d, kr_device *dev)
