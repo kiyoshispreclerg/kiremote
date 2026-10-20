@@ -30,6 +30,7 @@ TEST(upload_closes_when_done)
     CHECK(fd >= 0);
     unlink(path);
     char *data = malloc(n);
+    CHECK(data != NULL);
     for (size_t i = 0; i < n; i++)
         data[i] = (char)(i * 31 + 7);
     CHECK(write(fd, data, n) == (ssize_t)n);

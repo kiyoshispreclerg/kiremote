@@ -1592,7 +1592,7 @@ void kr_daemon_dispatch(kr_daemon *d, const struct pollfd *fds, int n)
     pump_devices(d, now);
 
     /* Control requests last: they may start transfers and send packets. */
-    struct pollfd cfds[32];
+    struct pollfd cfds[32] = {{0}};
     int nc = 0;
     for (int i = 0; i < n && i < d->n_slots && nc < 32; i++)
         if (d->slots[i].kind == S_CONTROL)

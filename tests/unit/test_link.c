@@ -115,6 +115,7 @@ TEST(handshake_and_packets)
     kr_packet *big = kr_packet_new("kdeconnect.big");
     size_t n = 3u << 20;
     char *blob = malloc(n + 1);
+    CHECK(blob != NULL);
     memset(blob, 'x', n);
     blob[n] = '\0';
     cJSON_AddStringToObject(big->body, "blob", blob);

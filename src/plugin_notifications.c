@@ -176,7 +176,7 @@ static void present(entry *e)
         return;
     kr_notify *n = kr_daemon_notify(e->st->d);
     const char *acts[2 * MAX_ACTIONS + 1];
-    char keys[MAX_ACTIONS][8];
+    char keys[MAX_ACTIONS][16];
     int k = 0;
     for (int i = 0; i < e->n_actions; i++) {
         snprintf(keys[i], sizeof keys[i], "a%d", i);

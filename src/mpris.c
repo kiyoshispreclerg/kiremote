@@ -489,7 +489,7 @@ kr_mpris *kr_mpris_new(kr_bus *bus)
     m->bus = bus;
     if (kr_bus_alive(bus)) {
         kr_bus_listen(bus,
-                      "type='signal',sender='" DBUS_SERVICE_DBUS "',interface='" DBUS_INTERFACE_DBUS
+                      "type='signal',sender='org.freedesktop.DBus',interface='org.freedesktop.DBus"
                       "',member='NameOwnerChanged',arg0namespace='org.mpris.MediaPlayer2'",
                       on_signal, m);
         kr_bus_listen(bus,
