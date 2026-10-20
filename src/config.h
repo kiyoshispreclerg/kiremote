@@ -60,6 +60,17 @@ bool kr_config_get_bool(const kr_config *c, const char *section, const char *key
  * *i = 0; false at the end. Strings are owned by c. */
 bool kr_config_each(const kr_config *c, const char *section, int *i, const char **key, const char **value);
 
+/* Editing, for the interfaces (through the daemon's control socket). The
+ * file keeps its comments and order; only the touched lines change. Strings
+ * handed out earlier by this config (kr_config_get...) are invalid after a
+ * set or unset, so nobody keeps them across turns of the loop. False
+ * without memory. */
+bool kr_config_set(kr_config *c, const char *section, const char *key, const char *value);
+void kr_config_unset(kr_config *c, const char *section, const char *key);
+/* Writes the file atomically; false (logged) if it cannot, or if the config
+ * came from kr_config_parse and has no file. */
+bool kr_config_save(const kr_config *c);
+
 /* True for the device types the protocol knows. "smartphone" is the old
  * spelling of "phone" and is accepted on input. */
 bool kr_device_type_valid(const char *type);

@@ -28,8 +28,9 @@ typedef struct kr_daemon kr_daemon;
 typedef struct kr_device kr_device;
 
 /* Sets everything up and announces us. socket_path NULL: the default.
- * cfg must outlive the daemon. NULL on failure (logged). */
-kr_daemon *kr_daemon_new(const kr_config *cfg, const char *socket_path);
+ * cfg must outlive the daemon; the daemon edits it for the interfaces
+ * (config-set) and saves the file. NULL on failure (logged). */
+kr_daemon *kr_daemon_new(kr_config *cfg, const char *socket_path);
 void kr_daemon_free(kr_daemon *d);
 
 /* Fills fds (at most max) with what to poll; returns how many. */

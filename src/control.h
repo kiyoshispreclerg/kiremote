@@ -7,7 +7,10 @@
  * per line, each answered by one line:
  *
  *   {"type":"devices"}  → {"ok":true,"devices":[{"id","name","type",
- *                          "reachable","paired","state","key","address"}]}
+ *                          "reachable","paired","state","key","address", and
+ *                          while it is up: "plugins" (the ones that do something
+ *                          with it), "battery":{"charge","charging"},
+ *                          "signal":{"type","strength"}, "locked"...}]}
  *   {"type":"pair","device":"<id or name>"}     ask, or accept their request
  *   {"type":"unpair","device":...}              unpair, or refuse a request
  *   {"type":"ping","device":...,"message":"opt"}
@@ -16,10 +19,25 @@
  *   {"type":"unmount-files","device":...}
  *   {"type":"refresh"}                          announce ourselves again
  *   {"type":"version"}                          → {"ok":true,"version":"..."}
+ *   {"type":"status"}                           → "name","type","id","version","pid" and
+ *                                                 "devices" as above. The daemon also keeps
+ *                                                 this object in kiremote-status.json next to
+ *                                                 the socket (rewritten when it changes, removed
+ *                                                 on exit) for programs that can't hold a socket
+ *   {"type":"subscribe"}                        → {"ok":true}, and from then on
+ *                                                 event lines (below); "unsubscribe" stops
+ *   {"type":"config-schema"}                    → every setting: type, default, texts
+ *   {"type":"config-get"}                       → {"values":{...},"set":[...]}
+ *   {"type":"config-set","key":"a.b","value":"x"}   value null or "" = back to the default
  *
  * A bare word ("refresh") means {"type":"<word>"}. Replies are
  * {"ok":true,...} or {"ok":false,"error":"..."} (translated). The socket is
  * created with mode 0600: it can pair devices.
+ *
+ * Event lines have no "ok": {"event":"device","device":{...}} when a device
+ * appears or anything about it changes, {"event":"removed","id":"..."},
+ * {"event":"pair-request","device":{...}} and {"event":"config","key":"a.b",
+ * "value":"x"}. A client that does not read them is dropped.
  *
  * Everything runs in the main loop: the socket and its clients are polled
  * with the rest, and nothing here blocks. Adapted from kikarinhas. */
@@ -53,6 +71,10 @@ void kr_control_dispatch(kr_control *c, const struct pollfd *fds, int n);
  * (without "\n"), which the caller frees. */
 char *kr_control_handle_line(kr_control *c, const char *line);
 
+/* Sends line (no newline) as an event to every client that subscribed. */
+void kr_control_broadcast(kr_control *c, const char *line);
+bool kr_control_has_subscribers(const kr_control *c);
+
 /* Marks reply as failed with error. */
 void kr_control_fail(cJSON *reply, const char *error);
 
@@ -63,5 +85,9 @@ bool kr_control_default_path(char *out, size_t size);
  * timeout_ms for the reply line. The reply is malloc'd (caller frees);
  * NULL (errno set) if nobody listens or no reply came. */
 char *kr_control_request(const char *path, const char *line, int timeout_ms);
+
+/* Client side: a blocking connection for a program that stays (the CLI's
+ * --watch, a UI with its own loop); -1 with errno if nobody listens. */
+int kr_control_connect(const char *path);
 
 #endif

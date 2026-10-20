@@ -7,6 +7,7 @@
 
 #include <arpa/inet.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -23,6 +24,7 @@
 #include "net.h"
 #include "pair.h"
 #include "plugin.h"
+#include "schema.h"
 #include "transfer.h"
 #include "trust.h"
 #include "util.h"
@@ -42,6 +44,8 @@
 /* Two links to the same device this close together are a race where
  * both sides connected at once; see docs/UPSTREAM.md. */
 #define LINK_RACE_S 5.0
+/* The longest value config-set accepts. */
+#define MAX_SETTING 1024
 
 struct kr_device {
     char id[KR_ID_SIZE];
@@ -56,6 +60,7 @@ struct kr_device {
     kr_pair pair;
     bool up; /* the plugins were told it is connected */
     void *state[KR_MAX_PLUGINS];
+    char *last_json; /* what the interfaces were last told about it */
 };
 
 typedef struct {
@@ -77,7 +82,9 @@ typedef struct {
 } seen;
 
 struct kr_daemon {
-    const kr_config *cfg;
+    kr_config *cfg;
+    char status_path[KR_PATH_MAX]; /* "" for none */
+    char *last_status;
     kr_cert *cert;
     SSL_CTX *ctx;
     kr_packet *identity;
@@ -207,6 +214,7 @@ static void free_device(kr_device *dev)
     kr_link_free(dev->link);
     X509_free(dev->cert);
     cJSON_Delete(dev->incoming);
+    free(dev->last_json);
     free(dev);
 }
 
@@ -422,6 +430,8 @@ static const char *pair_why(kr_pair_why why)
     return "?";
 }
 
+static void emit_device_event(kr_daemon *d, const char *event, const kr_device *dev);
+
 /* Does what the pairing state machine said. */
 static void apply_pair(kr_daemon *d, kr_device *dev, kr_pair_out out)
 {
@@ -439,6 +449,7 @@ static void apply_pair(kr_daemon *d, kr_device *dev, kr_pair_out out)
         kr_log_info(_("%s wants to pair; verification key %s. "
                       "Accept with \"kiremote-cli -d %s --pair\", refuse with \"--unpair\"."),
                     dev->name, key, dev->id);
+        emit_device_event(d, "pair-request", dev);
     }
     if (out.events & KR_PAIR_EV_PAIRED) {
         if (!dev->cert || !kr_trust_add(d->trust, dev->id, dev->cert, dev->name, dev->type, dev->proto))
@@ -775,6 +786,15 @@ static const char *state_name(kr_pair_state s)
     return "none";
 }
 
+/* Does dev take any of these packet types (its incomingCapabilities)? */
+static bool takes_any(const kr_device *dev, const char *const *types)
+{
+    const cJSON *c;
+    for (; *types; types++)
+        cJSON_ArrayForEach(c, dev->incoming) if (cJSON_IsString(c) && strcmp(c->valuestring, *types) == 0) return true;
+    return false;
+}
+
 static cJSON *device_json(const kr_daemon *d, const kr_device *dev)
 {
     cJSON *o = cJSON_CreateObject();
@@ -795,10 +815,219 @@ static cJSON *device_json(const kr_daemon *d, const kr_device *dev)
         cJSON_AddStringToObject(o, "address",
                                 kr_addr_str(&kr_link_peer(dev->link)->sin_addr, addr, sizeof addr));
     }
-    for (int i = 0; dev->up && kr_plugins[i]; i++)
-        if (kr_plugins[i]->describe && plugin_on(d, kr_plugins[i]))
+    cJSON *on = dev->up ? cJSON_AddArrayToObject(o, "plugins") : NULL;
+    for (int i = 0; dev->up && kr_plugins[i]; i++) {
+        if (!plugin_on(d, kr_plugins[i]))
+            continue;
+        /* Listed when there is something to do with this device: it takes
+         * one of what the plugin sends, or the plugin only listens. */
+        if (on && (!kr_plugins[i]->outgoing || !kr_plugins[i]->outgoing[0] || takes_any(dev, kr_plugins[i]->outgoing)))
+            cJSON_AddItemToArray(on, cJSON_CreateString(kr_plugins[i]->name));
+        if (kr_plugins[i]->describe)
             kr_plugins[i]->describe((kr_daemon *)d, dev, o);
+    }
     return o;
+}
+
+/* ---- what the interfaces are told ---------------------------------------- */
+
+/* {"event":event,"device":{...}} to whoever subscribed. */
+static void emit_device_event(kr_daemon *d, const char *event, const kr_device *dev)
+{
+    if (!kr_control_has_subscribers(d->control))
+        return;
+    cJSON *o = cJSON_CreateObject();
+    cJSON *dj = device_json(d, dev);
+    if (o && dj) {
+        cJSON_AddStringToObject(o, "event", event);
+        cJSON_AddItemToObject(o, "device", dj);
+        char *line = cJSON_PrintUnformatted(o);
+        if (line)
+            kr_control_broadcast(d->control, line);
+        free(line);
+    } else {
+        cJSON_Delete(dj);
+    }
+    cJSON_Delete(o);
+}
+
+static void emit_removed(kr_daemon *d, const kr_device *dev)
+{
+    if (!dev->last_json || !kr_control_has_subscribers(d->control))
+        return;
+    cJSON *o = cJSON_CreateObject();
+    if (o) {
+        cJSON_AddStringToObject(o, "event", "removed");
+        cJSON_AddStringToObject(o, "id", dev->id);
+        char *line = cJSON_PrintUnformatted(o);
+        if (line)
+            kr_control_broadcast(d->control, line);
+        free(line);
+    }
+    cJSON_Delete(o);
+}
+
+/* The "status" reply, and the status file: us, and the devices. If events
+ * is true, a device whose JSON differs from the last one we told about is
+ * announced to the subscribers (and remembered). */
+static cJSON *status_json(kr_daemon *d, bool events)
+{
+    cJSON *o = cJSON_CreateObject();
+    cJSON *a = o ? cJSON_AddArrayToObject(o, "devices") : NULL;
+    if (!a) {
+        cJSON_Delete(o);
+        return NULL;
+    }
+    cJSON_AddNumberToObject(o, "pid", (double)getpid());
+    cJSON_AddStringToObject(o, "version", KR_VERSION);
+    cJSON_AddStringToObject(o, "id", kr_cert_device_id(d->cert));
+    cJSON_AddStringToObject(o, "name", kr_config_device_name(d->cfg));
+    cJSON_AddStringToObject(o, "type", kr_config_device_type(d->cfg));
+    for (int i = 0; i < d->n_dev; i++) {
+        kr_device *dev = d->dev[i];
+        cJSON *dj = device_json(d, dev);
+        if (!dj)
+            continue;
+        if (events) {
+            char *txt = cJSON_PrintUnformatted(dj);
+            if (txt && (!dev->last_json || strcmp(txt, dev->last_json) != 0)) {
+                free(dev->last_json);
+                dev->last_json = txt;
+                cJSON *ev = cJSON_CreateObject();
+                cJSON *copy = ev ? cJSON_Duplicate(dj, true) : NULL;
+                if (copy) {
+                    cJSON_AddStringToObject(ev, "event", "device");
+                    cJSON_AddItemToObject(ev, "device", copy);
+                    char *line = cJSON_PrintUnformatted(ev);
+                    if (line && kr_control_has_subscribers(d->control))
+                        kr_control_broadcast(d->control, line);
+                    free(line);
+                }
+                cJSON_Delete(ev);
+            } else {
+                free(txt);
+            }
+        }
+        cJSON_AddItemToArray(a, dj);
+    }
+    return o;
+}
+
+static bool write_atomic(const char *path, const char *text)
+{
+    char tmp[KR_PATH_MAX];
+    if (!kr_pathf(tmp, sizeof tmp, "%s.tmp", path))
+        return false;
+    int fd = open(tmp, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0600);
+    if (fd < 0)
+        return false;
+    size_t n = strlen(text);
+    bool ok = write(fd, text, n) == (ssize_t)n;
+    ok = close(fd) == 0 && ok;
+    if (ok)
+        ok = rename(tmp, path) == 0;
+    if (!ok)
+        unlink(tmp);
+    return ok;
+}
+
+/* After every turn of the loop: tell the subscribers what changed, and keep
+ * the status file (for the panel widget, which can't hold a socket) current. */
+static void publish(kr_daemon *d)
+{
+    if (!kr_control_has_subscribers(d->control) && !d->status_path[0]) {
+        /* Nobody to tell, but remember nothing either: the next subscriber
+         * gets its state from "status". */
+        return;
+    }
+    cJSON *st = status_json(d, true);
+    if (!st || !d->status_path[0]) {
+        cJSON_Delete(st);
+        return;
+    }
+    char *txt = cJSON_PrintUnformatted(st);
+    cJSON_Delete(st);
+    if (txt && (!d->last_status || strcmp(txt, d->last_status) != 0)) {
+        if (!write_atomic(d->status_path, txt)) {
+            kr_log_warn(_("cannot write %s: %s"), d->status_path, strerror(errno));
+            d->status_path[0] = '\0';
+        }
+        free(d->last_status);
+        d->last_status = txt;
+    } else {
+        free(txt);
+    }
+}
+
+/* ---- settings ------------------------------------------------------------- */
+
+static void config_set(kr_daemon *d, const cJSON *req, cJSON *reply)
+{
+    const cJSON *k = cJSON_GetObjectItemCaseSensitive(req, "key");
+    const cJSON *v = cJSON_GetObjectItemCaseSensitive(req, "value");
+    if (!cJSON_IsString(k)) {
+        kr_control_fail(reply, _("missing \"key\""));
+        return;
+    }
+    const char *name;
+    const kr_setting *s = kr_schema_find(k->valuestring, &name);
+    if (!s) {
+        kr_control_fail(reply, _("unknown setting"));
+        return;
+    }
+    char text[64];
+    const char *value = "";
+    if (cJSON_IsString(v)) {
+        value = v->valuestring;
+    } else if (cJSON_IsBool(v)) {
+        value = cJSON_IsTrue(v) ? "true" : "false";
+    } else if (cJSON_IsNumber(v)) {
+        snprintf(text, sizeof text, "%.0f", v->valuedouble);
+        value = text;
+    } else if (!cJSON_IsNull(v)) {
+        kr_control_fail(reply, _("missing \"value\""));
+        return;
+    }
+
+    char norm[MAX_SETTING + 1], err[160];
+    if (!kr_schema_check(s, name, value, norm, sizeof norm, err, sizeof err)) {
+        kr_control_fail(reply, err);
+        return;
+    }
+    const char *section = s->section, *key = name ? name : s->key;
+    const char *old = kr_config_get(d->cfg, section, key);
+    char *before = old ? strdup(old) : NULL;
+    bool ok = norm[0] ? kr_config_set(d->cfg, section, key, norm) : (kr_config_unset(d->cfg, section, key), true);
+    if (ok && !kr_config_save(d->cfg)) {
+        if (before)
+            kr_config_set(d->cfg, section, key, before);
+        else
+            kr_config_unset(d->cfg, section, key);
+        ok = false;
+        kr_control_fail(reply, _("cannot save the configuration"));
+    } else if (!ok) {
+        kr_control_fail(reply, _("out of memory"));
+    }
+    free(before);
+    if (!ok)
+        return;
+
+    cJSON_AddBoolToObject(reply, "restart", s->restart);
+    cJSON_AddStringToObject(reply, "value", norm);
+    if (kr_control_has_subscribers(d->control)) {
+        cJSON *ev = cJSON_CreateObject();
+        if (ev) {
+            cJSON_AddStringToObject(ev, "event", "config");
+            cJSON_AddStringToObject(ev, "key", k->valuestring);
+            cJSON_AddStringToObject(ev, "value", norm);
+            cJSON_AddBoolToObject(ev, "restart", s->restart);
+            char *line = cJSON_PrintUnformatted(ev);
+            if (line)
+                kr_control_broadcast(d->control, line);
+            free(line);
+        }
+        cJSON_Delete(ev);
+    }
 }
 
 /* The device named by req's "device" (an id, or a unique name). */
@@ -838,6 +1067,29 @@ static void on_request(void *ud, const char *type, const cJSON *req, cJSON *repl
         cJSON *a = cJSON_AddArrayToObject(reply, "devices");
         for (int i = 0; a && i < d->n_dev; i++)
             cJSON_AddItemToArray(a, device_json(d, d->dev[i]));
+        return;
+    }
+    if (strcmp(type, "status") == 0) {
+        cJSON *st = status_json(d, false);
+        for (cJSON *c = st ? st->child : NULL; c;) {
+            cJSON *next = c->next;
+            cJSON_DetachItemViaPointer(st, c);
+            cJSON_AddItemToObject(reply, c->string, c);
+            c = next;
+        }
+        cJSON_Delete(st);
+        return;
+    }
+    if (strcmp(type, "config-schema") == 0) {
+        kr_schema_to_json(reply);
+        return;
+    }
+    if (strcmp(type, "config-get") == 0) {
+        kr_schema_values_to_json(d->cfg, reply);
+        return;
+    }
+    if (strcmp(type, "config-set") == 0) {
+        config_set(d, req, reply);
         return;
     }
     if (strcmp(type, "refresh") == 0) {
@@ -966,7 +1218,7 @@ static kr_packet *make_identity(const kr_config *cfg, const char *id)
     return p;
 }
 
-kr_daemon *kr_daemon_new(const kr_config *cfg, const char *socket_path)
+kr_daemon *kr_daemon_new(kr_config *cfg, const char *socket_path)
 {
     kr_daemon *d = calloc(1, sizeof *d);
     if (!d)
@@ -1003,6 +1255,13 @@ kr_daemon *kr_daemon_new(const kr_config *cfg, const char *socket_path)
     }
     if (!(d->control = kr_control_open(socket_path, on_request, d)))
         goto fail;
+    /* kiremote.sock → kiremote-status.json beside it, so a daemon on another
+     * socket (the tests) never touches the user's. */
+    size_t sl = strlen(socket_path);
+    if (!kr_pathf(d->status_path, sizeof d->status_path, "%.*s%s",
+                  (int)(sl > 5 && strcmp(socket_path + sl - 5, ".sock") == 0 ? sl - 5 : sl), socket_path,
+                  sl > 5 && strcmp(socket_path + sl - 5, ".sock") == 0 ? "-status.json" : ".status.json"))
+        d->status_path[0] = '\0';
 
     d->udp = kr_udp_open(KR_UDP_PORT, true);
     if (d->udp < 0) {
@@ -1082,6 +1341,9 @@ void kr_daemon_free(kr_daemon *d)
     kr_procs_free(d->procs);
     free(d->srcs);
     kr_control_close(d->control);
+    if (d->status_path[0])
+        unlink(d->status_path);
+    free(d->last_status);
     if (d->udp >= 0)
         close(d->udp);
     if (d->tcp >= 0)
@@ -1239,6 +1501,7 @@ static void pump_devices(kr_daemon *d, double now)
     for (int i = 0; i < d->n_dev;) {
         kr_device *dev = d->dev[i];
         if (!dev->link && !kr_trust_has(d->trust, dev->id) && !kr_pair_deadline(&dev->pair)) {
+            emit_removed(d, dev);
             free_device(dev);
             d->dev[i] = d->dev[--d->n_dev];
         } else {
@@ -1348,4 +1611,5 @@ void kr_daemon_dispatch(kr_daemon *d, const struct pollfd *fds, int n)
         if (sr.ops.dispatch)
             sr.ops.dispatch(sr.ud, mine, cnt);
     }
+    publish(d);
 }

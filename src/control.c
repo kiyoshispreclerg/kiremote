@@ -17,11 +17,21 @@
 
 #define MAX_CLIENTS 16
 #define MAX_LINE 65536
+/* What may wait to be written to one client before we give up on it: a
+ * client that does not read the events must not make the daemon grow. A
+ * reply is allowed to be big (the settings schema); it is the same size
+ * limit kr_control_request puts on what it reads. */
+#define MAX_EVENT_OUT (256 * 1024)
+#define MAX_REPLY_OUT (16u << 20)
 
 typedef struct {
     int fd;
     char *buf; /* MAX_LINE bytes */
     size_t len;
+    char *out; /* written, not yet sent */
+    size_t out_len, out_cap;
+    bool subscribed; /* wants the event lines */
+    bool dead;       /* to be dropped at the end of the turn */
 } client;
 
 struct kr_control {
@@ -31,6 +41,7 @@ struct kr_control {
     void *ud;
     client clients[MAX_CLIENTS];
     int n_clients;
+    client *current; /* the one whose request is being handled */
 };
 
 static bool set_flags(int fd)
@@ -110,6 +121,7 @@ static void drop_client(kr_control *c, int i)
 {
     close(c->clients[i].fd);
     free(c->clients[i].buf);
+    free(c->clients[i].out);
     c->clients[i] = c->clients[--c->n_clients];
 }
 
@@ -132,7 +144,8 @@ int kr_control_pollfds(const kr_control *c, struct pollfd *fds, int max)
     if (c->fd >= 0 && n < max)
         fds[n++] = (struct pollfd){.fd = c->fd, .events = POLLIN};
     for (int i = 0; i < c->n_clients && n < max; i++)
-        fds[n++] = (struct pollfd){.fd = c->clients[i].fd, .events = POLLIN};
+        fds[n++] = (struct pollfd){.fd = c->clients[i].fd,
+                                   .events = (short)(POLLIN | (c->clients[i].out_len ? POLLOUT : 0))};
     return n;
 }
 
@@ -173,7 +186,10 @@ char *kr_control_handle_line(kr_control *c, const char *line)
         kr_control_fail(reply, _("invalid JSON"));
     else if (!cJSON_IsString(t))
         kr_control_fail(reply, _("missing \"type\""));
-    else if (c->on_request)
+    else if (strcmp(t->valuestring, "subscribe") == 0 || strcmp(t->valuestring, "unsubscribe") == 0) {
+        if (c->current)
+            c->current->subscribed = t->valuestring[0] == 's';
+    } else if (c->on_request)
         c->on_request(c->ud, t->valuestring, req, reply);
     else
         kr_control_fail(reply, _("unknown request"));
@@ -184,12 +200,47 @@ char *kr_control_handle_line(kr_control *c, const char *line)
     return out;
 }
 
-static void send_line(int fd, const char *s)
+/* Sends what the socket takes now; false if the client is gone. */
+static bool flush_client(client *cl)
 {
-    /* Best effort: a full socket buffer means the client isn't reading. */
+    while (cl->out_len) {
+        ssize_t r = send(cl->fd, cl->out, cl->out_len, MSG_NOSIGNAL | MSG_DONTWAIT);
+        if (r < 0)
+            return errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR;
+        cl->out_len -= (size_t)r;
+        memmove(cl->out, cl->out + r, cl->out_len);
+    }
+    return true;
+}
+
+/* Queues line and a newline, and sends as much as fits now. A client with
+ * too much waiting is marked dead. */
+static void send_line(client *cl, const char *s, size_t limit)
+{
     size_t n = strlen(s);
-    if (send(fd, s, n, MSG_NOSIGNAL | MSG_DONTWAIT) == (ssize_t)n)
-        send(fd, "\n", 1, MSG_NOSIGNAL | MSG_DONTWAIT);
+    if (cl->dead)
+        return;
+    if (cl->out_len + n + 1 > limit) {
+        cl->dead = true;
+        return;
+    }
+    if (cl->out_len + n + 1 > cl->out_cap) {
+        size_t cap = cl->out_cap ? cl->out_cap * 2 : 4096;
+        while (cap < cl->out_len + n + 1)
+            cap *= 2;
+        char *nb = realloc(cl->out, cap);
+        if (!nb) {
+            cl->dead = true;
+            return;
+        }
+        cl->out = nb;
+        cl->out_cap = cap;
+    }
+    memcpy(cl->out + cl->out_len, s, n);
+    cl->out[cl->out_len + n] = '\n';
+    cl->out_len += n + 1;
+    if (!flush_client(cl))
+        cl->dead = true;
 }
 
 static void accept_clients(kr_control *c)
@@ -215,7 +266,7 @@ static void accept_clients(kr_control *c)
  * client (closed, error, or a line too long). */
 static bool serve(kr_control *c, client *cl)
 {
-    for (;;) {
+    for (; !cl->dead;) {
         ssize_t r = recv(cl->fd, cl->buf + cl->len, MAX_LINE - 1 - cl->len, 0);
         if (r == 0)
             return false;
@@ -230,9 +281,11 @@ static bool serve(kr_control *c, client *cl)
             if (nl > start && nl[-1] == '\r')
                 nl[-1] = '\0';
             if (*start) {
+                c->current = cl;
                 char *reply = kr_control_handle_line(c, start);
+                c->current = NULL;
                 if (reply)
-                    send_line(cl->fd, reply);
+                    send_line(cl, reply, MAX_REPLY_OUT);
                 free(reply);
             }
             start = nl + 1;
@@ -241,6 +294,17 @@ static bool serve(kr_control *c, client *cl)
         memmove(cl->buf, start, cl->len);
         if (cl->len == MAX_LINE - 1)
             return false;
+    }
+    return false;
+}
+
+static void reap(kr_control *c)
+{
+    for (int i = 0; i < c->n_clients;) {
+        if (c->clients[i].dead)
+            drop_client(c, i);
+        else
+            i++;
     }
 }
 
@@ -255,11 +319,32 @@ void kr_control_dispatch(kr_control *c, const struct pollfd *fds, int n)
         }
         for (int i = 0; i < c->n_clients; i++)
             if (c->clients[i].fd == fds[k].fd) {
-                if (!serve(c, &c->clients[i]))
-                    drop_client(c, i);
+                client *cl = &c->clients[i];
+                if ((fds[k].revents & POLLOUT) && !flush_client(cl))
+                    cl->dead = true;
+                if ((fds[k].revents & ~POLLOUT) && !cl->dead && !serve(c, cl))
+                    cl->dead = true;
                 break;
             }
+        reap(c);
     }
+}
+
+void kr_control_broadcast(kr_control *c, const char *line)
+{
+    for (int i = 0; i < c->n_clients; i++)
+        if (c->clients[i].subscribed)
+            send_line(&c->clients[i], line, MAX_EVENT_OUT);
+    if (!c->current)
+        reap(c);
+}
+
+bool kr_control_has_subscribers(const kr_control *c)
+{
+    for (int i = 0; i < c->n_clients; i++)
+        if (c->clients[i].subscribed && !c->clients[i].dead)
+            return true;
+    return false;
 }
 
 bool kr_control_default_path(char *out, size_t size)
@@ -315,4 +400,23 @@ char *kr_control_request(const char *path, const char *line, int timeout_ms)
     close(fd);
     errno = ETIMEDOUT;
     return NULL;
+}
+
+int kr_control_connect(const char *path)
+{
+    struct sockaddr_un sa;
+    if (!make_addr(&sa, path)) {
+        errno = ENAMETOOLONG;
+        return -1;
+    }
+    int fd = socket(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0);
+    if (fd < 0)
+        return -1;
+    if (connect(fd, (struct sockaddr *)&sa, sizeof sa) < 0) {
+        int e = errno;
+        close(fd);
+        errno = e;
+        return -1;
+    }
+    return fd;
 }

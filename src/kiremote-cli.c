@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <unistd.h>
 
 #include "cJSON.h"
 #include "control.h"
@@ -21,6 +22,7 @@
 #define PAIR_WAIT_S 35.0
 
 static const char *socket_path;
+static bool json_out;
 
 static void usage(FILE *out)
 {
@@ -28,6 +30,14 @@ static void usage(FILE *out)
                    "Controls kiremoted, the phone connection daemon.\n"
                    "\n"
                    "  -l, --list            list the devices (paired, and the ones around)\n"
+                   "      --status          the daemon's state and the devices\n"
+                   "      --schema          list the settings and their defaults\n"
+                   "      --get [KEY]       show the settings (or just KEY, as section.key)\n"
+                   "      --set KEY=VALUE   change a setting (an empty VALUE: back to the default)\n"
+                   "      --unset KEY       back to the default\n"
+                   "      --watch           print events (devices, pairing requests, settings)\n"
+                   "                        as JSON lines until interrupted\n"
+                   "      --json            print the daemon's reply as JSON (with the options above)\n"
                    "  -d, --device ID       the device for the options below (id or name)\n"
                    "      --pair            ask to pair (or accept its request) and wait\n"
                    "      --unpair          unpair (or refuse its request)\n"
@@ -132,6 +142,129 @@ static void print_device(const cJSON *dev)
     printf(")\n");
 }
 
+/* With --json: the reply as the daemon sent it. */
+static void print_json(const cJSON *reply)
+{
+    char *txt = cJSON_Print(reply);
+    if (txt)
+        puts(txt);
+    free(txt);
+}
+
+static int status(void)
+{
+    cJSON *reply = request(simple("status", NULL));
+    if (!reply)
+        return 1;
+    if (json_out) {
+        print_json(reply);
+    } else {
+        printf(_("%s (%s), id %s, kiremoted %s, pid %d\n"), str(reply, "name"), str(reply, "type"), str(reply, "id"),
+               str(reply, "version"), (int)cJSON_GetObjectItem(reply, "pid")->valuedouble);
+        const cJSON *dev;
+        cJSON_ArrayForEach(dev, cJSON_GetObjectItem(reply, "devices")) print_device(dev);
+    }
+    cJSON_Delete(reply);
+    return 0;
+}
+
+static int schema(void)
+{
+    cJSON *reply = request(simple("config-schema", NULL));
+    if (!reply)
+        return 1;
+    if (json_out) {
+        print_json(reply);
+        cJSON_Delete(reply);
+        return 0;
+    }
+    const cJSON *g, *st;
+    cJSON_ArrayForEach(g, cJSON_GetObjectItem(reply, "groups"))
+    {
+        printf("%s\n", str(g, "label"));
+        cJSON_ArrayForEach(st, cJSON_GetObjectItem(reply, "settings"))
+        {
+            if (strcmp(str(st, "group"), str(g, "id")) != 0)
+                continue;
+            printf("  %s [%s]%s\n    %s: %s\n", str(st, "key"), str(st, "type"),
+                   flag(st, "restart") ? _(" (needs a restart)") : "", str(st, "label"), str(st, "help"));
+        }
+    }
+    cJSON_Delete(reply);
+    return 0;
+}
+
+static int get(const char *key)
+{
+    cJSON *reply = request(simple("config-get", NULL));
+    if (!reply)
+        return 1;
+    int rc = 0;
+    const cJSON *values = cJSON_GetObjectItem(reply, "values"), *v;
+    if (json_out) {
+        print_json(reply);
+    } else if (key) {
+        v = cJSON_GetObjectItem(values, key);
+        if (cJSON_IsString(v))
+            puts(v->valuestring);
+        else {
+            kr_log_error(_("unknown setting"));
+            rc = 1;
+        }
+    } else {
+        cJSON_ArrayForEach(v, values) printf("%s = %s\n", v->string, v->valuestring);
+    }
+    cJSON_Delete(reply);
+    return rc;
+}
+
+static int set(const char *key, const char *value)
+{
+    cJSON *req = simple("config-set", NULL);
+    cJSON_AddStringToObject(req, "key", key);
+    cJSON_AddStringToObject(req, "value", value);
+    cJSON *reply = request(req);
+    if (!reply)
+        return 1;
+    if (json_out)
+        print_json(reply);
+    else if (flag(reply, "restart"))
+        printf(_("Saved. It takes effect when kiremoted starts again.\n"));
+    cJSON_Delete(reply);
+    return 0;
+}
+
+static int watch(void)
+{
+    int fd = kr_control_connect(socket_path);
+    if (fd < 0) {
+        kr_log_error(_("cannot talk to kiremoted at %s: %s"), socket_path, strerror(errno));
+        return 1;
+    }
+    static const char sub[] = "{\"type\":\"subscribe\"}\n";
+    if (write(fd, sub, sizeof sub - 1) != (ssize_t)(sizeof sub - 1)) {
+        close(fd);
+        return 1;
+    }
+    FILE *in = fdopen(fd, "r");
+    char *line = NULL;
+    size_t cap = 0;
+    bool first = true;
+    while (in && getline(&line, &cap, in) > 0) {
+        if (first) { /* the reply to "subscribe" */
+            first = false;
+            continue;
+        }
+        fputs(line, stdout);
+        fflush(stdout);
+    }
+    free(line);
+    if (in)
+        fclose(in);
+    kr_log_error(_("kiremoted closed the connection"));
+    return 1;
+}
+
 static int list(void)
 {
     cJSON *reply = request(simple("devices", NULL));
@@ -219,9 +352,17 @@ int main(int argc, char **argv)
     kr_i18n_init();
     kr_log_init("kiremote-cli");
 
-    enum { O_PAIR = 256, O_UNPAIR, O_PING, O_PING_MSG, O_SHARE, O_REFRESH, O_FIND, O_STOP_RING, O_MUTE, O_SHARE_TEXT, O_SHARE_URL, O_BROWSE, O_UNMOUNT };
+    enum { O_PAIR = 256, O_UNPAIR, O_PING, O_PING_MSG, O_SHARE, O_REFRESH, O_FIND, O_STOP_RING, O_MUTE, O_SHARE_TEXT, O_SHARE_URL, O_BROWSE, O_UNMOUNT,
+           O_STATUS, O_SCHEMA, O_GET, O_SET, O_UNSET, O_WATCH, O_JSON };
     static const struct option longopts[] = {
         {"list", no_argument, NULL, 'l'},
+        {"status", no_argument, NULL, O_STATUS},
+        {"schema", no_argument, NULL, O_SCHEMA},
+        {"get", optional_argument, NULL, O_GET},
+        {"set", required_argument, NULL, O_SET},
+        {"unset", required_argument, NULL, O_UNSET},
+        {"watch", no_argument, NULL, O_WATCH},
+        {"json", no_argument, NULL, O_JSON},
         {"device", required_argument, NULL, 'd'},
         {"pair", no_argument, NULL, O_PAIR},
         {"unpair", no_argument, NULL, O_UNPAIR},
@@ -245,6 +386,8 @@ int main(int argc, char **argv)
     bool do_list = false, do_pair = false, do_unpair = false, do_ping = false, do_refresh = false;
     bool do_find = false, do_stop_ring = false, do_mute = false, do_browse = false, do_unmount = false;
     const char *share_text = NULL, *share_url = NULL;
+    bool do_status = false, do_schema = false, do_get = false, do_watch = false;
+    const char *get_key = NULL, *set_arg = NULL, *unset_key = NULL;
     cJSON *files = cJSON_CreateArray();
     int c;
     while ((c = getopt_long(argc, argv, "ld:s:Vh", longopts, NULL)) != -1) {
@@ -254,6 +397,28 @@ int main(int argc, char **argv)
             break;
         case 'd':
             device = optarg;
+            break;
+        case O_STATUS:
+            do_status = true;
+            break;
+        case O_SCHEMA:
+            do_schema = true;
+            break;
+        case O_GET:
+            do_get = true;
+            get_key = optarg;
+            break;
+        case O_SET:
+            set_arg = optarg;
+            break;
+        case O_UNSET:
+            unset_key = optarg;
+            break;
+        case O_WATCH:
+            do_watch = true;
+            break;
+        case O_JSON:
+            json_out = true;
             break;
         case O_PAIR:
             do_pair = true;
@@ -321,7 +486,18 @@ int main(int argc, char **argv)
     }
     bool per_device = do_pair || do_unpair || do_ping || do_find || do_mute || do_browse || do_unmount || share_text || share_url ||
                       cJSON_GetArraySize(files);
-    if (optind < argc || (!per_device && !do_list && !do_refresh && !do_stop_ring) || (per_device && !device)) {
+    /* "--get KEY": an optional argument only takes "--get=KEY" in getopt. */
+    if (do_get && !get_key && optind < argc)
+        get_key = argv[optind++];
+    bool daemon_wide = do_list || do_refresh || do_stop_ring || do_status || do_schema || do_get || do_watch ||
+                       set_arg || unset_key;
+    if (set_arg && !strchr(set_arg, '=')) {
+        kr_log_error(_("--set wants KEY=VALUE"));
+        usage(stderr);
+        cJSON_Delete(files);
+        return 2;
+    }
+    if (optind < argc || (!per_device && !daemon_wide) || (per_device && !device)) {
         if (per_device && !device)
             kr_log_error(_("say which device with -d"));
         usage(stderr);
@@ -339,6 +515,17 @@ int main(int argc, char **argv)
     }
 
     int rc = 0;
+    if (set_arg) {
+        char *copy = strdup(set_arg);
+        char *eq = copy ? strchr(copy, '=') : NULL;
+        if (eq) {
+            *eq = '\0';
+            rc |= set(copy, eq + 1);
+        }
+        free(copy);
+    }
+    if (unset_key)
+        rc |= set(unset_key, "");
     if (do_refresh) {
         cJSON *r = request(simple("refresh", NULL));
         rc |= !r;
@@ -398,6 +585,14 @@ int main(int argc, char **argv)
     }
     if (do_list)
         rc |= list();
+    if (do_status)
+        rc |= status();
+    if (do_schema)
+        rc |= schema();
+    if (do_get)
+        rc |= get(get_key);
+    if (do_watch)
+        rc |= watch();
     cJSON_Delete(files);
     return rc;
 }

@@ -14,6 +14,7 @@
 
 struct kr_config {
     kr_ini *ini;
+    char *path; /* where kr_config_save writes; NULL for kr_config_parse */
     char hostname[256];
     const char *name;
     const char *type;
@@ -34,15 +35,11 @@ static void warn_line(void *ud, int line, const char *msg)
     kr_log_warn("%s:%d: %s", (const char *)ud, line, msg);
 }
 
-static kr_config *from_ini(kr_ini *ini, const char *where)
+/* name and type, from the ini (they point into it, so redo this after
+ * every edit). */
+static void derive(kr_config *c, const char *where)
 {
-    kr_config *c = calloc(1, sizeof *c);
-    if (!c) {
-        kr_ini_free(ini);
-        return NULL;
-    }
-    c->ini = ini;
-
+    const kr_ini *ini = c->ini;
     const char *name = kr_ini_get(ini, "device", "name");
     if (name && *name) {
         c->name = name;
@@ -62,6 +59,17 @@ static kr_config *from_ini(kr_ini *ini, const char *where)
         else
             c->type = strcmp(type, "smartphone") == 0 ? "phone" : type;
     }
+}
+
+static kr_config *from_ini(kr_ini *ini, const char *where)
+{
+    kr_config *c = calloc(1, sizeof *c);
+    if (!c) {
+        kr_ini_free(ini);
+        return NULL;
+    }
+    c->ini = ini;
+    derive(c, where);
     return c;
 }
 
@@ -82,6 +90,7 @@ kr_config *kr_config_load(const char *path)
         path = def;
     }
 
+    kr_config *c = NULL;
     char *text = kr_read_file(path, NULL);
     if (!text) {
         if (errno != ENOENT) {
@@ -90,11 +99,17 @@ kr_config *kr_config_load(const char *path)
         }
         kr_log_debug("%s not found, using defaults", path);
         kr_ini *ini = kr_ini_new();
-        return ini ? from_ini(ini, path) : NULL;
+        c = ini ? from_ini(ini, path) : NULL;
+    } else {
+        kr_ini *ini = kr_ini_parse(text, warn_line, (void *)path);
+        free(text);
+        c = ini ? from_ini(ini, path) : NULL;
     }
-    kr_ini *ini = kr_ini_parse(text, warn_line, (void *)path);
-    free(text);
-    return ini ? from_ini(ini, path) : NULL;
+    if (c && !(c->path = strdup(path))) {
+        kr_config_free(c);
+        return NULL;
+    }
+    return c;
 }
 
 void kr_config_free(kr_config *c)
@@ -102,6 +117,7 @@ void kr_config_free(kr_config *c)
     if (!c)
         return;
     kr_ini_free(c->ini);
+    free(c->path);
     free(c);
 }
 
@@ -204,4 +220,29 @@ bool kr_config_each(const kr_config *c, const char *section, int *i, const char 
         if (strcasecmp(sec, section) == 0)
             return true;
     return false;
+}
+
+bool kr_config_set(kr_config *c, const char *section, const char *key, const char *value)
+{
+    if (kr_ini_set(c->ini, section, key, value) != 0)
+        return false;
+    derive(c, c->path ? c->path : "(text)");
+    return true;
+}
+
+void kr_config_unset(kr_config *c, const char *section, const char *key)
+{
+    kr_ini_unset(c->ini, section, key);
+    derive(c, c->path ? c->path : "(text)");
+}
+
+bool kr_config_save(const kr_config *c)
+{
+    if (!c->path)
+        return false;
+    if (kr_ini_save(c->ini, c->path) != 0) {
+        kr_log_error(_("cannot write %s: %s"), c->path, strerror(errno));
+        return false;
+    }
+    return true;
 }

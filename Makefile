@@ -21,6 +21,7 @@ LIB_SRC = src/log.c \
       src/net.c \
       src/transfer.c \
       src/control.c \
+      src/schema.c \
       src/daemon.c \
       src/plugins.c \
       src/plugin_ping.c \
