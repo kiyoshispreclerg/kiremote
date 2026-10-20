@@ -303,7 +303,7 @@ static kr_ui *connected_ui(void)
 TEST(devices_list_shows_what_the_model_says)
 {
     kr_ui *ui = connected_ui();
-    GtkWidget *w = kr_ui_devices_new(ui, FALSE);
+    GtkWidget *w = g_object_ref_sink(kr_ui_devices_new(ui, FALSE));
     CHECK(wait_label(w, "moto g", 3));
     GtkWidget *detail = label_with(w, "Connected");
     CHECK(detail);
@@ -327,6 +327,7 @@ TEST(devices_list_shows_what_the_model_says)
     spin(30);
     CHECK(!label_with(w, "Vizinho"));
     gtk_widget_destroy(w);
+    g_object_unref(w);
     kr_ui_free(ui);
 }
 
@@ -336,7 +337,7 @@ TEST(devices_list_follows_the_daemon_coming_and_going)
     kr_control_close(F.srv);
     F.srv = NULL;
     kr_ui *ui = new_ui();
-    GtkWidget *w = kr_ui_devices_new(ui, TRUE);
+    GtkWidget *w = g_object_ref_sink(kr_ui_devices_new(ui, TRUE));
     CHECK(wait_label(w, "not running", 1));
 
     F.srv = kr_control_open(F.path, on_request, NULL);
@@ -352,6 +353,7 @@ TEST(devices_list_follows_the_daemon_coming_and_going)
 
     F.srv = kr_control_open(F.path, on_request, NULL);
     gtk_widget_destroy(w);
+    g_object_unref(w);
     kr_ui_free(ui);
 }
 
@@ -621,7 +623,7 @@ TEST(pair_dialog_for_a_device_that_is_not_asking_is_nothing)
 
 static GtkWidget *settings_page(kr_ui *ui)
 {
-    GtkWidget *w = kr_ui_settings_new(ui);
+    GtkWidget *w = g_object_ref_sink(kr_ui_settings_new(ui));
     wait_check(w, "Send what I copy");
     return w;
 }
@@ -655,6 +657,7 @@ TEST(settings_are_built_from_the_daemons_schema)
     g_free(name);
     g_free(cmd);
     gtk_widget_destroy(w);
+    g_object_unref(w);
     kr_ui_free(ui);
 }
 
@@ -680,6 +683,7 @@ TEST(a_switch_is_saved_at_once)
         sets += strstr(g_ptr_array_index(F.log, i), "config-set") != NULL;
     CHECK_INT_EQ(sets, 1);
     gtk_widget_destroy(w);
+    g_object_unref(w);
     kr_ui_free(ui);
 }
 
@@ -697,6 +701,7 @@ TEST(a_change_made_elsewhere_shows_up)
     CHECK(!gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ca)));
     CHECK(!logged("config-set")); /* showing it didn't write it back */
     gtk_widget_destroy(w);
+    g_object_unref(w);
     kr_ui_free(ui);
 }
 
@@ -720,6 +725,7 @@ TEST(what_belongs_to_a_plugin_that_is_off_is_dimmed)
         pump();
     CHECK(GTK_WIDGET_SENSITIVE(ca));
     gtk_widget_destroy(w);
+    g_object_unref(w);
     kr_ui_free(ui);
 }
 
@@ -749,6 +755,7 @@ TEST(text_fields_save_on_enter_and_say_when_it_needs_a_restart)
     spin(20);
     CHECK(!logged("config-set"));
     gtk_widget_destroy(w);
+    g_object_unref(w);
     kr_ui_free(ui);
 }
 
@@ -767,6 +774,7 @@ TEST(a_refused_value_shows_why_and_goes_back)
     CHECK_STR_EQ(gtk_entry_get_text(GTK_ENTRY(addr)), "");
     CHECK(kr_config_addresses(F.cfg) == NULL);
     gtk_widget_destroy(w);
+    g_object_unref(w);
     kr_ui_free(ui);
 }
 
@@ -783,6 +791,7 @@ TEST(a_choice_is_saved)
     CHECK_STR_EQ(kr_config_device_type(F.cfg), "tablet");
     CHECK_INT_EQ(gtk_combo_box_get_active(GTK_COMBO_BOX(type)), 3);
     gtk_widget_destroy(w);
+    g_object_unref(w);
     kr_ui_free(ui);
 }
 
@@ -820,6 +829,7 @@ TEST(commands_are_edited_in_the_list)
     spin(20);
     CHECK_INT_EQ(gtk_tree_model_iter_n_children(model, NULL), 0);
     gtk_widget_destroy(w);
+    g_object_unref(w);
     kr_ui_free(ui);
 }
 
@@ -829,7 +839,7 @@ TEST(settings_wait_for_the_daemon)
     kr_control_close(F.srv);
     F.srv = NULL;
     kr_ui *ui = new_ui();
-    GtkWidget *w = kr_ui_settings_new(ui);
+    GtkWidget *w = g_object_ref_sink(kr_ui_settings_new(ui));
     CHECK(label_with(w, "Start kiremoted"));
     F.srv = kr_control_open(F.path, on_request, NULL);
     GtkWidget *ca = wait_check(w, "Send what I copy");
@@ -837,17 +847,20 @@ TEST(settings_wait_for_the_daemon)
     ca = wait_check(w, "Send what I copy");
     CHECK(ca);
     gtk_widget_destroy(w);
+    g_object_unref(w);
     kr_ui_free(ui);
 }
 
 TEST(destroying_a_page_with_a_request_in_flight_is_safe)
 {
     kr_ui *ui = connected_ui();
-    GtkWidget *w = kr_ui_settings_new(ui);
-    gtk_widget_destroy(w); /* the schema and values requests are still out */
-    spin(30);
-    w = kr_ui_devices_new(ui, FALSE);
+    GtkWidget *w = g_object_ref_sink(kr_ui_settings_new(ui));
     gtk_widget_destroy(w);
+    g_object_unref(w); /* the schema and values requests are still out */
+    spin(30);
+    w = g_object_ref_sink(kr_ui_devices_new(ui, FALSE));
+    gtk_widget_destroy(w);
+    g_object_unref(w);
     spin(30);
     kr_ui_free(ui);
 }
