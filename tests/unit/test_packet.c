@@ -1,9 +1,11 @@
 /* SPDX-License-Identifier: GPL-3.0-or-later */
 /* Packets: parsing, serializing, identity checks. */
+#include <locale.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "../harness.h"
+#include "i18n.h"
 #include "packet.h"
 
 static kr_packet *parse(const char *s)
@@ -145,6 +147,32 @@ TEST(identity_shapes)
     kr_packet_free(p);
 }
 
+/* The presenter's dx/dy are floats: with a decimal-comma locale (pt_BR) the
+ * parser used to reject every one of them. Skipped where the locale is not
+ * installed. */
+TEST(fractions_parse_in_a_decimal_comma_locale)
+{
+    if (!setlocale(LC_ALL, "pt_BR.UTF-8") || strcmp(localeconv()->decimal_point, ",") != 0) {
+        setlocale(LC_ALL, "C");
+        return; /* no such locale here */
+    }
+    setenv("LC_ALL", "pt_BR.UTF-8", 1);
+    kr_i18n_init();
+    CHECK_STR_EQ(localeconv()->decimal_point, ".");
+    kr_packet *p = parse("{\"id\":1,\"type\":\"kdeconnect.presenter\",\"body\":{\"dx\":-1.25E-4,\"dy\":0.5}}");
+    CHECK(p);
+    if (p) {
+        CHECK(cJSON_GetObjectItemCaseSensitive(p->body, "dx")->valuedouble < -1.2e-4);
+        CHECK(cJSON_GetObjectItemCaseSensitive(p->body, "dy")->valuedouble == 0.5);
+    }
+    kr_packet_free(p);
+    char *out = kr_packet_serialize(p = kr_packet_new("x"), &(size_t){0});
+    CHECK(out);
+    free(out);
+    kr_packet_free(p);
+    setlocale(LC_ALL, "C");
+}
+
 int main(void)
 {
     RUN(parses_a_packet);
@@ -154,5 +182,6 @@ int main(void)
     RUN(device_ids);
     RUN(name_filter);
     RUN(identity_shapes);
+    RUN(fractions_parse_in_a_decimal_comma_locale);
     return harness_report();
 }

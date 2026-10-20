@@ -14,6 +14,10 @@
 void kr_i18n_init(void)
 {
     setlocale(LC_ALL, "");
+    /* The wire format is JSON: strtod()/printf() must keep "." as the decimal
+     * point, or every fractional number from the phone (the presenter's
+     * dx/dy) fails to parse under pt_BR and the like. */
+    setlocale(LC_NUMERIC, "C");
 
     const char *dir = LOCALEDIR;
     char exe[KR_PATH_MAX], local[KR_PATH_MAX];
