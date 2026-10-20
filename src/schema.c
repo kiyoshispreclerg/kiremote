@@ -16,6 +16,22 @@
 
 static const char *const device_types[] = {"desktop", "laptop", "phone", "tablet", "tv", NULL};
 static const char *const players[] = {"", "paplay", "pw-play", "aplay", NULL};
+static const char *const tray_choices[] = {"auto", "yes", "no", NULL};
+
+/* How a choice is shown (msgids); a choice not listed is shown as it is. */
+static const struct {
+    const char *value, *label;
+} choice_labels[] = {
+    {"", N_("(default)")},
+    {"auto", N_("Automatic")},
+    {"yes", N_("Always")},
+    {"no", N_("Never")},
+    {"desktop", N_("Desktop")},
+    {"laptop", N_("Laptop")},
+    {"phone", N_("Phone")},
+    {"tablet", N_("Tablet")},
+    {"tv", N_("TV")},
+};
 
 static const kr_setting_group groups[] = {
     {"device", N_("This computer")},
@@ -27,6 +43,7 @@ static const kr_setting_group groups[] = {
     {"find", N_("Find my phone")},
     {"lock", N_("Screen lock")},
     {"commands", N_("Commands")},
+    {"interface", N_("Interface")},
     {"advanced", N_("Advanced")},
 };
 
@@ -90,6 +107,10 @@ static const kr_setting settings[] = {
      N_("Off by default: anyone with the phone could otherwise unlock this computer."), "lockdevice", false},
     {"lock", "unlock_command", KR_S_STRING, "", NULL, "lock", N_("Unlock command"),
      N_("Empty: loginctl unlock-session. Needs the option above."), "lockdevice", false},
+
+    {"ui", "tray", KR_S_ENUM, "auto", tray_choices, "interface", N_("Tray icon"),
+     N_("Show an icon in the notification area. Automatic: unless the desktop already has one for Kiremote (KiDesktop)."),
+     NULL, false},
 
     {"runcommand", NULL, KR_S_MAP, "", NULL, "commands", N_("Commands the phone may run"),
      N_("Name and shell command. The phone only sees the names."), "runcommand", false},
@@ -282,8 +303,15 @@ void kr_schema_to_json(cJSON *reply)
             cJSON_AddStringToObject(o, "plugin", s->plugin);
         if (s->choices) {
             cJSON *c = cJSON_AddArrayToObject(o, "choices");
-            for (const char *const *p = s->choices; c && *p; p++)
+            cJSON *l = cJSON_AddArrayToObject(o, "choice_labels");
+            for (const char *const *p = s->choices; c && l && *p; p++) {
+                const char *label = *p;
+                for (size_t k = 0; k < sizeof choice_labels / sizeof *choice_labels; k++)
+                    if (strcmp(choice_labels[k].value, *p) == 0)
+                        label = _(choice_labels[k].label);
                 cJSON_AddItemToArray(c, cJSON_CreateString(*p));
+                cJSON_AddItemToArray(l, cJSON_CreateString(label));
+            }
         }
         cJSON_AddItemToArray(ss, o);
     }

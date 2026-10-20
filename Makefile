@@ -59,7 +59,23 @@ FUZZ_RUNNERS = $(patsubst %,$(BUILD)/tests/fuzz-run-%,$(FUZZ_TARGETS))
 ALL_CFLAGS  = $(STDFLAGS) $(OPTFLAGS) $(SANFLAGS) $(PKG_CFLAGS) $(CFLAGS)
 ALL_LDFLAGS = $(SANFLAGS) $(LDFLAGS)
 
-.PHONY: all test test-net run asan asan-run fuzz fuzz-targets install uninstall lint clean locale pot update-po
+# Only the interface tests (GTK2 and Xvfb).
+test-ui: all $(GTK_TESTS)
+	tests/ui/run.sh $(BUILD)
+
+.PHONY: test-ui all test test-net run asan asan-run fuzz fuzz-targets install uninstall lint clean locale pot update-po
+
+# The GTK2 interface is built when GTK2 is there: the daemon and the CLI don't
+# need it (and a machine with only the daemon shouldn't).
+HAVE_GTK := $(shell $(PKG_CONFIG) --exists gtk+-2.0 && echo 1)
+ifeq ($(HAVE_GTK),1)
+GTK_CFLAGS = $(shell $(PKG_CONFIG) --cflags gtk+-2.0 | sed 's/-I/-isystem /g')
+GTK_LIBS = $(shell $(PKG_CONFIG) --libs gtk+-2.0)
+KRUI_SRC = $(filter-out ui/gtk/main.c,$(wildcard ui/gtk/*.c))
+LIBKRUI = $(BUILD)/libkrui.a
+GTK_TARGETS = $(BUILD)/kiremote
+GTK_TESTS = $(BUILD)/tests/test_ui
+endif
 
 # Translations (po/LINGUAS lists the languages), built into $(BUILD)/locale,
 # which the programs find next to their own executable.
@@ -67,7 +83,7 @@ LINGUAS = $(shell sed 's/\#.*//' po/LINGUAS)
 HAVE_MSGFMT := $(shell command -v msgfmt >/dev/null 2>&1 && echo 1)
 MO_FILES = $(if $(HAVE_MSGFMT),$(foreach l,$(LINGUAS),$(BUILD)/locale/$(l)/LC_MESSAGES/kiremote.mo))
 
-all: $(BUILD)/kiremoted $(BUILD)/kiremote-cli $(MO_FILES)
+all: $(BUILD)/kiremoted $(BUILD)/kiremote-cli $(MO_FILES) $(GTK_TARGETS)
 locale: $(MO_FILES)
 
 $(BUILD)/locale/%/LC_MESSAGES/kiremote.mo: po/%.po
@@ -89,6 +105,22 @@ $(BUILD)/kiremoted: $(BUILD)/$(DAEMON_MAIN:.c=.o) $(LIBKR)
 
 $(BUILD)/kiremote-cli: $(BUILD)/$(CLI_MAIN:.c=.o) $(LIBKR)
 	$(CC) $(ALL_LDFLAGS) -o $@ $^ $(LDLIBS)
+
+# libkrui: the interface as widgets (PIC: the KiDesktop modules embed it).
+$(BUILD)/ui/gtk/%.o: ui/gtk/%.c $(wildcard ui/gtk/*.h) ui/krmodel.h ui/krclient.h
+	@mkdir -p $(@D)
+	$(CC) $(CPPFLAGS) $(ALL_CFLAGS) $(GTK_CFLAGS) -fPIC $(WARNFLAGS) -MMD -MP -c -o $@ $<
+
+$(LIBKRUI): $(patsubst %.c,$(BUILD)/%.o,$(KRUI_SRC))
+	$(AR) rcs $@ $^
+
+# The interface tests need GTK and a private X server (tests/ui/run.sh).
+$(BUILD)/tests/test_ui: tests/ui/test_ui.c tests/harness.h $(LIBKRUI) $(LIBKR)
+	@mkdir -p $(@D)
+	$(CC) $(CPPFLAGS) $(ALL_CFLAGS) $(GTK_CFLAGS) $(WARNFLAGS) -MMD -MP $(ALL_LDFLAGS) -o $@ $< $(LIBKRUI) $(LIBKR) $(GTK_LIBS) $(LDLIBS)
+
+$(BUILD)/kiremote: $(BUILD)/ui/gtk/main.o $(LIBKRUI) $(LIBKR)
+	$(CC) $(ALL_LDFLAGS) -o $@ $^ $(GTK_LIBS) $(LDLIBS)
 
 $(LIBKR): $(patsubst %.c,$(BUILD)/%.o,$(LIB_SRC) $(VENDOR_SRC))
 	$(AR) rcs $@ $^
@@ -125,7 +157,7 @@ $(BUILD)/tests/xtool: tests/tools/xtool.c
 	@mkdir -p $(@D)
 	$(CC) $(CPPFLAGS) $(ALL_CFLAGS) $(WARNFLAGS) $(ALL_LDFLAGS) -o $@ $< $(LDLIBS)
 
-test: all $(UNIT_TESTS) $(FUZZ_RUNNERS) $(BUILD)/tests/fakephone $(BUILD)/tests/xtool
+test: all $(UNIT_TESTS) $(GTK_TESTS) $(FUZZ_RUNNERS) $(BUILD)/tests/fakephone $(BUILD)/tests/xtool
 	@fail=0; for t in $(UNIT_TESTS); do \
 		$$t || fail=1; \
 	done; \
@@ -135,6 +167,7 @@ test: all $(UNIT_TESTS) $(FUZZ_RUNNERS) $(BUILD)/tests/fakephone $(BUILD)/tests/
 	tests/net/pair.sh $(BUILD) || fail=1; \
 	tests/net/plugins.sh $(BUILD) || fail=1; \
 	tests/net/desktop.sh $(BUILD) || fail=1; \
+	$(if $(GTK_TESTS),tests/ui/run.sh $(BUILD) || fail=1;) \
 	if [ $$fail -ne 0 ]; then echo "*** tests FAILED"; exit 1; fi; \
 	echo "*** all tests passed"
 
@@ -169,7 +202,7 @@ $(BUILD)/fuzz_%: tests/fuzz/fuzz_%.c $(LIBKR)
 asan-run: asan
 	LSAN_OPTIONS=suppressions=$(CURDIR)/tools/lsan.supp $(BUILD)/asan/kiremoted $(ARGS)
 
-install: $(BUILD)/kiremoted $(BUILD)/kiremote-cli $(MO_FILES)
+install: $(BUILD)/kiremoted $(BUILD)/kiremote-cli $(MO_FILES) $(GTK_TARGETS)
 	install -Dm755 $(BUILD)/kiremoted $(DESTDIR)$(BINDIR)/kiremoted
 	install -Dm644 data/kiremote.ini $(DESTDIR)$(DATADIR)/doc/kiremote/kiremote.ini
 	install -Dm644 data/kiremoted.desktop $(DESTDIR)/etc/xdg/autostart/kiremoted.desktop
@@ -177,7 +210,8 @@ install: $(BUILD)/kiremoted $(BUILD)/kiremote-cli $(MO_FILES)
 		$(DESTDIR)$(LOCALEDIR)/$(l)/LC_MESSAGES/kiremote.mo;)
 
 uninstall:
-	rm -f $(DESTDIR)$(BINDIR)/kiremoted $(DESTDIR)$(BINDIR)/kiremote-cli
+	rm -f $(DESTDIR)$(BINDIR)/kiremoted $(DESTDIR)$(BINDIR)/kiremote-cli $(DESTDIR)$(BINDIR)/kiremote
+	rm -f $(DESTDIR)$(DATADIR)/applications/kiremote.desktop
 	rm -f $(DESTDIR)$(DATADIR)/doc/kiremote/kiremote.ini
 	rm -f $(DESTDIR)/etc/xdg/autostart/kiremoted.desktop
 	for l in $(LINGUAS); do rm -f $(DESTDIR)$(LOCALEDIR)/$$l/LC_MESSAGES/kiremote.mo; done
@@ -188,7 +222,7 @@ lint:
 	@command -v cppcheck >/dev/null || { echo "*** cppcheck not installed"; exit 1; }
 	cppcheck --std=c11 --enable=warning,performance,portability \
 		--error-exitcode=1 --inline-suppr --quiet -Isrc -Ivendor/cjson \
-		-D_XOPEN_SOURCE=700 -DKR_VERSION='"lint"' -DKR_FIXTURES_DIR='"."' src ui tests/unit tests/fuzz
+		-D_XOPEN_SOURCE=700 -DKR_VERSION='"lint"' -DKR_FIXTURES_DIR='"."' src ui/krmodel.c ui/krclient.c tests/unit tests/fuzz
 
 clean:
 	rm -rf $(BUILD)

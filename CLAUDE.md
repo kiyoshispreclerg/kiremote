@@ -9,8 +9,8 @@ Fase atual: 1 feita (testada com o app Android). Fase 2 (plugins do
 daemon) quase pronta: falta a resposta a notificações (sftp feito, só testado
 com `sshfs` falso). Fase 3 (interfaces `kiremote-gtk` e
 `kiremote-kidesktop`, que compartilham a `libkrui`) em andamento: 3a (API do
-daemon) e 3b (`krclient`/`krmodel`) feitas; próxima, 3c (`libkrui` e o
-`kiremote`). Veja o `PLANO.md`, seção 3.
+daemon), 3b (`krclient`/`krmodel`) e 3c (`libkrui` e o `kiremote`) feitas;
+próxima, 3d (módulos do KiDesktop). Veja o `PLANO.md`, seção 3.
 
 O usuário escreve em português (pt-BR) e quer as respostas em português.
 Comentários e identificadores no código, em inglês. Todo texto que o usuário
@@ -38,6 +38,7 @@ make            # build/kiremoted, sem avisos (-Werror -Wpedantic etc.)
 make test       # testes de unidade (tests/unit/test_*.c, tests/harness.h)
 make asan       # os testes com ASan/UBSan
 make test-net   # só tests/net/pair.sh: dois daemons em network namespaces
+make test-ui    # só tests/ui/run.sh (precisa de GTK2 e Xvfb)
 make fuzz       # libFuzzer (clang): build/fuzz/fuzz_packet tests/fuzz/corpus/packet
 make lint       # cppcheck + funções proibidas (strcpy, strcat, sprintf, vsprintf, gets)
 make pot        # recria po/kiremote.pot e mescla nos .po
@@ -88,6 +89,7 @@ LANGUAGE=en build/kiremoted --help   # o catálogo vem de build/locale
 | `src/trust.c` | aparelhos confiáveis (`trusted/<id>.pem` e `.ini`) |
 | `src/net.c` | UDP 1716, TCP 1716–1764, endereços de broadcast, netlink |
 | `src/transfer.c` | payloads (portas 1739–1764) |
+| `ui/gtk/*.c` | `libkrui` (GTK2): lista de aparelhos, ações, pareamento, configurações; `main.c` é o `kiremote`. Só compila com `gtk+-2.0` |
 | `src/control.c` | socket de controle, JSON por linha (veio do kikarinhas); assinantes de eventos com fila de saída limitada |
 | `src/schema.c` | a lista das opções do `.ini` (tipo, validação, padrão, texto traduzido): as interfaces e a CLI se montam dela |
 | `ui/krmodel.c` | estado dos aparelhos, ordem, textos e ações, sem GTK (as duas interfaces e o widget do xispanel usam) |
@@ -104,6 +106,7 @@ LANGUAGE=en build/kiremoted --help   # o catálogo vem de build/locale
 | `src/log.c` | log em stderr com nome do programa; `-v` liga o debug |
 | `src/i18n.c` | `setlocale` + `bindtextdomain` (procura `locale/` ao lado do executável) |
 | `src/util.c` | arquivos, caminhos (`kr_pathf` falha em vez de truncar), XDG, relógio |
+| `tests/ui/test_ui.c`, `tests/ui/run.sh` | os widgets sob um Xvfb privado, contra um daemon falso no mesmo processo |
 | `tests/net/pair.sh` | integração: dois daemons em network namespaces (também eventos, arquivo de estado e `--set`) |
 | `tests/net/plugins.sh`, `tests/net/desktop.sh`, `tests/tools/` | integração dos plugins: celular falso (`fakephone.c`, serve payloads), D-Bus de sessão e de sistema privados com serviços falsos (Python), Xvfb, `xtool.c`, `pactl`/`paplay`/`xdg-*` falsos |
 | `tests/fuzz/` | alvos de fuzz, `driver.c` (sem libFuzzer) e corpus |

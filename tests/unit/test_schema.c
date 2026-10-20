@@ -198,7 +198,12 @@ TEST(schema_json)
         CHECK(cJSON_IsString(cJSON_GetObjectItem(e, "group")));
         CHECK(cJSON_IsBool(cJSON_GetObjectItem(e, "restart")));
         const cJSON *type = cJSON_GetObjectItem(e, "type");
-        saw_enum |= strcmp(type->valuestring, "enum") == 0 && cJSON_IsArray(cJSON_GetObjectItem(e, "choices"));
+        if (strcmp(type->valuestring, "enum") == 0) {
+            const cJSON *ch = cJSON_GetObjectItem(e, "choices"), *lb = cJSON_GetObjectItem(e, "choice_labels");
+            CHECK(cJSON_IsArray(ch) && cJSON_IsArray(lb));
+            CHECK_INT_EQ(cJSON_GetArraySize(ch), cJSON_GetArraySize(lb));
+            saw_enum = true;
+        }
         saw_map |= strcmp(type->valuestring, "map") == 0 &&
                    strcmp(cJSON_GetObjectItem(e, "key")->valuestring, "runcommand.*") == 0;
     }

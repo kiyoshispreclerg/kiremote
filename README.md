@@ -20,11 +20,20 @@ Em desenvolvimento: o núcleo do protocolo (fase 1) está pronto e a fase 2
 e já tem: ping, arquivos, bateria, sinal da operadora, achar o celular e
 achar o computador, notificação de chamada (e silenciar), pausar a música
 na chamada, controle de mídia do desktop pelo celular e volume do sistema.
-O `kiremote-cli` controla tudo pelo terminal. Ainda não há interface nem
-ícone na bandeja (fase 3). Veja o [PLANO.md](PLANO.md) para o que está
+O `kiremote-cli` controla tudo pelo terminal, e o `kiremote` (GTK2) é a
+janela: aparelhos (bateria, sinal, ping, achar, enviar arquivos e texto —
+também arrastando arquivos —, navegar, parear e desparear), a pergunta de
+pareamento com a chave de verificação e todas as configurações, montadas a
+partir do que o daemon informa. Fora do KiDesktop ele põe um ícone na
+bandeja (`[ui] tray` no .ini). Os módulos do KiDesktop (aba do kiconf,
+página do xisserve, widget do xispanel) vêm a seguir. Veja o [PLANO.md](PLANO.md) para o que está
 previsto e em que ordem.
 
 ## Uso
+
+```sh
+build/kiremote             # a janela (precisa do GTK2 para compilar); --settings, --hidden
+```
 
 ```sh
 build/kiremoted -v &            # o daemon (as mensagens vão para o terminal)

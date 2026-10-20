@@ -22,3 +22,9 @@ src/transfer.c
 ui/krclient.c
 ui/krmodel.c
 src/trust.c
+ui/gtk/kractions.c
+ui/gtk/krdevices.c
+ui/gtk/krpair.c
+ui/gtk/krsettings.c
+ui/gtk/krui.c
+ui/gtk/main.c

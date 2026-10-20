@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Kiremote
+Name[pt_BR]=Kiremote
+Comment=Phone and computer together
+Comment[pt_BR]=Celular e computador juntos
+Exec=kiremote
+Icon=phone
+Terminal=false
+Categories=Utility;Network;
+Keywords=phone;android;kdeconnect;celular;
+StartupNotify=false

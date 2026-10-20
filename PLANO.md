@@ -446,10 +446,26 @@ contra o qual foi compilado no `Depends`.
   resposta por callback na ordem, reconecta sozinho (1 s, até 5 s); quem
   hospeda só liga o fd no seu laço. Testes: `test_schema`, `test_control`,
   `test_model`, `test_client` e os eventos/configuração no `pair.sh`.
-- **3c. `libkrui` e `kiremote`**: lista, diálogo de pareamento (a chave de
-  verificação), menu de ações, configurações, envio de arquivos
-  (diálogo e arrastar-soltar), texto/URL. Teste no Xvfb (como o
-  `tests/net/desktop.sh`).
+- **3c. `libkrui` e `kiremote` (feitas).** `ui/gtk/` (GTK2, `-fPIC`,
+  `build/libkrui.a`; o Makefile só a monta se `gtk+-2.0` existir): `krui`
+  (a conexão no laço do GLib, ouvintes, e os "hooks" de diálogo que o teste
+  responde pelo usuário), `krdevices` (lista: ícone, nome, estado, bateria,
+  sinal, menu de ações, botões de parear, arrastar arquivos para um aparelho,
+  “procurar aparelhos”), `kractions` (pedir arquivos/texto, confirmar o que
+  desfaz, enviar, mostrar o erro do daemon; o menu), `krpair` (a pergunta com a
+  chave de verificação; fecha sozinha se respondida em outro lugar),
+  `krsettings` (todas as configurações montadas do `config-schema`; salva a
+  cada mudança; esmaece o que é de um plugin desligado; avisa o que precisa
+  reiniciar; edita a lista de comandos). `ui/gtk/main.c` é o `kiremote`: janela
+  com Aparelhos e Configurações, `GtkStatusIcon` conforme `[ui] tray`
+  (`auto`: não no KiDesktop), `--settings`, `--pair ID`, `--hidden`.
+  O esquema ganhou `ui.tray` e os rótulos traduzidos das escolhas. Testes:
+  `tests/ui/test_ui.c` (24) sob um Xvfb privado (`tests/ui/run.sh`), com um
+  daemon falso no mesmo processo que usa o socket, o esquema e o `kr_config`
+  reais; sob ASan só falha o vazamento que passa pelo nosso código (o GTK não
+  libera seus singletons). `KR_UI_SHOT=arq.png tests/ui/run.sh build` salva uma
+  captura da janela. Falta: instância única (abrir o `kiremote` de novo hoje
+  abre outra janela) e o daemon abrir a interface num pedido de pareamento.
 - **3d. Módulos do KiDesktop**: aba do kiconf, página do xisserve, widget
   do xispanel. Teste: `XISSERVE_PAGE_PATH`/`XISPANEL_WIDGET_PATH`/
   `KICONF` apontando para `build/`, em Xvfb.

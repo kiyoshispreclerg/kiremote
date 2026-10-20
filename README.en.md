@@ -23,11 +23,19 @@ the phone controlling the desktop's media players, system volume, a shared
 clipboard, text and links, the phone's notifications on the desktop, remote
 commands, the phone as mouse and keyboard, browsing the phone's files, a presentation pointer, locking
 and (optionally) keeping the screen awake. `kiremote-cli` drives it from the
-terminal. There is no interface or tray
-icon yet (phase 3). See [PLANO.md](PLANO.md) (in Portuguese) for what is
+terminal, and `kiremote` (GTK2) is the window: devices (battery, signal, ping,
+find, send files and text, also by dropping files on them, browse, pair and
+unpair), the pairing question with the verification key, and every setting,
+built from what the daemon reports. Outside KiDesktop it puts an icon in the
+tray (`[ui] tray` in the .ini). The KiDesktop modules (kiconf tab, xisserve
+page, xispanel widget) come next. See [PLANO.md](PLANO.md) (in Portuguese) for what is
 planned and in which order.
 
 ## Usage
+
+```sh
+build/kiremote             # the window (needs GTK2 to build); --settings, --hidden
+```
 
 ```sh
 build/kiremoted -v &            # the daemon (messages go to the terminal)

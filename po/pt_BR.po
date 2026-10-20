@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kiremote\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-20 17:44-0300\n"
+"POT-Creation-Date: 2026-10-20 18:07-0300\n"
 "PO-Revision-Date: 2026-10-17 21:00-0300\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -91,7 +91,7 @@ msgid "TLS write error"
 msgstr "erro de escrita no TLS"
 
 #: src/conn.c:346 src/conn.c:400 src/conn.c:429 src/daemon.c:1009
-#: src/daemon.c:1241 src/link.c:229
+#: src/daemon.c:1241 src/link.c:229 ui/gtk/main.c:225
 msgid "out of memory"
 msgstr "sem memória"
 
@@ -882,67 +882,107 @@ msgstr "Silenciar chamada"
 msgid "pactl not found: the volume control is off"
 msgstr "pactl não encontrado: o controle de volume está desligado"
 
-#: src/schema.c:21
+#: src/schema.c:25
+msgid "(default)"
+msgstr "(padrão)"
+
+#: src/schema.c:26
+msgid "Automatic"
+msgstr "Automático"
+
+#: src/schema.c:27
+msgid "Always"
+msgstr "Sempre"
+
+#: src/schema.c:28
+msgid "Never"
+msgstr "Nunca"
+
+#: src/schema.c:29
+msgid "Desktop"
+msgstr "Computador"
+
+#: src/schema.c:30
+msgid "Laptop"
+msgstr "Notebook"
+
+#: src/schema.c:31
+msgid "Phone"
+msgstr "Celular"
+
+#: src/schema.c:32
+msgid "Tablet"
+msgstr "Tablet"
+
+#: src/schema.c:33
+msgid "TV"
+msgstr "TV"
+
+#: src/schema.c:37
 msgid "This computer"
 msgstr "Este computador"
 
-#: src/schema.c:22
+#: src/schema.c:38
 msgid "Network"
 msgstr "Rede"
 
-#: src/schema.c:23
+#: src/schema.c:39
 msgid "Files"
 msgstr "Arquivos"
 
-#: src/schema.c:24
+#: src/schema.c:40
 msgid "Features"
 msgstr "Recursos"
 
-#: src/schema.c:25 src/schema.c:63
+#: src/schema.c:41 src/schema.c:80
 msgid "Clipboard"
 msgstr "Área de transferência"
 
-#: src/schema.c:26
+#: src/schema.c:42
 msgid "Media"
 msgstr "Mídia"
 
-#: src/schema.c:27 src/schema.c:58
+#: src/schema.c:43 src/schema.c:75
 msgid "Find my phone"
 msgstr "Achar meu celular"
 
-#: src/schema.c:28
+#: src/schema.c:44
 msgid "Screen lock"
 msgstr "Bloqueio de tela"
 
-#: src/schema.c:29
+#: src/schema.c:45
 msgid "Commands"
 msgstr "Comandos"
 
-#: src/schema.c:30
+#: src/schema.c:46
+msgid "Interface"
+msgstr "Interface"
+
+#: src/schema.c:47
 msgid "Advanced"
 msgstr "Avançado"
 
-#: src/schema.c:39
+#: src/schema.c:56 ui/gtk/krsettings.c:241 ui/gtk/krsettings.c:334
 msgid "Name"
 msgstr "Nome"
 
-#: src/schema.c:40
+#: src/schema.c:57
 msgid "How the phone calls this computer. Empty: the host name."
 msgstr "Como o celular chama este computador. Vazio: o nome da máquina."
 
-#: src/schema.c:41
+#: src/schema.c:58
 msgid "Type"
 msgstr "Tipo"
 
-#: src/schema.c:42
+#: src/schema.c:59
 msgid "Only changes the icon on the phone."
 msgstr "Só muda o ícone no celular."
 
-#: src/schema.c:44
+#: src/schema.c:61
 msgid "Extra addresses"
 msgstr "Endereços extras"
 
-#: src/schema.c:45
+#: src/schema.c:62
 msgid ""
 "IPv4 addresses that also get our discovery packet, separated by commas. For "
 "networks that block broadcasts."
@@ -950,263 +990,275 @@ msgstr ""
 "Endereços IPv4 que também recebem o nosso pacote de descoberta, separados "
 "por vírgula. Para redes que bloqueiam broadcast."
 
-#: src/schema.c:49
+#: src/schema.c:66
 msgid "Received files"
 msgstr "Arquivos recebidos"
 
-#: src/schema.c:50
+#: src/schema.c:67
 msgid "Where files from the phone go. Empty: your downloads folder."
 msgstr "Para onde vão os arquivos do celular. Vazio: a sua pasta de downloads."
 
-#: src/schema.c:51
+#: src/schema.c:68
 msgid "sshfs program"
 msgstr "Programa sshfs"
 
-#: src/schema.c:52
+#: src/schema.c:69
 msgid "The program that mounts the phone's files. Empty: sshfs."
 msgstr "O programa que monta os arquivos do celular. Vazio: sshfs."
 
-#: src/schema.c:54
+#: src/schema.c:71
 msgid "Ping"
 msgstr "Ping"
 
-#: src/schema.c:54
+#: src/schema.c:71
 msgid "Send and receive pings."
 msgstr "Enviar e receber pings."
 
-#: src/schema.c:55
+#: src/schema.c:72
 msgid "Share files and text"
 msgstr "Compartilhar arquivos e texto"
 
-#: src/schema.c:55
+#: src/schema.c:72
 msgid "Send and receive files, text and links."
 msgstr "Enviar e receber arquivos, textos e links."
 
-#: src/schema.c:56
+#: src/schema.c:73
 msgid "Battery"
 msgstr "Bateria"
 
-#: src/schema.c:56
+#: src/schema.c:73
 msgid "Show the phone's battery and tell it ours."
 msgstr "Mostrar a bateria do celular e informar a nossa."
 
-#: src/schema.c:57
+#: src/schema.c:74
 msgid "Signal"
 msgstr "Sinal"
 
-#: src/schema.c:57
+#: src/schema.c:74
 msgid "Show the phone's mobile signal."
 msgstr "Mostrar o sinal da operadora do celular."
 
-#: src/schema.c:58
+#: src/schema.c:75
 msgid "Make the phone ring, and answer when it looks for this computer."
 msgstr ""
 "Fazer o celular tocar, e responder quando ele procurar este computador."
 
-#: src/schema.c:59
+#: src/schema.c:76
 msgid "Calls"
 msgstr "Chamadas"
 
-#: src/schema.c:59
+#: src/schema.c:76
 msgid "Notify about calls and let you mute the ringer."
 msgstr "Avisar sobre chamadas e deixar silenciar o toque."
 
-#: src/schema.c:60
+#: src/schema.c:77
 msgid "Pause media on calls"
 msgstr "Pausar a mídia nas chamadas"
 
-#: src/schema.c:60
+#: src/schema.c:77
 msgid "Pause the players here while the phone rings."
 msgstr "Pausar os players daqui enquanto o celular toca."
 
-#: src/schema.c:61
+#: src/schema.c:78
 msgid "Media players"
 msgstr "Players de mídia"
 
-#: src/schema.c:61
+#: src/schema.c:78
 msgid "Control this computer's players from the phone."
 msgstr "Controlar os players deste computador pelo celular."
 
-#: src/schema.c:62
+#: src/schema.c:79
 msgid "Volume"
 msgstr "Volume"
 
-#: src/schema.c:62
+#: src/schema.c:79
 msgid "Let the phone change this computer's volume."
 msgstr "Deixar o celular mudar o volume deste computador."
 
-#: src/schema.c:63
+#: src/schema.c:80
 msgid "Share the clipboard with the phone."
 msgstr "Compartilhar a área de transferência com o celular."
 
-#: src/schema.c:64
+#: src/schema.c:81
 msgid "Phone notifications"
 msgstr "Notificações do celular"
 
-#: src/schema.c:64
+#: src/schema.c:81
 msgid "Show the phone's notifications here."
 msgstr "Mostrar aqui as notificações do celular."
 
-#: src/schema.c:65
+#: src/schema.c:82
 msgid "Run commands"
 msgstr "Executar comandos"
 
-#: src/schema.c:65
+#: src/schema.c:82
 msgid "Let the phone run the commands listed under Commands."
 msgstr "Deixar o celular executar os comandos listados em Comandos."
 
-#: src/schema.c:66
+#: src/schema.c:83
 msgid "Remote mouse and keyboard"
 msgstr "Mouse e teclado remotos"
 
-#: src/schema.c:66
+#: src/schema.c:83
 msgid "Let the phone move the pointer and type here."
 msgstr "Deixar o celular mover o ponteiro e digitar aqui."
 
-#: src/schema.c:67
+#: src/schema.c:84
 msgid "Presentation pointer"
 msgstr "Ponteiro de apresentação"
 
-#: src/schema.c:67
+#: src/schema.c:84
 msgid "Let the phone point at the screen during a presentation."
 msgstr "Deixar o celular apontar na tela durante uma apresentação."
 
-#: src/schema.c:68
+#: src/schema.c:85
 msgid "Lock the screen"
 msgstr "Bloquear a tela"
 
-#: src/schema.c:68
+#: src/schema.c:85
 msgid "Let the phone lock this computer."
 msgstr "Deixar o celular bloquear este computador."
 
-#: src/schema.c:69
+#: src/schema.c:86
 msgid "Keep the screen awake"
 msgstr "Manter a tela acesa"
 
-#: src/schema.c:69
+#: src/schema.c:86
 msgid "Do not let the screen sleep while a phone is connected."
 msgstr "Não deixar a tela apagar enquanto houver um celular conectado."
 
-#: src/schema.c:70
+#: src/schema.c:87
 msgid "Browse phone files"
 msgstr "Navegar pelos arquivos do celular"
 
-#: src/schema.c:70
+#: src/schema.c:87
 msgid "Mount the phone's storage as a folder."
 msgstr "Montar o armazenamento do celular como uma pasta."
 
-#: src/schema.c:72
+#: src/schema.c:89
 msgid "Send what I copy"
 msgstr "Enviar o que eu copio"
 
-#: src/schema.c:73
+#: src/schema.c:90
 msgid "Send what is copied here to the phone as soon as it is copied."
 msgstr "Enviar para o celular o que for copiado aqui, assim que copiar."
 
-#: src/schema.c:74
+#: src/schema.c:91
 msgid "Send passwords too"
 msgstr "Enviar senhas também"
 
-#: src/schema.c:75
+#: src/schema.c:92
 msgid "Also send what a password manager marks as secret."
 msgstr "Enviar também o que um gerenciador de senhas marca como secreto."
 
-#: src/schema.c:77
+#: src/schema.c:94
 msgid "Pause only when answered"
 msgstr "Pausar só ao atender"
 
-#: src/schema.c:78
+#: src/schema.c:95
 msgid "Wait until the call is answered instead of pausing while it rings."
 msgstr "Esperar a chamada ser atendida em vez de pausar enquanto toca."
 
-#: src/schema.c:79
+#: src/schema.c:96
 msgid "Resume afterwards"
 msgstr "Retomar depois"
 
-#: src/schema.c:80
+#: src/schema.c:97
 msgid "Start the players again when the call ends."
 msgstr "Tocar os players de novo quando a chamada acabar."
 
-#: src/schema.c:82
+#: src/schema.c:99
 msgid "Sound"
 msgstr "Som"
 
-#: src/schema.c:83
+#: src/schema.c:100
 msgid "The sound played when the phone looks for this computer. Empty: a beep."
 msgstr "O som tocado quando o celular procura este computador. Vazio: um bipe."
 
-#: src/schema.c:84
+#: src/schema.c:101
 msgid "Player"
 msgstr "Player"
 
-#: src/schema.c:85
+#: src/schema.c:102
 msgid "The program that plays it. Empty: the first one found."
 msgstr "O programa que toca o som. Vazio: o primeiro que for encontrado."
 
-#: src/schema.c:87
+#: src/schema.c:104
 msgid "Lock command"
 msgstr "Comando de bloqueio"
 
-#: src/schema.c:88
+#: src/schema.c:105
 msgid "Empty: loginctl lock-session."
 msgstr "Vazio: loginctl lock-session."
 
-#: src/schema.c:89
+#: src/schema.c:106
 msgid "Let the phone unlock"
 msgstr "Deixar o celular desbloquear"
 
-#: src/schema.c:90
+#: src/schema.c:107
 msgid ""
 "Off by default: anyone with the phone could otherwise unlock this computer."
 msgstr ""
 "Desligado por padrão: quem estivesse com o celular poderia desbloquear este "
 "computador."
 
-#: src/schema.c:91
+#: src/schema.c:108
 msgid "Unlock command"
 msgstr "Comando de desbloqueio"
 
-#: src/schema.c:92
+#: src/schema.c:109
 msgid "Empty: loginctl unlock-session. Needs the option above."
 msgstr "Vazio: loginctl unlock-session. Precisa da opção acima."
 
-#: src/schema.c:94
+#: src/schema.c:111
+msgid "Tray icon"
+msgstr "Ícone na bandeja"
+
+#: src/schema.c:112
+msgid ""
+"Show an icon in the notification area. Automatic: unless the desktop already "
+"has one for Kiremote (KiDesktop)."
+msgstr ""
+"Mostra um ícone na área de notificação. Automático: a menos que o desktop já "
+"tenha um para o Kiremote (KiDesktop)."
+
+#: src/schema.c:115
 msgid "Commands the phone may run"
 msgstr "Comandos que o celular pode executar"
 
-#: src/schema.c:95
+#: src/schema.c:116
 msgid "Name and shell command. The phone only sees the names."
 msgstr "Nome e comando de shell. O celular só vê os nomes."
 
-#: src/schema.c:200 src/schema.c:244
+#: src/schema.c:221 src/schema.c:265
 msgid "too long"
 msgstr "comprido demais"
 
-#: src/schema.c:208
+#: src/schema.c:229
 msgid "invalid name"
 msgstr "nome inválido"
 
-#: src/schema.c:211
+#: src/schema.c:232
 msgid "must be a single line"
 msgstr "deve ter uma linha só"
 
-#: src/schema.c:218
+#: src/schema.c:239
 msgid "must be true or false"
 msgstr "deve ser verdadeiro ou falso"
 
-#: src/schema.c:224
+#: src/schema.c:245
 msgid "not one of the choices"
 msgstr "não é uma das opções"
 
-#: src/schema.c:227
+#: src/schema.c:248
 msgid "must be IPv4 addresses separated by commas"
 msgstr "devem ser endereços IPv4 separados por vírgula"
 
-#: src/schema.c:231
+#: src/schema.c:252
 msgid "must be an absolute path"
 msgstr "deve ser um caminho absoluto"
 
-#: src/schema.c:237
+#: src/schema.c:258
 msgid "not a usable name"
 msgstr "nome inválido para o protocolo"
 
@@ -1328,6 +1380,148 @@ msgstr "Procurar aparelhos"
 #, c-format
 msgid "ignoring %s: not a certificate for that device"
 msgstr "ignorando %s: não é um certificado desse dispositivo"
+
+#: ui/gtk/kractions.c:23
+msgid "Send files"
+msgstr "Enviar arquivos"
+
+#: ui/gtk/kractions.c:24 ui/gtk/kractions.c:43
+msgid "_Send"
+msgstr "_Enviar"
+
+#: ui/gtk/kractions.c:42
+msgid "Send text"
+msgstr "Enviar texto"
+
+#: ui/gtk/kractions.c:150
+#, c-format
+msgid "Refuse the pairing request from %s?"
+msgstr "Recusar o pedido de pareamento de %s?"
+
+#: ui/gtk/kractions.c:151
+#, c-format
+msgid "Unpair from %s?"
+msgstr "Desparear de %s?"
+
+#: ui/gtk/kractions.c:231
+msgid "Nothing to do"
+msgstr "Nada a fazer"
+
+#: ui/gtk/krdevices.c:89
+#, c-format
+msgid "Verification key: %s"
+msgstr "Chave de verificação: %s"
+
+#: ui/gtk/krdevices.c:144
+msgid "More actions"
+msgstr "Mais ações"
+
+#: ui/gtk/krdevices.c:175
+msgid ""
+"Kiremote is not running.\n"
+"Start kiremoted and this list fills in by itself."
+msgstr ""
+"O Kiremote não está rodando.\n"
+"Inicie o kiremoted e esta lista se preenche sozinha."
+
+#: ui/gtk/krdevices.c:179
+msgid ""
+"No devices around.\n"
+"Open KDE Connect on the phone, on the same network as this computer."
+msgstr ""
+"Nenhum aparelho por perto.\n"
+"Abra o KDE Connect no celular, na mesma rede deste computador."
+
+#: ui/gtk/krpair.c:51
+#, c-format
+msgid "%s wants to pair"
+msgstr "%s quer parear"
+
+#: ui/gtk/krpair.c:53
+#, c-format
+msgid ""
+"Verification key: %s\n"
+"\n"
+"Check that the other device shows the same key before accepting."
+msgstr ""
+"Chave de verificação: %s\n"
+"\n"
+"Confira se o outro aparelho mostra a mesma chave antes de aceitar."
+
+#: ui/gtk/krsettings.c:72
+msgid "Some changes take effect when kiremoted starts again."
+msgstr "Algumas mudanças só valem quando o kiremoted for iniciado de novo."
+
+#: ui/gtk/krsettings.c:201
+msgid "Choose a folder"
+msgstr "Escolher uma pasta"
+
+#: ui/gtk/krsettings.c:201
+msgid "Choose a file"
+msgstr "Escolher um arquivo"
+
+#: ui/gtk/krsettings.c:234
+msgid "New command"
+msgstr "Novo comando"
+
+#: ui/gtk/krsettings.c:243 ui/gtk/krsettings.c:339
+msgid "Command"
+msgstr "Comando"
+
+#: ui/gtk/krsettings.c:387
+msgid "Browse..."
+msgstr "Procurar..."
+
+#: ui/gtk/krsettings.c:566
+msgid ""
+"Kiremote is not running.\n"
+"Start kiremoted to change its settings."
+msgstr ""
+"O Kiremote não está rodando.\n"
+"Inicie o kiremoted para mudar as configurações."
+
+#: ui/gtk/main.c:25
+#, c-format
+msgid ""
+"Usage: %s [OPTION]...\n"
+"The Kiremote window: devices, pairing and settings.\n"
+"\n"
+"  -s, --socket PATH   the daemon's control socket\n"
+"      --settings      open on the settings page\n"
+"      --pair ID       show the pairing question of that device\n"
+"      --hidden        start in the tray, without the window\n"
+"  -V, --version       show the version and exit\n"
+"  -h, --help          show this help and exit\n"
+msgstr ""
+"Uso: %s [OPÇÃO]...\n"
+"A janela do Kiremote: aparelhos, pareamento e configurações.\n"
+"\n"
+"  -s, --socket CAMINHO   o socket de controle do daemon\n"
+"      --settings         abre na página de configurações\n"
+"      --pair ID          mostra a pergunta de pareamento desse aparelho\n"
+"      --hidden           começa na bandeja, sem a janela\n"
+"  -V, --version          mostra a versão e sai\n"
+"  -h, --help             mostra esta ajuda e sai\n"
+
+#: ui/gtk/main.c:76
+msgid "Show Kiremote"
+msgstr "Mostrar o Kiremote"
+
+#: ui/gtk/main.c:77
+msgid "Quit"
+msgstr "Sair"
+
+#: ui/gtk/main.c:178
+msgid "cannot open the display"
+msgstr "não foi possível abrir a tela"
+
+#: ui/gtk/main.c:241
+msgid "Devices"
+msgstr "Aparelhos"
+
+#: ui/gtk/main.c:242
+msgid "Settings"
+msgstr "Configurações"
 
 #, c-format
 #~ msgid "%s shared a text: %s"
