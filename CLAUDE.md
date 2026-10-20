@@ -10,7 +10,8 @@ daemon) quase pronta: falta a resposta a notificações (sftp feito, só testado
 com `sshfs` falso). Fase 3 (interfaces `kiremote-gtk` e
 `kiremote-kidesktop`, que compartilham a `libkrui`) em andamento: 3a (API do
 daemon), 3b (`krclient`/`krmodel`), 3c (`libkrui` e o `kiremote`, uma janela por
-sessão) e 3d (módulos do KiDesktop) feitas; próxima, 3e (`debian/` e CI). Veja o `PLANO.md`, seção 3.
+sessão) 3d (módulos do KiDesktop) e 3e (`debian/`, scripts e CI) feitas. Versão 0.1.0.
+Próxima: fase 4 (SMS e contatos) ou fechar a fase 2 (responder a notificações). Veja o `PLANO.md`, seção 3.
 
 O usuário escreve em português (pt-BR) e quer as respostas em português.
 Comentários e identificadores no código, em inglês. Todo texto que o usuário
@@ -39,6 +40,7 @@ make test       # testes de unidade (tests/unit/test_*.c, tests/harness.h)
 make asan       # os testes com ASan/UBSan
 make test-net   # só tests/net/pair.sh: dois daemons em network namespaces
 make test-ui    # só tests/ui/run.sh (precisa de GTK2 e Xvfb)
+./scripts/build-deb.sh   # os 3 .deb em dist/ (KIREMOTE_SKIP_DEPS_CHECK=1 se o kidesktop-core veio do fonte)
 make fuzz       # libFuzzer (clang): build/fuzz/fuzz_packet tests/fuzz/corpus/packet
 make lint       # cppcheck + funções proibidas (strcpy, strcat, sprintf, vsprintf, gets)
 make pot        # recria po/kiremote.pot e mescla nos .po
@@ -63,6 +65,9 @@ LANGUAGE=en build/kiremoted --help   # o catálogo vem de build/locale
   `dbus-daemon` privado, um Xvfb em display alto a partir do `:40`), com
   `pactl`/`paplay`/`xdg-open`/`xdg-screensaver` falsos no PATH
   (`tests/tools/`). Ao testar à mão, não rode `pactl set-*` no som do usuário.
+- Nunca mate processo por nome (`pkill`, `pgrep | kill`, nem em script de teste): o
+  usuário roda o `kiremoted` e o resto de verdade na máquina. Mate só o PID que
+  o próprio script iniciou.
 - Nunca use `pkill -f` por nome genérico (Xephyr, Xvfb, dbus-daemon...): o
   usuário roda sessões aninhadas e isso derrubou uma. Mate só o PID que você
   mesmo iniciou. O display do seu shell (`$DISPLAY`) pode ser uma sessão
@@ -112,6 +117,7 @@ LANGUAGE=en build/kiremoted --help   # o catálogo vem de build/locale
 | `src/util.c` | arquivos, caminhos (`kr_pathf` falha em vez de truncar), XDG, relógio |
 | `tests/ui/test_widget.c`, `tests/ui/kidesktop.sh` | o widget carregado por um hospedeiro de teste; os três módulos nos programas reais do KiDesktop, num Xvfb privado |
 | `tests/ui/test_ui.c`, `tests/ui/run.sh` | os widgets sob um Xvfb privado, contra um daemon falso no mesmo processo |
+| `debian/`, `scripts/`, `.github/workflows/` | os três pacotes, os scripts de build/dependências/smoke test e a CI |
 | `tests/net/pair.sh` | integração: dois daemons em network namespaces (também eventos, arquivo de estado e `--set`) |
 | `tests/net/plugins.sh`, `tests/net/desktop.sh`, `tests/tools/` | integração dos plugins: celular falso (`fakephone.c`, serve payloads), D-Bus de sessão e de sistema privados com serviços falsos (Python), Xvfb, `xtool.c`, `pactl`/`paplay`/`xdg-*` falsos |
 | `tests/fuzz/` | alvos de fuzz, `driver.c` (sem libFuzzer) e corpus |

@@ -1,0 +1,89 @@
+Source: kiremote
+Section: net
+Priority: optional
+Maintainer: Kiyoshi Spreclerg <kiyoshi_pip@protonmail.com>
+# kidesktop-core is here for the headers the panel widget and the popup page
+# are built against (xispanel_widget.h, xisserve_page.h): it installs them.
+# The "~" lets its own per-distro versions (0.1.4~ubuntu22.04) count.
+Build-Depends: debhelper-compat (= 13),
+               pkg-config,
+               gettext,
+               libssl-dev,
+               libdbus-1-dev,
+               libx11-dev,
+               libxfixes-dev,
+               libxtst-dev,
+               libxext-dev,
+               libgtk2.0-dev,
+               libcairo2-dev,
+               kidesktop-core (>= 0.1.4~)
+Standards-Version: 4.6.0
+Homepage: https://github.com/kiyoshispreclerg/kiremote
+Rules-Requires-Root: no
+
+Package: kiremote
+Architecture: any
+Depends: ${shlibs:Depends},
+         ${misc:Depends}
+Recommends: kiremote-gtk | kiremote-kidesktop,
+            pulseaudio-utils,
+            sshfs,
+            xdg-utils
+Description: connects this computer to your phone (KDE Connect protocol)
+ Kiremote's daemon and command line. It speaks protocol version 8 of KDE
+ Connect, so the official KDE Connect app on the phone works with it, without
+ Qt or KDE libraries on this side: pairing, ping, files, clipboard,
+ notifications, battery and signal, finding the phone, media and volume
+ control, remote mouse and keyboard, a presentation pointer, remote commands,
+ locking the screen and browsing the phone's files.
+ .
+  * kiremoted - the daemon (starts with the session; no GUI, no threads)
+  * kiremote-cli - controls it from the terminal and scripts
+ .
+ The phone finds this computer through UDP 1716 and TCP 1716-1764 on the
+ local network. An interface is a separate package: kiremote-gtk for any
+ desktop, kiremote-kidesktop for KiDesktop.
+
+Package: kiremote-gtk
+Architecture: any
+Depends: ${shlibs:Depends},
+         ${misc:Depends},
+         kiremote (= ${binary:Version})
+Recommends: adwaita-icon-theme | gnome-icon-theme
+Description: Kiremote window and tray icon for any desktop (GTK 2)
+ The Kiremote interface for desktops that are not KiDesktop: a window with
+ the phones around (battery, signal, ping, find, send files and text, browse,
+ pair and unpair), the pairing question with the verification key, and every
+ setting, plus a tray icon. Only one window runs per session.
+ .
+ It has to be running to hear a pairing request, so the package starts it
+ hidden with the session.
+
+Package: kiremote-kidesktop
+Architecture: any
+Depends: ${shlibs:Depends},
+         ${misc:Depends},
+         kiremote (= ${binary:Version}),
+         kidesktop-core (>= 0.1.4~),
+         libgtk2.0-0
+Enhances: kidesktop-core
+Description: Kiremote for KiDesktop: panel widget, popup page and settings tab
+ The Kiremote interface integrated into KiDesktop, with the same functions
+ and settings as kiremote-gtk:
+ .
+  * a kiconf tab with all the settings
+  * an xisserve page (xisserve --kiremote): the devices with battery and
+    signal, an actions menu on each, pair and unpair
+  * an xispanel widget (WIDGET ... kiremote): the phone icon with the number
+    of connected devices; it also asks the pairing questions, through
+    xisserve --question
+ .
+ Add the widget to a panel in kiconf (Panels) or in xispanel.conf.
+# A fourth package comes with the screen mirroring (phase 5 of PLANO.md):
+#
+# Package: kiremote-mirror
+# Architecture: any
+# Depends: ${shlibs:Depends}, ${misc:Depends}, kiremote (= ${binary:Version})
+# Recommends: adb
+# Description: mirror and control the phone's screen
+#  kiremote-mirror: one window per phone, scrcpy's protocol, no SDL.

@@ -506,9 +506,30 @@ contra o qual foi compilado no `Depends`.
     `xisserve` e o `xispanel` reais (HOME, XDG e rede privados) e confere que
     cada um carregou o módulo e que o widget fez a pergunta. Não rodam sob
     ASan (os `.so` entrariam em processos sem o runtime dele).
-- **3e. Empacotamento e CI**: `debian/`, `.deb` dos quatro pacotes, CI
-  rodando `make test`/`asan` com gcc e clang e conferindo que o pacote
-  `-kidesktop` instala sem o `-gtk` e vice-versa.
+- **3e. Empacotamento e CI (feita; falta rodar na CI de verdade).** Um fonte
+  (`debian/`), três binários, versão 0.1.0 (`config.mk`):
+  `kiremote` (`kiremoted`, `kiremote-cli`, traduções, autostart, exemplo de
+  `.ini`; Recommends `kiremote-gtk | kiremote-kidesktop`, `sshfs`,
+  `pulseaudio-utils`, `xdg-utils`), `kiremote-gtk` (Depends `kiremote (= v)`;
+  janela, `.desktop` e autostart `--hidden` com `NotShowIn=KiDesktop`) e
+  `kiremote-kidesktop` (Depends `kiremote (= v)` e **`kidesktop-core (>=
+  0.1.4~)`**; aba, página e widget). O `~` é porque os pacotes do KiDesktop
+  são `0.1.4~ubuntu22.04`, que é menor que `0.1.4`. O `kidesktop-core` também é
+  Build-Depends (só pelos cabeçalhos `xispanel_widget.h`/`xisserve_page.h`).
+  O quarto, `kiremote-mirror` (espelhamento, fase 5), tem o bloco comentado em
+  `debian/control`. `make install-daemon|install-gtk|install-kidesktop` enchem
+  cada pacote; `scripts/build-deb.sh` (versão pela tag ou `0.1.0+git<data>.<hash>`,
+  sufixo `~ubuntu22.04`/`~debian12`; `KIREMOTE_SKIP_DEPS_CHECK=1` onde o core
+  foi instalado do fonte), `scripts/install-build-deps.sh`,
+  `scripts/fetch-kidesktop-core.sh` (baixa o `.deb` do core nos releases do
+  kidesktop) e `scripts/smoke-test-packages.sh` (instala só o que deve estar
+  instalado e confere daemon, janela, instância única e a página no xisserve
+  real). Workflows: `ci.yml` (`make lint` e `make test` em Ubuntu 22.04/24.04
+  e Debian 12/13; ASan e clang) e `release.yml` (zip do fonte, `.deb` por
+  distro, smoke test com os conjuntos full/gtk/daemon, publicação no release).
+  O pacote é compilado sem `-Werror`. Testado aqui: build dos três `.deb`, o
+  conteúdo, `ldd` e o smoke test com os pacotes extraídos; não testados: as
+  outras distros, o `fetch-kidesktop-core.sh` e os workflows.
 - Depois (já na fase 3 pelo escopo original): controle de mídia do celular
   e teclado remoto na interface; resposta a notificações (fecha o que
   falta da fase 2).

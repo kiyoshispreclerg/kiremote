@@ -1,0 +1,69 @@
+# make lint and make test (-Werror build of everything, unit tests, the
+# network-namespace tests, the interface tests under Xvfb) on every distro the
+# packages target, plus the sanitizers and clang on one of them. Tests that
+# need what a container may not give (user namespaces, kidesktop's programs)
+# skip themselves.
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Everything the tests and lint use besides debian/control's Build-Depends.
+  EXTRA_PACKAGES: cppcheck xvfb xsel x11-utils dbus python3 python3-dbus python3-gi iproute2 util-linux imagemagick clang procps
+
+jobs:
+  test:
+    name: test (${{ matrix.image }})
+    runs-on: ubuntu-latest
+    container: ${{ matrix.image }}
+    strategy:
+      fail-fast: false
+      matrix:
+        image: ["ubuntu:22.04", "ubuntu:24.04", "debian:12", "debian:13"]
+    steps:
+      - name: Install git
+        run: apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends git ca-certificates
+      - uses: actions/checkout@v4
+      # kidesktop-core (for the KiDesktop modules' headers) comes from kidesktop's
+      # releases; where there is none for this distro, the modules are skipped.
+      - name: Install build dependencies
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          ./scripts/install-build-deps.sh $EXTRA_PACKAGES ||
+            NO_KIDESKTOP_CORE=1 ./scripts/install-build-deps.sh $EXTRA_PACKAGES
+      - name: make lint
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          make lint
+      - name: make test
+        run: make test
+
+  sanitizers:
+    name: asan and clang (ubuntu:24.04)
+    runs-on: ubuntu-latest
+    container: ubuntu:24.04
+    steps:
+      - name: Install git
+        run: apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends git ca-certificates
+      - uses: actions/checkout@v4
+      - name: Install build dependencies
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          ./scripts/install-build-deps.sh $EXTRA_PACKAGES ||
+            NO_KIDESKTOP_CORE=1 ./scripts/install-build-deps.sh $EXTRA_PACKAGES
+      - name: make asan
+        run: make asan
+      - name: make test with clang
+        run: make CC=clang BUILD=build/clang test

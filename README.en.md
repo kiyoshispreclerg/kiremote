@@ -94,3 +94,11 @@ GPL-3.0-or-later. See [LICENSE](LICENSE).
 
 Not affiliated with KDE. "KDE Connect" is only used to say which protocol
 Kiremote is compatible with.
+
+## Packages
+
+One source, three `.deb` packages (Ubuntu 22.04/24.04, Debian 12/13):
+`kiremote` (daemon and CLI), `kiremote-gtk` (the window, for any desktop) and
+`kiremote-kidesktop` (kiconf tab, xisserve page and xispanel widget; needs
+`kidesktop-core` 0.1.4 or newer). `./scripts/install-build-deps.sh` and
+`./scripts/build-deb.sh` build them into `dist/`.

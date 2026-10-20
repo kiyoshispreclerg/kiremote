@@ -1,0 +1,33 @@
+kiremote Debian packaging
+=========================
+
+Three binary packages from one build of the top-level Makefile:
+
+    kiremote            kiremoted and kiremote-cli (+ translations, autostart)
+    kiremote-gtk        the GTK2 window and tray icon, for any desktop;
+                        depends on kiremote (= same version)
+    kiremote-kidesktop  the kiconf tab, the xisserve page and the xispanel
+                        widget; depends on kiremote (= same version) and
+                        kidesktop-core (>= 0.1.4~)
+
+A fourth, kiremote-mirror (the screen mirroring, phase 5 of PLANO.md), has
+its stanza commented out in debian/control; when the program exists, add an
+install-mirror target and a line to debian/rules.
+
+Each package's directory is filled by `make install-daemon`, `install-gtk`
+and `install-kidesktop`.
+
+kidesktop-core is a Build-Depends only for the headers the widget and the
+page are compiled against (xispanel_widget.h, xisserve_page.h); the version
+has a "~" because its own per-distro builds are 0.1.4~ubuntu22.04, which is
+older than a bare 0.1.4. The modules are checked at run time by the ABI
+numbers in those headers (both 1 today): when kidesktop bumps one, the
+Depends here must follow.
+
+debian/changelog is not kept in git: scripts/build-deb.sh writes it for each
+build, with the version from the git tag (v1.2.3 -> 1.2.3, or
+<VERSION in config.mk>+git<date>.<commit> between tags) plus a distro suffix
+(~ubuntu22.04, ~debian12), as kidesktop does.
+
+    ./scripts/install-build-deps.sh   # apt Build-Depends (+ kidesktop-core, see the script)
+    ./scripts/build-deb.sh            # -> dist/*.deb

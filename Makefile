@@ -63,7 +63,7 @@ ALL_LDFLAGS = $(SANFLAGS) $(LDFLAGS)
 test-ui: all $(GTK_TESTS)
 	tests/ui/run.sh $(BUILD)
 
-.PHONY: test-ui all test test-net run asan asan-run fuzz fuzz-targets install uninstall lint clean locale pot update-po
+.PHONY: install-daemon install-gtk install-kidesktop test-ui all test test-net run asan asan-run fuzz fuzz-targets install uninstall lint clean locale pot update-po
 
 # The GTK2 interface is built when GTK2 is there: the daemon and the CLI don't
 # need it (and a machine with only the daemon shouldn't).
@@ -278,12 +278,33 @@ $(BUILD)/fuzz_%: tests/fuzz/fuzz_%.c $(LIBKR)
 asan-run: asan
 	LSAN_OPTIONS=suppressions=$(CURDIR)/tools/lsan.supp $(BUILD)/asan/kiremoted $(ARGS)
 
-install: $(BUILD)/kiremoted $(BUILD)/kiremote-cli $(MO_FILES) $(GTK_TARGETS) $(KD_TARGETS)
+# One target per package (debian/rules uses them): the daemon and CLI with
+# the translations, the GTK window, the KiDesktop modules. `make install`
+# does what can be built here.
+install: install-daemon $(if $(GTK_TARGETS),install-gtk) $(if $(KD_TARGETS),install-kidesktop)
+
+install-daemon: $(BUILD)/kiremoted $(BUILD)/kiremote-cli $(MO_FILES)
 	install -Dm755 $(BUILD)/kiremoted $(DESTDIR)$(BINDIR)/kiremoted
+	install -Dm755 $(BUILD)/kiremote-cli $(DESTDIR)$(BINDIR)/kiremote-cli
 	install -Dm644 data/kiremote.ini $(DESTDIR)$(DATADIR)/doc/kiremote/kiremote.ini
-	install -Dm644 data/kiremoted.desktop $(DESTDIR)/etc/xdg/autostart/kiremoted.desktop
+	install -Dm644 data/kiremoted.desktop $(DESTDIR)$(SYSCONFDIR)/xdg/autostart/kiremoted.desktop
 	$(foreach l,$(if $(MO_FILES),$(LINGUAS)),install -Dm644 $(BUILD)/locale/$(l)/LC_MESSAGES/kiremote.mo \
 		$(DESTDIR)$(LOCALEDIR)/$(l)/LC_MESSAGES/kiremote.mo;)
+
+install-gtk: $(BUILD)/kiremote
+	install -Dm755 $(BUILD)/kiremote $(DESTDIR)$(BINDIR)/kiremote
+	install -Dm644 data/kiremote.desktop $(DESTDIR)$(DATADIR)/applications/kiremote.desktop
+	install -Dm644 data/kiremote-autostart.desktop $(DESTDIR)$(SYSCONFDIR)/xdg/autostart/kiremote.desktop
+
+# The tab's module is found by its absolute path (the .desktop is generated
+# for LIBDIR); xisserve and xispanel look in their own directories.
+install-kidesktop: $(KD_TARGETS)
+	install -Dm755 $(KD_OUT)/tabs/kiremote-tab.so $(DESTDIR)$(LIBDIR)/kiremote/kiremote-tab.so
+	install -d $(DESTDIR)$(DATADIR)/kiconf/tabs
+	sed 's|@MODULE@|$(LIBDIR)/kiremote/kiremote-tab.so|' kidesktop/kiremote.desktop.in > $(DESTDIR)$(DATADIR)/kiconf/tabs/kiremote.desktop
+	install -Dm755 $(KD_OUT)/pages/kiremote.so $(DESTDIR)$(LIBDIR)/xisserve/pages/kiremote.so
+	install -Dm755 $(KD_OUT)/widgets/kiremote.so $(DESTDIR)$(LIBDIR)/xispanel/widgets/kiremote.so
+	install -Dm644 kidesktop/kiremote.widget $(DESTDIR)$(LIBDIR)/xispanel/widgets/kiremote.widget
 
 uninstall:
 	rm -f $(DESTDIR)$(BINDIR)/kiremoted $(DESTDIR)$(BINDIR)/kiremote-cli $(DESTDIR)$(BINDIR)/kiremote
@@ -291,7 +312,7 @@ uninstall:
 	rm -f $(DESTDIR)$(LIBDIR)/kiremote/kiremote-tab.so $(DESTDIR)$(LIBDIR)/xisserve/pages/kiremote.so
 	rm -f $(DESTDIR)$(LIBDIR)/xispanel/widgets/kiremote.so $(DESTDIR)$(LIBDIR)/xispanel/widgets/kiremote.widget
 	rm -f $(DESTDIR)$(DATADIR)/doc/kiremote/kiremote.ini
-	rm -f $(DESTDIR)/etc/xdg/autostart/kiremoted.desktop
+	rm -f $(DESTDIR)$(SYSCONFDIR)/xdg/autostart/kiremoted.desktop $(DESTDIR)$(SYSCONFDIR)/xdg/autostart/kiremote.desktop
 	for l in $(LINGUAS); do rm -f $(DESTDIR)$(LOCALEDIR)/$$l/LC_MESSAGES/kiremote.mo; done
 
 lint:

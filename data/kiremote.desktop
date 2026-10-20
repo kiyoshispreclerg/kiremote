@@ -7,6 +7,6 @@ Comment[pt_BR]=Celular e computador juntos
 Exec=kiremote
 Icon=phone
 Terminal=false
-Categories=Utility;Network;
+Categories=Network;
 Keywords=phone;android;kdeconnect;celular;
 StartupNotify=false

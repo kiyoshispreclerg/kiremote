@@ -1,0 +1,44 @@
+#!/usr/bin/make -f
+# One build of the top-level Makefile, installed into one directory per
+# package by its install-daemon / install-gtk / install-kidesktop targets
+# (see README.source). The tests are not run here: they need namespaces, an
+# X server and, for the KiDesktop ones, kidesktop's own programs (CI runs
+# `make test` on its own).
+
+include /usr/share/dpkg/pkg-info.mk
+
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+
+# -Werror is for development: a newer compiler on another distro finding a
+# new warning must not stop a package. The version the programs report is the
+# package's.
+MAKEVARS = PREFIX=/usr VERSION='$(DEB_VERSION_UPSTREAM)' WARNFLAGS='-Wall -Wextra'
+
+%:
+	dh $@
+
+override_dh_auto_configure:
+
+override_dh_auto_build:
+	$(MAKE) $(MAKEVARS) all
+	# The panel widget, the popup page and the kiconf tab are built only when
+	# GTK and kidesktop-core's headers are there: here that is a failure.
+	for f in kiremote build/kidesktop/tabs/kiremote-tab.so build/kidesktop/pages/kiremote.so \
+	         build/kidesktop/widgets/kiremote.so; do \
+		test -e $$f || test -e build/$$f || { echo "debian/rules: $$f was not built"; exit 1; }; \
+	done
+
+override_dh_auto_install:
+	$(MAKE) $(MAKEVARS) install-daemon DESTDIR=$(CURDIR)/debian/kiremote
+	$(MAKE) $(MAKEVARS) install-gtk DESTDIR=$(CURDIR)/debian/kiremote-gtk
+	$(MAKE) $(MAKEVARS) install-kidesktop DESTDIR=$(CURDIR)/debian/kiremote-kidesktop
+
+# The modules leave xpw_*() and xisserve_*() to the program that loads them:
+# dpkg-shlibdeps would warn about each.
+override_dh_shlibdeps:
+	dh_shlibdeps -- --warnings=0
+
+override_dh_auto_test:
+
+override_dh_auto_clean:
+	$(MAKE) clean

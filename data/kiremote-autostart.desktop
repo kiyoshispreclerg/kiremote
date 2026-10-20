@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Kiremote
+Comment=Phone and computer together
+Comment[pt_BR]=Celular e computador juntos
+Exec=kiremote --hidden
+Icon=phone
+NoDisplay=true
+# KiDesktop has the panel widget, which is what hears the pairing requests.
+NotShowIn=KiDesktop;
+X-KDE-autostart-phase=2
