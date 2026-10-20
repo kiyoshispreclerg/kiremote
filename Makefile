@@ -320,7 +320,8 @@ lint:
 		echo "*** banned function used"; exit 1; fi
 	@command -v cppcheck >/dev/null || { echo "*** cppcheck not installed"; exit 1; }
 	cppcheck --std=c11 --enable=warning,performance,portability \
-		--error-exitcode=1 --inline-suppr --quiet -Isrc -Ivendor/cjson \
+		--error-exitcode=1 --inline-suppr --quiet \
+		--suppress=normalCheckLevelMaxBranches -Isrc -Ivendor/cjson \
 		-D_XOPEN_SOURCE=700 -DKR_VERSION='"lint"' -DKR_FIXTURES_DIR='"."' src ui/krmodel.c ui/krclient.c tests/unit tests/fuzz
 
 clean:
