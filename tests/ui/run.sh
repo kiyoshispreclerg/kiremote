@@ -47,4 +47,22 @@ if awk 'BEGIN { RS = "" } /leak of/ && /(ui\/gtk\/|tests\/ui\/)/ { bad = 1 } END
 fi
 sed '/ERROR: LeakSanitizer/,$d' "$tmp/out"
 [ "$rc" -eq 0 ] || { echo "tests/ui/run.sh: FAILED"; exit "$rc"; }
+
+# The program itself: a second kiremote shows the first one and exits.
+if [ -x "$build/kiremote" ]; then
+    mkdir -p "$tmp/run"
+    export XDG_RUNTIME_DIR="$tmp/run"
+    "$build/kiremote" -s "$tmp/run/k.sock" >"$tmp/first.log" 2>&1 &
+    first=$!
+    t=50
+    while [ ! -S "$tmp/run/k-ui.sock" ] && [ $t -gt 0 ]; do sleep 0.1; t=$((t - 1)); done
+    [ -S "$tmp/run/k-ui.sock" ] || { echo "the first kiremote did not start"; cat "$tmp/first.log"; kill $first; exit 1; }
+    timeout 5 "$build/kiremote" -s "$tmp/run/k.sock" --settings >"$tmp/second.log" 2>&1 \
+        || { echo "the second kiremote did not exit by itself"; cat "$tmp/second.log"; kill $first; exit 1; }
+    kill -0 $first 2>/dev/null || { echo "the first kiremote is gone"; cat "$tmp/first.log"; exit 1; }
+    kill $first
+    wait $first 2>/dev/null || true
+    [ ! -e "$tmp/run/k-ui.sock" ] || { echo "the socket was left behind after SIGTERM"; exit 1; }
+    echo "tests/ui/run.sh: one window per session"
+fi
 echo "tests/ui/run.sh: all passed"

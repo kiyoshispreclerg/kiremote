@@ -209,9 +209,8 @@ O conteúdo abaixo vale para as duas interfaces: ambas montam as mesmas
 telas a partir da `libkrui` (ver fase 3).
 
 - Lista de dispositivos (pareados e visíveis), estado, bateria, sinal.
-- Diálogo de pareamento com a chave de verificação (o daemon abre a
-  interface com `--pair <id>` quando chega um pedido: o `notifd` do
-  xispanel não suporta ações).
+- Diálogo de pareamento com a chave de verificação (a interface precisa estar
+  aberta; o daemon não a inicia).
 - Por dispositivo: enviar arquivos (diálogo e arrastar-soltar), enviar
   texto/URL, achar celular, navegar arquivos, espelhar, controle de mídia,
   teclado remoto, plugins ligados/desligados, comandos.
@@ -464,8 +463,12 @@ contra o qual foi compilado no `Depends`.
   daemon falso no mesmo processo que usa o socket, o esquema e o `kr_config`
   reais; sob ASan só falha o vazamento que passa pelo nosso código (o GTK não
   libera seus singletons). `KR_UI_SHOT=arq.png tests/ui/run.sh build` salva uma
-  captura da janela. Falta: instância única (abrir o `kiremote` de novo hoje
-  abre outra janela) e o daemon abrir a interface num pedido de pareamento.
+  captura da janela. Uma janela por sessão (`ui/gtk/instance.c`): o socket
+  `kiremote-ui.sock` ao lado do de controle; abrir de novo entrega “show”,
+  “settings” ou “pair=ID” à primeira e sai. O daemon **não** abre a
+  interface: ela precisa estar aberta (ou na bandeja) para ouvir um pedido de
+  pareamento. No KiDesktop, quem pergunta é o widget do xispanel, abrindo uma
+  página do xisserve.
 - **3d. Módulos do KiDesktop**: aba do kiconf, página do xisserve, widget
   do xispanel. Teste: `XISSERVE_PAGE_PATH`/`XISPANEL_WIDGET_PATH`/
   `KICONF` apontando para `build/`, em Xvfb.

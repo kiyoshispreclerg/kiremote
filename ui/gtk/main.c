@@ -3,11 +3,14 @@
  * icon where the desktop has no panel widget of its own. All the interface is
  * libkrui's; this only puts it in a window. */
 #include <getopt.h>
+#include <glib-unix.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "i18n.h"
+#include "instance.h"
 #include "krui.h"
 #include "log.h"
 
@@ -30,7 +33,9 @@ static void usage(FILE *out)
                    "      --pair ID       show the pairing question of that device\n"
                    "      --hidden        start in the tray, without the window\n"
                    "  -V, --version       show the version and exit\n"
-                   "  -h, --help          show this help and exit\n"),
+                   "  -h, --help          show this help and exit\n"
+                   "\n"
+                   "Only one window runs per session: starting it again shows that one.\n"),
             "kiremote");
 }
 
@@ -145,6 +150,33 @@ static void on_change(void *ud, kr_change what, const char *id)
     update_icon(a);
 }
 
+/* What a later launch asked of us (instance.h). */
+static void on_launch(void *ud, char **words)
+{
+    app *a = ud;
+    gboolean show = FALSE;
+    for (; words && *words; words++) {
+        if (strcmp(*words, "show") == 0) {
+            show = TRUE;
+        } else if (strcmp(*words, "settings") == 0) {
+            gtk_notebook_set_current_page(GTK_NOTEBOOK(a->tabs), 1);
+            show = TRUE;
+        } else if (strncmp(*words, "pair=", 5) == 0) {
+            kr_ui_pair_dialog(a->ui, GTK_WINDOW(a->window), *words + 5);
+            show = TRUE;
+        }
+    }
+    if (show)
+        gtk_window_present(GTK_WINDOW(a->window));
+}
+
+static gboolean on_signal(gpointer data)
+{
+    (void)data;
+    gtk_main_quit(); /* so the instance socket is removed */
+    return G_SOURCE_REMOVE;
+}
+
 static gboolean window_delete(GtkWidget *w, GdkEvent *e, gpointer data)
 {
     app *a = data;
@@ -220,6 +252,24 @@ int main(int argc, char **argv)
         return 2;
     }
 
+    /* One window per session: a second launch hands its request to the first. */
+    GPtrArray *words = g_ptr_array_new();
+    if (!hidden)
+        g_ptr_array_add(words, "show");
+    if (settings)
+        g_ptr_array_add(words, "settings");
+    char *pair_word = a.pair_id ? g_strdup_printf("pair=%s", a.pair_id) : NULL;
+    if (pair_word)
+        g_ptr_array_add(words, pair_word);
+    g_ptr_array_add(words, NULL);
+    char *instance_path = kr_instance_path(socket_path);
+    gboolean first = kr_instance_acquire(instance_path, (char **)words->pdata, on_launch, &a);
+    g_ptr_array_free(words, TRUE);
+    g_free(pair_word);
+    g_free(instance_path);
+    if (!first)
+        return 0;
+
     a.ui = kr_ui_new(socket_path);
     if (!a.ui) {
         kr_log_error(_("out of memory"));
@@ -251,11 +301,14 @@ int main(int argc, char **argv)
     if (!hidden || !a.icon || a.pair_id)
         gtk_widget_show(a.window);
 
+    g_unix_signal_add(SIGTERM, on_signal, NULL);
+    g_unix_signal_add(SIGINT, on_signal, NULL);
     gtk_main();
 
     if (a.icon)
         g_object_unref(a.icon);
     gtk_widget_destroy(a.window); /* the widgets before the connection they listen to */
     kr_ui_free(a.ui);
+    kr_instance_release();
     return 0;
 }

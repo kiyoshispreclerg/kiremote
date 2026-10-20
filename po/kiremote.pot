@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kiremote\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-20 18:07-0300\n"
+"POT-Creation-Date: 2026-10-20 18:16-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -91,7 +91,7 @@ msgid "TLS write error"
 msgstr ""
 
 #: src/conn.c:346 src/conn.c:400 src/conn.c:429 src/daemon.c:1009
-#: src/daemon.c:1241 src/link.c:229 ui/gtk/main.c:225
+#: src/daemon.c:1241 src/link.c:229 ui/gtk/main.c:275
 msgid "out of memory"
 msgstr ""
 
@@ -1402,7 +1402,7 @@ msgid ""
 "Start kiremoted to change its settings."
 msgstr ""
 
-#: ui/gtk/main.c:25
+#: ui/gtk/main.c:28
 #, c-format
 msgid ""
 "Usage: %s [OPTION]...\n"
@@ -1414,24 +1414,26 @@ msgid ""
 "      --hidden        start in the tray, without the window\n"
 "  -V, --version       show the version and exit\n"
 "  -h, --help          show this help and exit\n"
+"\n"
+"Only one window runs per session: starting it again shows that one.\n"
 msgstr ""
 
-#: ui/gtk/main.c:76
+#: ui/gtk/main.c:81
 msgid "Show Kiremote"
 msgstr ""
 
-#: ui/gtk/main.c:77
+#: ui/gtk/main.c:82
 msgid "Quit"
 msgstr ""
 
-#: ui/gtk/main.c:178
+#: ui/gtk/main.c:210
 msgid "cannot open the display"
 msgstr ""
 
-#: ui/gtk/main.c:241
+#: ui/gtk/main.c:291
 msgid "Devices"
 msgstr ""
 
-#: ui/gtk/main.c:242
+#: ui/gtk/main.c:292
 msgid "Settings"
 msgstr ""

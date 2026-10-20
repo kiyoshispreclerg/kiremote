@@ -3,6 +3,10 @@
  * (tests/ui/run.sh). The daemon is in this process: the real control socket
  * code, the real settings schema and config, and canned devices. */
 #include <poll.h>
+#include <gio/gio.h>
+#include <gio/gunixsocketaddress.h>
+#include <sys/socket.h>
+#include <sys/un.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -10,6 +14,7 @@
 #include "../harness.h"
 #include "config.h"
 #include "control.h"
+#include "instance.h"
 #include "krui.h"
 #include "schema.h"
 #include "util.h"
@@ -842,6 +847,123 @@ TEST(destroying_a_page_with_a_request_in_flight_is_safe)
     kr_ui_free(ui);
 }
 
+/* ---- one window --------------------------------------------------------------------- */
+
+static struct {
+    int calls;
+    GPtrArray *words;
+} launched;
+
+static void on_launch(void *ud, char **words)
+{
+    (void)ud;
+    launched.calls++;
+    g_ptr_array_set_size(launched.words, 0);
+    for (; *words; words++)
+        g_ptr_array_add(launched.words, g_strdup(*words));
+}
+
+static gboolean c_launched(void *n)
+{
+    return launched.calls >= GPOINTER_TO_INT(n);
+}
+
+TEST(a_second_launch_hands_over_and_leaves)
+{
+    char *path = kr_instance_path(F.path);
+    CHECK(path && g_str_has_suffix(path, "/s-ui.sock"));
+    launched.calls = 0;
+    launched.words = g_ptr_array_new_with_free_func(g_free);
+
+    char *first_words[] = {"show", NULL};
+    CHECK(kr_instance_acquire(path, first_words, on_launch, NULL)); /* we are the instance */
+    CHECK_INT_EQ(launched.calls, 0);                                /* it doesn't ask itself */
+
+    char *second[] = {"show", "settings", "pair=abc", NULL};
+    CHECK(!kr_instance_acquire(path, second, on_launch, NULL)); /* told the first, and leaves */
+    CHECK(wait_until(c_launched, GINT_TO_POINTER(1), 3));
+    CHECK_INT_EQ(launched.words->len, 3);
+    CHECK_STR_EQ(g_ptr_array_index(launched.words, 0), "show");
+    CHECK_STR_EQ(g_ptr_array_index(launched.words, 1), "settings");
+    CHECK_STR_EQ(g_ptr_array_index(launched.words, 2), "pair=abc");
+
+    char *third[] = {"show", NULL};
+    CHECK(!kr_instance_acquire(path, third, on_launch, NULL));
+    CHECK(wait_until(c_launched, GINT_TO_POINTER(2), 3));
+    CHECK_INT_EQ(launched.words->len, 1);
+
+    kr_instance_release();
+    CHECK(!g_file_test(path, G_FILE_TEST_EXISTS)); /* the socket goes with it */
+
+    /* Nobody is left: the next one is the instance. */
+    CHECK(kr_instance_acquire(path, first_words, on_launch, NULL));
+    kr_instance_release();
+    g_free(path);
+    g_ptr_array_free(launched.words, TRUE);
+}
+
+TEST(a_socket_left_by_a_crash_is_replaced)
+{
+    char *path = g_strdup_printf("%s/stale-ui.sock", F.dir);
+    /* A socket file with nobody behind it. */
+    GSocket *s = g_socket_new(G_SOCKET_FAMILY_UNIX, G_SOCKET_TYPE_STREAM, G_SOCKET_PROTOCOL_DEFAULT, NULL);
+    GSocketAddress *a = g_unix_socket_address_new(path);
+    CHECK(g_socket_bind(s, a, TRUE, NULL));
+    g_object_unref(s); /* closed, the file stays */
+    g_object_unref(a);
+    CHECK(g_file_test(path, G_FILE_TEST_EXISTS));
+
+    launched.calls = 0;
+    launched.words = g_ptr_array_new_with_free_func(g_free);
+    char *w[] = {"show", NULL};
+    CHECK(kr_instance_acquire(path, w, on_launch, NULL));
+    CHECK(!kr_instance_acquire(path, w, on_launch, NULL));
+    CHECK(wait_until(c_launched, GINT_TO_POINTER(1), 3));
+    kr_instance_release();
+    g_free(path);
+    g_ptr_array_free(launched.words, TRUE);
+}
+
+TEST(garbage_and_silent_clients_do_not_disturb_the_instance)
+{
+    char *path = g_strdup_printf("%s/noise-ui.sock", F.dir);
+    launched.calls = 0;
+    launched.words = g_ptr_array_new_with_free_func(g_free);
+    char *w[] = {"show", NULL};
+    CHECK(kr_instance_acquire(path, w, on_launch, NULL));
+
+    struct sockaddr_un sa = {.sun_family = AF_UNIX};
+    snprintf(sa.sun_path, sizeof sa.sun_path, "%s", path);
+    int silent = socket(AF_UNIX, SOCK_STREAM, 0);
+    CHECK(connect(silent, (struct sockaddr *)&sa, sizeof sa) == 0); /* says nothing */
+    int big = socket(AF_UNIX, SOCK_STREAM, 0);
+    CHECK(connect(big, (struct sockaddr *)&sa, sizeof sa) == 0);
+    char junk[4096];
+    memset(junk, 'x', sizeof junk);
+    (void)!write(big, junk, sizeof junk); /* long, never ends */
+    spin(30);
+    CHECK_INT_EQ(launched.calls, 0);
+
+    char *real[] = {"settings", NULL};
+    CHECK(!kr_instance_acquire(path, real, on_launch, NULL)); /* still served */
+    CHECK(wait_until(c_launched, GINT_TO_POINTER(1), 3));
+    CHECK_STR_EQ(g_ptr_array_index(launched.words, 0), "settings");
+    close(silent);
+    close(big);
+    kr_instance_release();
+    g_free(path);
+    g_ptr_array_free(launched.words, TRUE);
+}
+
+TEST(no_path_means_no_single_instance)
+{
+    char *w[] = {"show", NULL};
+    CHECK(kr_instance_acquire(NULL, w, on_launch, NULL));
+    char *toolong = g_strnfill(300, 'a');
+    CHECK(kr_instance_acquire(toolong, w, on_launch, NULL));
+    g_free(toolong);
+}
+
 /* For a human: KR_UI_SHOT=/path/shot.png tests/ui/run.sh build draws the
  * window with the scripted devices and saves what the private X server shows
  * (needs ImageMagick's import). Not a check. */
@@ -904,6 +1026,10 @@ int main(int argc, char **argv)
     RUN(commands_are_edited_in_the_list);
     RUN(settings_wait_for_the_daemon);
     RUN(destroying_a_page_with_a_request_in_flight_is_safe);
+    RUN(a_second_launch_hands_over_and_leaves);
+    RUN(a_socket_left_by_a_crash_is_replaced);
+    RUN(garbage_and_silent_clients_do_not_disturb_the_instance);
+    RUN(no_path_means_no_single_instance);
 
     int rc = harness_report();
     g_ptr_array_free(ask.errors, TRUE);
