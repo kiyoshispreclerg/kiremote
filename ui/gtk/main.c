@@ -252,6 +252,12 @@ int main(int argc, char **argv)
         return 2;
     }
 
+    /* Before the socket exists: a signal handled only in the main loop (which
+     * is when the quit takes effect, even if it came earlier) always leaves
+     * through kr_instance_release(). */
+    g_unix_signal_add(SIGTERM, on_signal, NULL);
+    g_unix_signal_add(SIGINT, on_signal, NULL);
+
     /* One window per session: a second launch hands its request to the first. */
     GPtrArray *words = g_ptr_array_new();
     if (!hidden)
@@ -301,8 +307,6 @@ int main(int argc, char **argv)
     if (!hidden || !a.icon || a.pair_id)
         gtk_widget_show(a.window);
 
-    g_unix_signal_add(SIGTERM, on_signal, NULL);
-    g_unix_signal_add(SIGINT, on_signal, NULL);
     gtk_main();
 
     if (a.icon)

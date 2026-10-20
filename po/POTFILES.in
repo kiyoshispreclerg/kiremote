@@ -28,3 +28,7 @@ ui/gtk/krpair.c
 ui/gtk/krsettings.c
 ui/gtk/krui.c
 ui/gtk/main.c
+kidesktop/page.c
+kidesktop/tab.c
+kidesktop/widget.c
+ui/gtk/instance.c

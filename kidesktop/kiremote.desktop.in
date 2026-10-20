@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Kiremote
+Name[pt_BR]=Kiremote
+Comment=Phone and computer together
+Comment[pt_BR]=Celular e computador juntos
+Icon=phone
+X-KiConf-Category=hardware
+X-KiConf-Keywords=phone;android;kdeconnect;celular;
+X-KiConf-Module=@MODULE@

@@ -469,9 +469,43 @@ contra o qual foi compilado no `Depends`.
   interface: ela precisa estar aberta (ou na bandeja) para ouvir um pedido de
   pareamento. No KiDesktop, quem pergunta é o widget do xispanel, abrindo uma
   página do xisserve.
-- **3d. Módulos do KiDesktop**: aba do kiconf, página do xisserve, widget
-  do xispanel. Teste: `XISSERVE_PAGE_PATH`/`XISPANEL_WIDGET_PATH`/
-  `KICONF` apontando para `build/`, em Xvfb.
+- **3d. Módulos do KiDesktop (feitos).** `kidesktop/`, três `.so` que o
+  `make` monta quando dá (a aba e a página precisam de `gtk+-2.0`; a página e
+  o widget, dos cabeçalhos que o KiDesktop instala em `$(KD_INCDIR)`, padrão
+  `/usr/local/include`; sem eles o resto compila igual). Cada um embute o que
+  usa (`libkrui.a` e `libkrpic.a`, a parte do daemon em PIC), com
+  `-Wl,-Bsymbolic`; os únicos símbolos que sobram indefinidos são os do
+  hospedeiro (`xpw_*`, `xisserve_*`).
+  - `tab.c` → `kiremote-tab.so` + `kiremote.desktop` (kiconf,
+    `X-KiConf-Module`): `kr_ui_settings_new()`, a mesma tela da janela.
+  - `page.c` → `pages/kiremote.so` (`xisserve --kiremote`): a lista compacta
+    com as cores do popup (`kr_ui_set_colors`), o menu de ações, parear e
+    “Procurar aparelhos”, e “Configurações...” (abre `kiconf --tab kiremote`).
+    O popup fecha ao perder o grab, então a confirmação de desparear/recusar
+    vai por `xisserve --question` (esperando com o laço rodando) e os
+    seletores de arquivo/texto avisam o xisserve
+    (`xisserve_transient_popup_begin/end`).
+  - `widget.c` → `widgets/kiremote.so` + `kiremote.widget` (xispanel; sem
+    GTK, sem socket, sem bloquear): o ícone com o número de aparelhos
+    conectados (ou um “!” âmbar quando alguém pede para parear), esmaecido
+    sem daemon; dica com as baterias; clique abre `xisserve --kiremote`,
+    clique do meio abre a aba do kiconf. Lê o arquivo de estado a cada 2 s
+    com o `krmodel`. **Pareamento**: o daemon não abre nada; quem pergunta é o
+    widget, uma vez por pedido, com `xisserve --question` (Aceitar/Recusar →
+    `kiremote-cli --pair`/`--unpair`; fechar o popup não faz nada). Um
+    arquivo `kiremote-asked-<id>-<chave>` em `$XDG_RUNTIME_DIR` (criado com
+    `O_EXCL`) impede que dois painéis perguntem a mesma coisa; o nome vem do
+    celular, então vai para o shell entre aspas simples (testado com um nome
+    hostil) e id e chave só valem com `[A-Za-z0-9_-]`.
+  - Textos: o `_()` agora é `dgettext("kiremote", ...)` e os módulos chamam
+    `kr_i18n_bind()` (o `$KIREMOTE_LOCALEDIR` aponta uma árvore de build).
+  - Testes: `tests/ui/test_widget.c` carrega o `.so` como o xispanel faz,
+    com as funções `xpw_*` gravando o que recebem, e executa de verdade o
+    comando da pergunta com `xisserve`/`kiremote-cli` falsos;
+    `tests/ui/kidesktop.sh` sobe um Xvfb, um `kiremoted`, o `kiconf`, o
+    `xisserve` e o `xispanel` reais (HOME, XDG e rede privados) e confere que
+    cada um carregou o módulo e que o widget fez a pergunta. Não rodam sob
+    ASan (os `.so` entrariam em processos sem o runtime dele).
 - **3e. Empacotamento e CI**: `debian/`, `.deb` dos quatro pacotes, CI
   rodando `make test`/`asan` com gcc e clang e conferindo que o pacote
   `-kidesktop` instala sem o `-gtk` e vice-versa.

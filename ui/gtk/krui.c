@@ -103,7 +103,8 @@ struct kr_ui {
     guint next_id;
     kr_ui_hooks hooks;
     GList *pair_dialogs; /* krui_private.h */
-    gboolean closing;
+    gboolean closing, has_colors;
+    GdkColor fg, bg;
     GSList *owned; /* freed with the kr_ui */
 };
 
@@ -219,4 +220,22 @@ gboolean kr_ui_closing(kr_ui *ui)
 void kr_ui_own(kr_ui *ui, gpointer mem)
 {
     ui->owned = g_slist_prepend(ui->owned, mem);
+}
+
+void kr_ui_set_colors(kr_ui *ui, const GdkColor *fg, const GdkColor *bg)
+{
+    ui->has_colors = fg && bg;
+    if (ui->has_colors) {
+        ui->fg = *fg;
+        ui->bg = *bg;
+    }
+}
+
+gboolean kr_ui_colors(kr_ui *ui, GdkColor *fg, GdkColor *bg)
+{
+    if (!ui->has_colors)
+        return FALSE;
+    *fg = ui->fg;
+    *bg = ui->bg;
+    return TRUE;
 }

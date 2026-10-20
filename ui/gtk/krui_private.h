@@ -6,14 +6,15 @@
 
 #include "krui.h"
 
-/* The dialogs a real user answers. */
-void kr_ui_default_hooks(kr_ui_hooks *h);
 const kr_ui_hooks *kr_ui_get_hooks(kr_ui *ui);
 /* The open pairing dialogs (GtkWidget *). */
 GList **kr_ui_pair_dialogs(kr_ui *ui);
 
 /* mem (from g_malloc) is freed when the kr_ui is: for what a listener keeps. */
 void kr_ui_own(kr_ui *ui, gpointer mem);
+
+/* The colors set by kr_ui_set_colors; FALSE if none. */
+gboolean kr_ui_colors(kr_ui *ui, GdkColor *fg, GdkColor *bg);
 
 /* Is kr_ui_free running? */
 gboolean kr_ui_closing(kr_ui *ui);

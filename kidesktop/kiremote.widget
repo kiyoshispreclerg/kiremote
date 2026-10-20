@@ -1,0 +1,8 @@
+[Widget]
+Embeddable=true
+
+[Field icon]
+Type=string
+Name=Icon
+Name[pt_BR]=Ícone
+Default=phone

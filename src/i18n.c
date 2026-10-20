@@ -2,6 +2,7 @@
 #include "i18n.h"
 
 #include <locale.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
@@ -10,6 +11,13 @@
 #ifndef LOCALEDIR
 #define LOCALEDIR "/usr/local/share/locale"
 #endif
+
+void kr_i18n_bind(void)
+{
+    const char *dir = getenv("KIREMOTE_LOCALEDIR");
+    bindtextdomain(KR_DOMAIN, dir && *dir ? dir : LOCALEDIR);
+    bind_textdomain_codeset(KR_DOMAIN, "UTF-8");
+}
 
 void kr_i18n_init(void)
 {

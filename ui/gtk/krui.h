@@ -31,6 +31,11 @@ typedef void (*kr_ui_listener)(void *ud, kr_change what, const char *id);
 guint kr_ui_listen(kr_ui *ui, kr_ui_listener fn, void *ud);
 void kr_ui_unlisten(kr_ui *ui, guint id);
 
+/* For a host whose background is not the GTK theme's (the xisserve popup
+ * draws its own): the text and background colors the lists use. NULL for
+ * both: the theme's. Set before creating the widgets. */
+void kr_ui_set_colors(kr_ui *ui, const GdkColor *fg, const GdkColor *bg);
+
 /* ---- the asking, replaceable (the tests answer for the user) ---- */
 
 typedef struct {
@@ -44,6 +49,8 @@ typedef struct {
     void (*show_error)(GtkWindow *parent, const char *message);
 } kr_ui_hooks;
 void kr_ui_set_hooks(kr_ui *ui, const kr_ui_hooks *hooks);
+/* The ones a user answers (GTK dialogs), for a host that wraps them. */
+void kr_ui_default_hooks(kr_ui_hooks *out);
 
 /* ---- widgets ---- */
 

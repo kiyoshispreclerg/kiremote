@@ -13,6 +13,21 @@ typedef struct {
     guint listener, rebuild_idle;
 } devs;
 
+/* The host's colors, if it has any (krui.h). */
+static void tint_fg(devs *dv, GtkWidget *w)
+{
+    GdkColor fg, bg;
+    if (kr_ui_colors(dv->ui, &fg, &bg))
+        gtk_widget_modify_fg(w, GTK_STATE_NORMAL, &fg);
+}
+
+static void tint_bg(devs *dv, GtkWidget *w)
+{
+    GdkColor fg, bg;
+    if (kr_ui_colors(dv->ui, &fg, &bg))
+        gtk_widget_modify_bg(w, GTK_STATE_NORMAL, &bg);
+}
+
 static GtkWindow *toplevel_of(GtkWidget *w)
 {
     GtkWidget *t = gtk_widget_get_toplevel(w);
@@ -96,6 +111,7 @@ static char *detail_text(const kr_dev *d)
 static GtkWidget *row_new(devs *dv, const kr_dev *d)
 {
     GtkWidget *event = gtk_event_box_new();
+    tint_bg(dv, event);
     GtkWidget *hbox = gtk_hbox_new(FALSE, 10);
     gtk_container_set_border_width(GTK_CONTAINER(hbox), dv->compact ? 4 : 8);
     gtk_container_add(GTK_CONTAINER(event), hbox);
@@ -110,6 +126,7 @@ static GtkWidget *row_new(devs *dv, const kr_dev *d)
     g_free(name);
     gtk_misc_set_alignment(GTK_MISC(l1), 0, 0.5);
     gtk_label_set_ellipsize(GTK_LABEL(l1), PANGO_ELLIPSIZE_END);
+    tint_fg(dv, l1);
     char *detail = detail_text(d);
     char *dm = g_markup_printf_escaped("<small>%s</small>", detail);
     GtkWidget *l2 = gtk_label_new(NULL);
@@ -118,6 +135,7 @@ static GtkWidget *row_new(devs *dv, const kr_dev *d)
     g_free(detail);
     gtk_misc_set_alignment(GTK_MISC(l2), 0, 0.5);
     gtk_label_set_ellipsize(GTK_LABEL(l2), PANGO_ELLIPSIZE_END);
+    tint_fg(dv, l2);
     gtk_box_pack_start(GTK_BOX(text), l1, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(text), l2, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(hbox), text, TRUE, TRUE, 0);
@@ -235,6 +253,7 @@ GtkWidget *kr_ui_devices_new(kr_ui *ui, gboolean compact)
     gtk_label_set_justify(GTK_LABEL(dv->notice), GTK_JUSTIFY_CENTER);
     gtk_label_set_line_wrap(GTK_LABEL(dv->notice), TRUE);
     gtk_misc_set_padding(GTK_MISC(dv->notice), 12, 16);
+    tint_fg(dv, dv->notice);
     gtk_widget_set_no_show_all(dv->notice, TRUE);
     gtk_box_pack_start(GTK_BOX(dv->root), dv->notice, FALSE, FALSE, 0);
 
@@ -243,6 +262,8 @@ GtkWidget *kr_ui_devices_new(kr_ui *ui, gboolean compact)
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(sw), GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
     gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(sw), dv->rows);
     gtk_viewport_set_shadow_type(GTK_VIEWPORT(GTK_BIN(sw)->child), GTK_SHADOW_NONE);
+    tint_bg(dv, GTK_BIN(sw)->child);
+    tint_bg(dv, dv->rows);
     gtk_box_pack_start(GTK_BOX(dv->root), sw, TRUE, TRUE, 0);
 
     GtkWidget *bar = gtk_hbox_new(FALSE, 6);

@@ -77,13 +77,37 @@ GTK_TARGETS = $(BUILD)/kiremote
 GTK_TESTS = $(BUILD)/tests/test_ui
 endif
 
+# The KiDesktop modules: a kiconf tab and an xisserve page (GTK2) and an
+# xispanel widget (cairo only). The page and the widget need the headers
+# KiDesktop installs; without them they are skipped (nothing else notices).
+# They are loaded into other programs, so everything they embed is PIC.
+KD_INCDIR ?= /usr/local/include
+LIBDIR ?= $(PREFIX)/lib
+KD_PAGE_H = $(wildcard $(KD_INCDIR)/xisserve/xisserve_page.h)
+KD_WIDGET_H = $(wildcard $(KD_INCDIR)/xispanel/xispanel_widget.h)
+HAVE_CAIRO := $(shell $(PKG_CONFIG) --exists cairo && echo 1)
+KD_OUT = $(BUILD)/kidesktop
+PIC_SRC = src/util.c src/log.c src/i18n.c src/control.c ui/krmodel.c ui/krclient.c
+KD_TARGETS =
+KD_TESTS =
+ifeq ($(HAVE_GTK),1)
+KD_TARGETS += $(KD_OUT)/tabs/kiremote-tab.so $(KD_OUT)/tabs/kiremote.desktop
+ifneq ($(KD_PAGE_H),)
+KD_TARGETS += $(KD_OUT)/pages/kiremote.so
+endif
+endif
+ifneq ($(and $(KD_WIDGET_H),$(filter 1,$(HAVE_CAIRO))),)
+KD_TARGETS += $(KD_OUT)/widgets/kiremote.so $(KD_OUT)/widgets/kiremote.widget
+KD_TESTS += $(BUILD)/tests/test_widget
+endif
+
 # Translations (po/LINGUAS lists the languages), built into $(BUILD)/locale,
 # which the programs find next to their own executable.
 LINGUAS = $(shell sed 's/\#.*//' po/LINGUAS)
 HAVE_MSGFMT := $(shell command -v msgfmt >/dev/null 2>&1 && echo 1)
 MO_FILES = $(if $(HAVE_MSGFMT),$(foreach l,$(LINGUAS),$(BUILD)/locale/$(l)/LC_MESSAGES/kiremote.mo))
 
-all: $(BUILD)/kiremoted $(BUILD)/kiremote-cli $(MO_FILES) $(GTK_TARGETS)
+all: $(BUILD)/kiremoted $(BUILD)/kiremote-cli $(MO_FILES) $(GTK_TARGETS) $(KD_TARGETS)
 locale: $(MO_FILES)
 
 $(BUILD)/locale/%/LC_MESSAGES/kiremote.mo: po/%.po
@@ -105,6 +129,56 @@ $(BUILD)/kiremoted: $(BUILD)/$(DAEMON_MAIN:.c=.o) $(LIBKR)
 
 $(BUILD)/kiremote-cli: $(BUILD)/$(CLI_MAIN:.c=.o) $(LIBKR)
 	$(CC) $(ALL_LDFLAGS) -o $@ $^ $(LDLIBS)
+
+# What the modules embed from the daemon's side (PIC, and its own cJSON).
+$(BUILD)/pic/vendor/%.o: vendor/%.c
+	@mkdir -p $(@D)
+	$(CC) $(CPPFLAGS) $(ALL_CFLAGS) $(VENDOR_WARNFLAGS) -fPIC -MMD -MP -c -o $@ $<
+
+$(BUILD)/pic/%.o: %.c
+	@mkdir -p $(@D)
+	$(CC) $(CPPFLAGS) $(ALL_CFLAGS) $(WARNFLAGS) -fPIC -MMD -MP -c -o $@ $<
+
+LIBKRPIC = $(BUILD)/libkrpic.a
+$(LIBKRPIC): $(patsubst %.c,$(BUILD)/pic/%.o,$(PIC_SRC) $(VENDOR_SRC))
+	$(AR) rcs $@ $^
+
+# The widget module under a host that gives it the xpw_*() it expects.
+$(BUILD)/tests/test_widget: tests/ui/test_widget.c tests/harness.h
+	@mkdir -p $(@D)
+	$(CC) $(CPPFLAGS) -I$(KD_INCDIR)/xispanel $(ALL_CFLAGS) $(shell $(PKG_CONFIG) --cflags cairo | sed 's/-I/-isystem /g') $(WARNFLAGS) -MMD -MP \
+		$(ALL_LDFLAGS) -rdynamic -o $@ $< $(shell $(PKG_CONFIG) --libs cairo) -ldl
+
+# The modules. -Bsymbolic: what they embed (cJSON, kr_*) binds to their own
+# copy, whatever the program that loads them exports.
+KD_SO_LDFLAGS = -shared -Wl,-Bsymbolic $(ALL_LDFLAGS)
+
+$(KD_OUT)/%.o: kidesktop/%.c
+	@mkdir -p $(@D)
+	$(CC) $(CPPFLAGS) -I$(KD_INCDIR)/xisserve -I$(KD_INCDIR)/xispanel $(ALL_CFLAGS) $(GTK_CFLAGS) $(shell $(PKG_CONFIG) --cflags cairo 2>/dev/null | sed 's/-I/-isystem /g') \
+		-fPIC $(WARNFLAGS) -MMD -MP -c -o $@ $<
+
+$(KD_OUT)/tabs/kiremote-tab.so: $(KD_OUT)/tab.o $(LIBKRUI) $(LIBKRPIC)
+	@mkdir -p $(@D)
+	$(CC) $(KD_SO_LDFLAGS) -o $@ $^ -lm
+
+$(KD_OUT)/pages/kiremote.so: $(KD_OUT)/page.o $(LIBKRUI) $(LIBKRPIC)
+	@mkdir -p $(@D)
+	$(CC) $(KD_SO_LDFLAGS) -o $@ $^ -lm
+
+$(KD_OUT)/widgets/kiremote.so: $(KD_OUT)/widget.o $(LIBKRPIC)
+	@mkdir -p $(@D)
+	$(CC) $(KD_SO_LDFLAGS) -o $@ $^ -lm
+
+$(KD_OUT)/widgets/kiremote.widget: kidesktop/kiremote.widget
+	@mkdir -p $(@D)
+	cp $< $@
+
+# In the build tree the tab's module sits beside its .desktop; installed, it
+# is found by its absolute path.
+$(KD_OUT)/tabs/kiremote.desktop: kidesktop/kiremote.desktop.in
+	@mkdir -p $(@D)
+	sed 's|@MODULE@|kiremote-tab.so|' $< > $@
 
 # libkrui: the interface as widgets (PIC: the KiDesktop modules embed it).
 $(BUILD)/ui/gtk/%.o: ui/gtk/%.c $(wildcard ui/gtk/*.h) ui/krmodel.h ui/krclient.h
@@ -157,7 +231,7 @@ $(BUILD)/tests/xtool: tests/tools/xtool.c
 	@mkdir -p $(@D)
 	$(CC) $(CPPFLAGS) $(ALL_CFLAGS) $(WARNFLAGS) $(ALL_LDFLAGS) -o $@ $< $(LDLIBS)
 
-test: all $(UNIT_TESTS) $(GTK_TESTS) $(FUZZ_RUNNERS) $(BUILD)/tests/fakephone $(BUILD)/tests/xtool
+test: all $(UNIT_TESTS) $(GTK_TESTS) $(KD_TESTS) $(FUZZ_RUNNERS) $(BUILD)/tests/fakephone $(BUILD)/tests/xtool
 	@fail=0; for t in $(UNIT_TESTS); do \
 		$$t || fail=1; \
 	done; \
@@ -168,6 +242,8 @@ test: all $(UNIT_TESTS) $(GTK_TESTS) $(FUZZ_RUNNERS) $(BUILD)/tests/fakephone $(
 	tests/net/plugins.sh $(BUILD) || fail=1; \
 	tests/net/desktop.sh $(BUILD) || fail=1; \
 	$(if $(GTK_TESTS),tests/ui/run.sh $(BUILD) || fail=1;) \
+	$(if $(KD_TESTS),$(BUILD)/tests/test_widget $(KD_OUT)/widgets/kiremote.so || fail=1;) \
+	$(if $(and $(KD_TESTS),$(filter 0,$(SANITIZE))),tests/ui/kidesktop.sh $(BUILD) || fail=1;) \
 	if [ $$fail -ne 0 ]; then echo "*** tests FAILED"; exit 1; fi; \
 	echo "*** all tests passed"
 
@@ -202,7 +278,7 @@ $(BUILD)/fuzz_%: tests/fuzz/fuzz_%.c $(LIBKR)
 asan-run: asan
 	LSAN_OPTIONS=suppressions=$(CURDIR)/tools/lsan.supp $(BUILD)/asan/kiremoted $(ARGS)
 
-install: $(BUILD)/kiremoted $(BUILD)/kiremote-cli $(MO_FILES) $(GTK_TARGETS)
+install: $(BUILD)/kiremoted $(BUILD)/kiremote-cli $(MO_FILES) $(GTK_TARGETS) $(KD_TARGETS)
 	install -Dm755 $(BUILD)/kiremoted $(DESTDIR)$(BINDIR)/kiremoted
 	install -Dm644 data/kiremote.ini $(DESTDIR)$(DATADIR)/doc/kiremote/kiremote.ini
 	install -Dm644 data/kiremoted.desktop $(DESTDIR)/etc/xdg/autostart/kiremoted.desktop
@@ -211,7 +287,9 @@ install: $(BUILD)/kiremoted $(BUILD)/kiremote-cli $(MO_FILES) $(GTK_TARGETS)
 
 uninstall:
 	rm -f $(DESTDIR)$(BINDIR)/kiremoted $(DESTDIR)$(BINDIR)/kiremote-cli $(DESTDIR)$(BINDIR)/kiremote
-	rm -f $(DESTDIR)$(DATADIR)/applications/kiremote.desktop
+	rm -f $(DESTDIR)$(DATADIR)/applications/kiremote.desktop $(DESTDIR)$(DATADIR)/kiconf/tabs/kiremote.desktop
+	rm -f $(DESTDIR)$(LIBDIR)/kiremote/kiremote-tab.so $(DESTDIR)$(LIBDIR)/xisserve/pages/kiremote.so
+	rm -f $(DESTDIR)$(LIBDIR)/xispanel/widgets/kiremote.so $(DESTDIR)$(LIBDIR)/xispanel/widgets/kiremote.widget
 	rm -f $(DESTDIR)$(DATADIR)/doc/kiremote/kiremote.ini
 	rm -f $(DESTDIR)/etc/xdg/autostart/kiremoted.desktop
 	for l in $(LINGUAS); do rm -f $(DESTDIR)$(LOCALEDIR)/$$l/LC_MESSAGES/kiremote.mo; done

@@ -27,8 +27,9 @@ terminal, and `kiremote` (GTK2) is the window: devices (battery, signal, ping,
 find, send files and text, also by dropping files on them, browse, pair and
 unpair), the pairing question with the verification key, and every setting,
 built from what the daemon reports. Outside KiDesktop it puts an icon in the
-tray (`[ui] tray` in the .ini). The KiDesktop modules (kiconf tab, xisserve
-page, xispanel widget) come next. See [PLANO.md](PLANO.md) (in Portuguese) for what is
+tray (`[ui] tray` in the .ini). On KiDesktop the same interface is a kiconf tab, an xisserve page
+(`xisserve --kiremote`) and an xispanel widget (`WIDGET ... kiremote`), which
+also asks the pairing question with `xisserve --question`. See [PLANO.md](PLANO.md) (in Portuguese) for what is
 planned and in which order.
 
 ## Usage

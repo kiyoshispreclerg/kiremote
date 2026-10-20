@@ -187,8 +187,10 @@ char *kr_control_handle_line(kr_control *c, const char *line)
     else if (!cJSON_IsString(t))
         kr_control_fail(reply, _("missing \"type\""));
     else if (strcmp(t->valuestring, "subscribe") == 0 || strcmp(t->valuestring, "unsubscribe") == 0) {
-        if (c->current)
+        if (c->current) {
             c->current->subscribed = t->valuestring[0] == 's';
+            kr_log_debug(c->current->subscribed ? "control client subscribed" : "control client unsubscribed");
+        }
     } else if (c->on_request)
         c->on_request(c->ud, t->valuestring, req, reply);
     else
@@ -259,6 +261,7 @@ static void accept_clients(kr_control *c)
             continue;
         }
         c->clients[c->n_clients++] = (client){.fd = fd, .buf = buf};
+        kr_log_debug("control client connected (%d)", c->n_clients);
     }
 }
 

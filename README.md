@@ -25,8 +25,9 @@ janela: aparelhos (bateria, sinal, ping, achar, enviar arquivos e texto —
 também arrastando arquivos —, navegar, parear e desparear), a pergunta de
 pareamento com a chave de verificação e todas as configurações, montadas a
 partir do que o daemon informa. Fora do KiDesktop ele põe um ícone na
-bandeja (`[ui] tray` no .ini). Os módulos do KiDesktop (aba do kiconf,
-página do xisserve, widget do xispanel) vêm a seguir. Veja o [PLANO.md](PLANO.md) para o que está
+bandeja (`[ui] tray` no .ini). No KiDesktop, a mesma interface vem como aba do kiconf, página do
+xisserve (`xisserve --kiremote`) e widget do xispanel (`WIDGET ... kiremote`),
+que também faz a pergunta de pareamento com o `xisserve --question`. Veja o [PLANO.md](PLANO.md) para o que está
 previsto e em que ordem.
 
 ## Uso

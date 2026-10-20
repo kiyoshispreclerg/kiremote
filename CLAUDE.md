@@ -9,8 +9,8 @@ Fase atual: 1 feita (testada com o app Android). Fase 2 (plugins do
 daemon) quase pronta: falta a resposta a notificações (sftp feito, só testado
 com `sshfs` falso). Fase 3 (interfaces `kiremote-gtk` e
 `kiremote-kidesktop`, que compartilham a `libkrui`) em andamento: 3a (API do
-daemon), 3b (`krclient`/`krmodel`) e 3c (`libkrui` e o `kiremote`) feitas;
-próxima, 3d (módulos do KiDesktop). Veja o `PLANO.md`, seção 3.
+daemon), 3b (`krclient`/`krmodel`), 3c (`libkrui` e o `kiremote`, uma janela por
+sessão) e 3d (módulos do KiDesktop) feitas; próxima, 3e (`debian/` e CI). Veja o `PLANO.md`, seção 3.
 
 O usuário escreve em português (pt-BR) e quer as respostas em português.
 Comentários e identificadores no código, em inglês. Todo texto que o usuário
@@ -54,6 +54,9 @@ LANGUAGE=en build/kiremoted --help   # o catálogo vem de build/locale
   usuário sem pedir.
 - Teste novo de comportamento entre daemons vai no `tests/net/pair.sh`;
   lógica sem rede (estados, parsers), em teste de unidade.
+- Testes que abrem o kiconf, o xisserve ou o xispanel (`tests/ui/kidesktop.sh`) só os rodam no Xvfb próprio, com HOME, `XDG_*` e rede
+  privados. Nunca os rode no `$DISPLAY` do usuário: nem `kiconf --help` (abre
+  janela); o xispanel dele é um daemon único.
 - Testes de rede **nunca** usam o D-Bus, o X ou o áudio do usuário: os
   sockets são arquivos e atravessam o network namespace. Os scripts fazem
   `unset DISPLAY DBUS_SESSION_BUS_ADDRESS ...` e sobem os seus (um
@@ -90,6 +93,7 @@ LANGUAGE=en build/kiremoted --help   # o catálogo vem de build/locale
 | `src/net.c` | UDP 1716, TCP 1716–1764, endereços de broadcast, netlink |
 | `src/transfer.c` | payloads (portas 1739–1764) |
 | `ui/gtk/*.c` | `libkrui` (GTK2): lista de aparelhos, ações, pareamento, configurações; `main.c` é o `kiremote`. Só compila com `gtk+-2.0` |
+| `kidesktop/*.c` | os módulos do KiDesktop: aba do kiconf (`tab.c`), página do xisserve (`page.c`), widget do xispanel (`widget.c`, sem GTK) |
 | `src/control.c` | socket de controle, JSON por linha (veio do kikarinhas); assinantes de eventos com fila de saída limitada |
 | `src/schema.c` | a lista das opções do `.ini` (tipo, validação, padrão, texto traduzido): as interfaces e a CLI se montam dela |
 | `ui/krmodel.c` | estado dos aparelhos, ordem, textos e ações, sem GTK (as duas interfaces e o widget do xispanel usam) |
@@ -106,6 +110,7 @@ LANGUAGE=en build/kiremoted --help   # o catálogo vem de build/locale
 | `src/log.c` | log em stderr com nome do programa; `-v` liga o debug |
 | `src/i18n.c` | `setlocale` + `bindtextdomain` (procura `locale/` ao lado do executável) |
 | `src/util.c` | arquivos, caminhos (`kr_pathf` falha em vez de truncar), XDG, relógio |
+| `tests/ui/test_widget.c`, `tests/ui/kidesktop.sh` | o widget carregado por um hospedeiro de teste; os três módulos nos programas reais do KiDesktop, num Xvfb privado |
 | `tests/ui/test_ui.c`, `tests/ui/run.sh` | os widgets sob um Xvfb privado, contra um daemon falso no mesmo processo |
 | `tests/net/pair.sh` | integração: dois daemons em network namespaces (também eventos, arquivo de estado e `--set`) |
 | `tests/net/plugins.sh`, `tests/net/desktop.sh`, `tests/tools/` | integração dos plugins: celular falso (`fakephone.c`, serve payloads), D-Bus de sessão e de sistema privados com serviços falsos (Python), Xvfb, `xtool.c`, `pactl`/`paplay`/`xdg-*` falsos |
