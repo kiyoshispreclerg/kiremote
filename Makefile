@@ -79,9 +79,11 @@ endif
 
 # The KiDesktop modules: a kiconf tab and an xisserve page (GTK2) and an
 # xispanel widget (cairo only). The page and the widget need the headers
-# KiDesktop installs; without them they are skipped (nothing else notices).
+# KiDesktop installs (under $(PREFIX)/include: /usr/local from source, /usr from
+# the kidesktop-core package); without them they are skipped (nothing else
+# notices).
 # They are loaded into other programs, so everything they embed is PIC.
-KD_INCDIR ?= /usr/local/include
+KD_INCDIR ?= $(PREFIX)/include
 LIBDIR ?= $(PREFIX)/lib
 KD_PAGE_H = $(wildcard $(KD_INCDIR)/xisserve/xisserve_page.h)
 KD_WIDGET_H = $(wildcard $(KD_INCDIR)/xispanel/xispanel_widget.h)
