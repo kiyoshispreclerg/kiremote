@@ -2,7 +2,8 @@
 # fetch-kidesktop-core.sh - installs kidesktop-core for this distro from the
 # newest kidesktop GitHub release that has one (its assets are named
 # kidesktop-core_<version>~<distro><release>_<arch>.deb, see kidesktop's
-# scripts/build-deb.sh). Kiremote needs it to build the KiDesktop modules (the
+# scripts/build-deb.sh; GitHub stores the "~" of an asset name as "."). Kiremote
+# needs it to build the KiDesktop modules (the
 # headers) and the smoke tests need it to run them.
 #
 #   KIDESKTOP_CORE_DEB=/path/kidesktop-core.deb   use this file instead
@@ -20,7 +21,7 @@ else
 	. /etc/os-release
 	arch=$(dpkg --print-architecture)
 	repo=${KIDESKTOP_REPO:-kiyoshispreclerg/kidesktop}
-	pattern="kidesktop-core_[^/\"]*~${ID}${VERSION_ID:-}_${arch}\\.deb"
+	pattern="kidesktop-core_[^/\"]*[~.]${ID}${VERSION_ID:-}_${arch}\\.deb"
 	command -v curl >/dev/null 2>&1 || $SUDO apt-get install -y --no-install-recommends curl ca-certificates
 	auth=""
 	[ -z "${GITHUB_TOKEN:-}" ] || auth="Authorization: Bearer $GITHUB_TOKEN"
