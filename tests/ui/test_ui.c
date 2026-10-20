@@ -388,39 +388,43 @@ static GtkWidget *menu_item(GtkWidget *menu, const char *label)
 TEST(the_menu_offers_what_the_model_allows)
 {
     kr_ui *ui = connected_ui();
-    GtkWidget *m = kr_ui_device_menu_new(ui, NULL, "b-phone");
+    GtkWidget *m = g_object_ref_sink(kr_ui_device_menu_new(ui, NULL, "b-phone"));
     GList *l = menu_labels(m);
     CHECK(has_label(l, "Send a ping") && has_label(l, "Ring my phone") && has_label(l, "Send files..."));
     CHECK(has_label(l, "Send text...") && has_label(l, "Browse files") && has_label(l, "Unpair"));
     CHECK(!has_label(l, "Pair"));
     g_list_free_full(l, g_free);
     gtk_widget_destroy(m);
+    g_object_unref(m);
 
     /* "Quebrado" only has ping. */
-    m = kr_ui_device_menu_new(ui, NULL, "bad");
+    m = g_object_ref_sink(kr_ui_device_menu_new(ui, NULL, "bad"));
     l = menu_labels(m);
     CHECK(has_label(l, "Send a ping") && !has_label(l, "Ring my phone"));
     g_list_free_full(l, g_free);
     gtk_widget_destroy(m);
+    g_object_unref(m);
 
-    m = kr_ui_device_menu_new(ui, NULL, "c-near");
+    m = g_object_ref_sink(kr_ui_device_menu_new(ui, NULL, "c-near"));
     l = menu_labels(m);
     CHECK(has_label(l, "Pair") && !has_label(l, "Send a ping"));
     g_list_free_full(l, g_free);
     gtk_widget_destroy(m);
+    g_object_unref(m);
 
-    m = kr_ui_device_menu_new(ui, NULL, "nobody");
+    m = g_object_ref_sink(kr_ui_device_menu_new(ui, NULL, "nobody"));
     l = menu_labels(m);
     CHECK(has_label(l, "Nothing to do"));
     g_list_free_full(l, g_free);
     gtk_widget_destroy(m);
+    g_object_unref(m);
     kr_ui_free(ui);
 }
 
 TEST(actions_send_their_requests)
 {
     kr_ui *ui = connected_ui();
-    GtkWidget *m = kr_ui_device_menu_new(ui, NULL, "b-phone");
+    GtkWidget *m = g_object_ref_sink(kr_ui_device_menu_new(ui, NULL, "b-phone"));
     gtk_menu_item_activate(GTK_MENU_ITEM(menu_item(m, "Send a ping")));
     CHECK(wait_until(c_logged, "\"type\":\"ping\",\"device\":\"b-phone\"", 3));
     gtk_menu_item_activate(GTK_MENU_ITEM(menu_item(m, "Ring my phone")));
@@ -445,6 +449,7 @@ TEST(actions_send_their_requests)
     CHECK(wait_until(c_logged, "\"type\":\"share-text\",\"device\":\"b-phone\",\"text\":\"olá, tudo bem?\"", 3));
     CHECK_INT_EQ(ask.errors->len, 0);
     gtk_widget_destroy(m);
+    g_object_unref(m);
     kr_ui_free(ui);
 }
 

@@ -68,8 +68,10 @@ static void menu_position(GtkMenu *menu, gint *x, gint *y, gboolean *push_in, gp
 static void menu_clicked(GtkButton *b, gpointer data)
 {
     click_ctx *c = data;
-    if (c->d->menu)
+    if (c->d->menu) {
         gtk_widget_destroy(c->d->menu);
+        g_object_unref(c->d->menu);
+    }
     c->d->menu = g_object_ref_sink(kr_ui_device_menu_new(c->d->ui, toplevel_of(GTK_WIDGET(b)), c->id));
     gtk_menu_popup(GTK_MENU(c->d->menu), NULL, NULL, menu_position, b, 1, gtk_get_current_event_time());
 }
@@ -237,8 +239,10 @@ static void root_destroyed(GtkWidget *w, gpointer data)
     kr_ui_unlisten(dv->ui, dv->listener);
     if (dv->rebuild_idle)
         g_source_remove(dv->rebuild_idle);
-    if (dv->menu)
+    if (dv->menu) {
         gtk_widget_destroy(dv->menu);
+        g_object_unref(dv->menu);
+    }
     g_free(dv);
 }
 
