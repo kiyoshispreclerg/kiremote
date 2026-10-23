@@ -1,115 +1,117 @@
 # Kiremote
 
-[English](README.en.md)
+[Português](README.pt-BR.md)
 
-Conecta o computador ao celular, compatível com o **KDE Connect**: use o
-app oficial do KDE Connect no Android (ou no iOS) e o Kiremote do lado do
-desktop. Feito para o KiDesktop, mas roda em qualquer desktop X11.
+Connects your computer to your phone, compatible with **KDE Connect**: use
+the official KDE Connect app on Android (or iOS) and Kiremote on the
+desktop side. Made for KiDesktop, but runs on any X11 desktop.
 
-A ideia é a mesma dos outros programas do KiDesktop: leve e rápido. O
-daemon é C puro com OpenSSL e Xlib, sem Qt nem KDE Frameworks; a interface
-é GTK2 e só fica aberta quando você usa.
+Same idea as the other KiDesktop programs: light and fast. The daemon is
+plain C with OpenSSL and Xlib, no Qt or KDE Frameworks; the interface is
+GTK2 and only stays open while you use it.
 
-Também vai ter o que o KDE Connect não tem: **espelhar e controlar a tela
-do Android** (pelo `scrcpy-server`, com um cliente próprio, sem SDL).
+It will also do what KDE Connect doesn't: **mirror and control the Android
+screen** (through `scrcpy-server`, with its own client, no SDL).
 
-## Situação
+## Status
 
-Em desenvolvimento: o núcleo do protocolo (fase 1) está pronto e a fase 2
-(plugins) está no meio. O `kiremoted` descobre os aparelhos na rede, pareia,
-e já tem: ping, arquivos, bateria, sinal da operadora, achar o celular e
-achar o computador, notificação de chamada (e silenciar), pausar a música
-na chamada, controle de mídia do desktop pelo celular e volume do sistema.
-O `kiremote-cli` controla tudo pelo terminal, e o `kiremote` (GTK2) é a
-janela: aparelhos (bateria, sinal, ping, achar, enviar arquivos e texto —
-também arrastando arquivos —, navegar, parear e desparear), a pergunta de
-pareamento com a chave de verificação e todas as configurações, montadas a
-partir do que o daemon informa. Fora do KiDesktop ele põe um ícone na
-bandeja (`[ui] tray` no .ini). No KiDesktop, a mesma interface vem como aba do kiconf, página do
-xisserve (`xisserve --kiremote`) e widget do xispanel (`WIDGET ... kiremote`),
-que também faz a pergunta de pareamento com o `xisserve --question`. Veja o [PLANO.md](PLANO.md) para o que está
-previsto e em que ordem.
+In development: the protocol core (phase 1) is done and phase 2 (plugins)
+is half way. `kiremoted` discovers devices on the network, pairs, and has:
+ping, files, battery, cellular signal, find my phone and find this
+computer, call notifications (and muting), pausing music during a call,
+the phone controlling the desktop's media players, system volume, a shared
+clipboard, text and links, the phone's notifications on the desktop, remote
+commands, the phone as mouse and keyboard, browsing the phone's files, a presentation pointer, locking
+and (optionally) keeping the screen awake. `kiremote-cli` drives it from the
+terminal, and `kiremote` (GTK2) is the window: devices (battery, signal, ping,
+find, send files and text, also by dropping files on them, browse, pair and
+unpair), the pairing question with the verification key, and every setting,
+built from what the daemon reports. Outside KiDesktop it puts an icon in the
+tray (`[ui] tray` in the .ini). On KiDesktop the same interface is a kiconf tab, an xisserve page
+(`xisserve --kiremote`) and an xispanel widget (`WIDGET ... kiremote`), which
+also asks the pairing question with `xisserve --question`. See [PLANO.md](PLANO.md) (in Portuguese) for what is
+planned and in which order.
 
-## Uso
+## Usage
 
 ```sh
-build/kiremote             # a janela (precisa do GTK2 para compilar); --settings, --hidden
+build/kiremote             # the window (needs GTK2 to build); --settings, --hidden
 ```
 
 ```sh
-build/kiremoted -v &            # o daemon (as mensagens vão para o terminal)
-build/kiremote-cli -l           # aparelhos pareados e os que estão por perto
-build/kiremote-cli -d Celular --pair      # pede o pareamento e espera
-build/kiremote-cli -d Celular --ping
-build/kiremote-cli -d Celular --share foto.jpg
-build/kiremote-cli -d Celular --find-phone   # o celular toca
-build/kiremote-cli -d Celular --mute-call    # silencia a chamada que toca
-build/kiremote-cli --stop-ring               # para o som quando o celular procura o computador
-build/kiremote-cli -d Celular --share-text "oi"   # vai para o clipboard do celular
-build/kiremote-cli -d Celular --share-url https://exemplo.org
-build/kiremote-cli --status                  # o daemon e os aparelhos (com --json, para scripts)
-build/kiremote-cli --schema                  # todas as configurações, com o texto de cada uma
+build/kiremoted -v &            # the daemon (messages go to the terminal)
+build/kiremote-cli -l           # paired devices and the ones around
+build/kiremote-cli -d Phone --pair        # ask to pair and wait
+build/kiremote-cli -d Phone --ping
+build/kiremote-cli -d Phone --share photo.jpg
+build/kiremote-cli -d Phone --find-phone     # the phone rings
+build/kiremote-cli -d Phone --mute-call      # silence the ringing call
+build/kiremote-cli --stop-ring               # stop the sound when the phone looks for this computer
+build/kiremote-cli -d Phone --share-text "hi"     # goes to the phone's clipboard
+build/kiremote-cli -d Phone --share-url https://example.org
+build/kiremote-cli --status                  # the daemon and the devices (--json for scripts)
+build/kiremote-cli --schema                  # every setting, with its description
 build/kiremote-cli --get clipboard.auto_share
-build/kiremote-cli --set clipboard.auto_share=off   # grava no .ini, mantendo os comentários
-build/kiremote-cli --watch                   # eventos (aparelho mudou, pedido de pareamento...) em JSON
+build/kiremote-cli --set clipboard.auto_share=off   # written to the .ini, comments kept
+build/kiremote-cli --watch                   # events (device changed, pairing request...) as JSON
 ```
 
-Notificações, controle de mídia e pausar na chamada precisam de uma sessão
-D-Bus (`$DBUS_SESSION_BUS_ADDRESS`); sem ela o daemon funciona, mas só
-escreve no log. O volume usa o `pactl`, e o som de "achar o computador",
-`paplay`, `pw-play` ou `aplay`. Cada plugin pode ser desligado na seção
-`[plugins]` do .ini. Clipboard, mouse/teclado e ponteiro de apresentação
-precisam de X11 (`$DISPLAY`); os comandos que o celular pode rodar são só os
-da seção `[runcommand]`. Para navegar pelos arquivos do celular
-(`kiremote-cli -d CELULAR --browse-files`) o ideal é ter o `sshfs`
-instalado; sem ele o daemon entrega o endereço `sftp://` ao `xdg-open`.
+Notifications, media control and pause-on-call need a D-Bus session
+(`$DBUS_SESSION_BUS_ADDRESS`); without one the daemon still works but only
+writes to its log. Volume uses `pactl`, and the "find this computer" sound
+uses `paplay`, `pw-play` or `aplay`. Each plugin can be turned off in the
+`[plugins]` section of the .ini. The clipboard, mouse/keyboard and
+presentation pointer need X11 (`$DISPLAY`); the commands the phone may run
+are only the ones in the `[runcommand]` section. To browse the phone's files
+(`kiremote-cli -d PHONE --browse-files`) `sshfs` is the best way; without it
+the daemon hands the `sftp://` address to `xdg-open`.
 
-No celular, abra o app do KDE Connect: o computador aparece na lista. Dá
-para parear dos dois lados; os dois mostram a mesma chave de verificação.
-Quando o pedido vem do celular, o daemon mostra a chave no log e você aceita
-com `kiremote-cli -d <aparelho> --pair` (ou recusa com `--unpair`). Os
-arquivos recebidos vão para a pasta de downloads; a configuração está em
+On the phone, open the KDE Connect app: the computer shows up in the list.
+Either side can start pairing; both show the same verification key. When
+the phone asks, the daemon logs the key and you accept with
+`kiremote-cli -d <device> --pair` (or refuse with `--unpair`). Received
+files go to your downloads folder; the settings are described in
 [data/kiremote.ini](data/kiremote.ini).
 
-Espelhamento (fase 5, começando: por enquanto só a imagem, sem controle nem
-áudio): ligue a depuração USB no celular, conecte pelo USB e rode
+Mirroring (phase 5, just started: only the picture for now, no control or
+audio): turn on USB debugging on the phone, plug it in and run
 
 ```sh
-scripts/fetch-scrcpy-server.sh   # uma vez: baixa e confere o scrcpy-server (fica em build/)
-build/kiremote-mirror            # -s SERIAL com mais de um celular; -m 1024 limita o tamanho
+scripts/fetch-scrcpy-server.sh   # once: downloads and checks the scrcpy-server (into build/)
+build/kiremote-mirror            # -s SERIAL with more than one phone; -m 1024 limits the size
 ```
 
-Ele usa o `adb` do sistema e o `scrcpy-server` da versão fixada no
-`config.mk`; o celular não precisa do app do scrcpy.
+It uses the system's `adb` and the `scrcpy-server` of the version pinned in
+`config.mk`; the phone does not need the scrcpy app.
 
-Se o computador não aparecer no celular, confira se o firewall deixa passar
-UDP e TCP de 1716 a 1764, ou adicione o IP do computador no app ("Adicionar
-dispositivos pelo IP"). O Kiremote convive com um KDE Connect rodando na
-mesma máquina: os dois aparecem no celular como computadores diferentes.
+If the computer doesn't show up on the phone, check that the firewall lets
+UDP and TCP 1716 to 1764 through, or add the computer's IP in the app ("Add
+devices by IP"). Kiremote can run next to KDE Connect on the same machine:
+the phone sees them as two different computers.
 
-## Compilar
+## Building
 
-Precisa de um compilador C11, `make`, `pkg-config`, OpenSSL e gettext
-(`msgfmt`). O `kiremote-mirror` só é compilado se houver libavcodec,
-libswscale e Xext (`libavcodec-dev libswscale-dev libxext-dev`).
+Needs a C11 compiler, `make`, `pkg-config`, OpenSSL and gettext (`msgfmt`).
+`kiremote-mirror` is only built with libavcodec, libswscale and Xext
+(`libavcodec-dev libswscale-dev libxext-dev`).
 
 ```sh
 make
-make test        # testes de unidade, fuzz no corpus e dois daemons em network namespaces
+make test        # unit tests, fuzz corpus, and two daemons in network namespaces
 build/kiremoted --help
 ```
 
-## Licença
+## License
 
-GPL-3.0-or-later. Veja [LICENSE](LICENSE).
+GPL-3.0-or-later. See [LICENSE](LICENSE).
 
-Não é afiliado ao KDE. "KDE Connect" é usado só para dizer com que
-protocolo o Kiremote é compatível.
+Not affiliated with KDE. "KDE Connect" is only used to say which protocol
+Kiremote is compatible with.
 
-## Pacotes
+## Packages
 
-Um fonte, três pacotes `.deb` (Ubuntu 22.04/24.04, Debian 12/13):
-`kiremote` (daemon e CLI), `kiremote-gtk` (a janela, para qualquer desktop) e
-`kiremote-kidesktop` (aba do kiconf, página do xisserve e widget do xispanel;
-depende de `kidesktop-core` 0.1.4 ou mais). `./scripts/install-build-deps.sh`
-e `./scripts/build-deb.sh` geram os pacotes em `dist/`.
+One source, three `.deb` packages (Ubuntu 22.04/24.04, Debian 12/13):
+`kiremote` (daemon and CLI), `kiremote-gtk` (the window, for any desktop) and
+`kiremote-kidesktop` (kiconf tab, xisserve page and xispanel widget; needs
+`kidesktop-core` 0.1.4 or newer). `./scripts/install-build-deps.sh` and
+`./scripts/build-deb.sh` build them into `dist/`.

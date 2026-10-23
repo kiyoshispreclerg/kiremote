@@ -134,6 +134,7 @@ LANGUAGE=en build/kiremoted --help   # o catálogo vem de build/locale
 - Prefixo `kr_`/`KR_` em tudo que é público; um módulo por arquivo,
   cabeçalho com comentário explicando o porquê e a posse da memória.
 - Caminhos com `kr_pathf`.
-- `README.md` (pt-BR, padrão) e `README.en.md` andam juntos: mudou um, mude
-  o outro.
-- Commits em português, terminando com a linha Co-Authored-By.
+- `README.md` (inglês, padrão) e `README.pt-BR.md` andam juntos: mudou um,
+  mude o outro.
+- Commits em inglês (desde 2026-10-23; os antigos estão em português),
+  terminando com a linha Co-Authored-By.
