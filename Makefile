@@ -47,7 +47,8 @@ LIB_SRC = src/log.c \
       src/plugin_lock.c \
       src/plugin_sftp.c \
       ui/krmodel.c \
-      ui/krclient.c
+      ui/krclient.c \
+      mirror/stream.c
 VENDOR_SRC = vendor/cjson/cJSON.c
 LIBKR = $(BUILD)/libkr.a
 
@@ -318,13 +319,13 @@ uninstall:
 	for l in $(LINGUAS); do rm -f $(DESTDIR)$(LOCALEDIR)/$$l/LC_MESSAGES/kiremote.mo; done
 
 lint:
-	@if grep -nE '\b(strcpy|strcat|sprintf|vsprintf|gets)[[:space:]]*\(' src/*.c src/*.h ui/*.c ui/*.h tests/unit/*.c tests/fuzz/*.c; then \
+	@if grep -nE '\b(strcpy|strcat|sprintf|vsprintf|gets)[[:space:]]*\(' src/*.c src/*.h ui/*.c ui/*.h mirror/*.c mirror/*.h tests/unit/*.c tests/fuzz/*.c; then \
 		echo "*** banned function used"; exit 1; fi
 	@command -v cppcheck >/dev/null || { echo "*** cppcheck not installed"; exit 1; }
 	cppcheck --std=c11 --enable=warning,performance,portability \
 		--error-exitcode=1 --inline-suppr --quiet \
-		--suppress=normalCheckLevelMaxBranches -Isrc -Ivendor/cjson \
-		-D_XOPEN_SOURCE=700 -DKR_VERSION='"lint"' -DKR_FIXTURES_DIR='"."' src ui/krmodel.c ui/krclient.c tests/unit tests/fuzz
+		--suppress=normalCheckLevelMaxBranches -Isrc -Imirror -Ivendor/cjson \
+		-D_XOPEN_SOURCE=700 -DKR_VERSION='"lint"' -DKR_FIXTURES_DIR='"."' src ui/krmodel.c ui/krclient.c mirror tests/unit tests/fuzz
 
 clean:
 	rm -rf $(BUILD)

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kiremote\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-23 19:26-0300\n"
+"POT-Creation-Date: 2026-10-23 20:16-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1442,7 +1442,7 @@ msgstr ""
 msgid "Yes"
 msgstr ""
 
-#: kidesktop/page.c:115 kidesktop/tab.c:20
+#: kidesktop/page.c:115 kidesktop/tab.c:20 mirror/stream.c:164
 msgid "Out of memory"
 msgstr ""
 
@@ -1452,4 +1452,32 @@ msgstr ""
 
 #: kidesktop/page.c:142
 msgid "Kiremote"
+msgstr ""
+
+#: mirror/stream.c:131
+msgid "The phone could not set up the stream (configuration error)"
+msgstr ""
+
+#: mirror/stream.c:133
+msgid "The phone sent an unknown codec"
+msgstr ""
+
+#: mirror/stream.c:145
+msgid "Unexpected session in an audio stream"
+msgstr ""
+
+#: mirror/stream.c:148
+msgid "The phone sent an invalid video size"
+msgstr ""
+
+#: mirror/stream.c:156
+msgid "The video stream did not start with its size"
+msgstr ""
+
+#: mirror/stream.c:159
+msgid "The phone sent a packet of invalid size"
+msgstr ""
+
+#: mirror/stream.c:201
+msgid "The phone sent data on a stream it turned off"
 msgstr ""
