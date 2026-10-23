@@ -64,7 +64,7 @@ FUZZ_RUNNERS = $(patsubst %,$(BUILD)/tests/fuzz-run-%,$(FUZZ_TARGETS))
 ALL_CFLAGS  = $(STDFLAGS) $(OPTFLAGS) $(SANFLAGS) $(PKG_CFLAGS) $(CFLAGS)
 ALL_LDFLAGS = $(SANFLAGS) $(LDFLAGS)
 
-.PHONY: install-daemon install-gtk install-kidesktop test-ui all test test-net run asan asan-run fuzz fuzz-targets install uninstall lint clean locale pot update-po
+.PHONY: install-daemon install-gtk install-kidesktop install-mirror test-ui all test test-net run asan asan-run fuzz fuzz-targets install uninstall lint clean locale pot update-po
 
 # The GTK2 interface is built when GTK2 is there: the daemon and the CLI don't
 # need it (and a machine with only the daemon shouldn't).
@@ -308,7 +308,17 @@ asan-run: asan
 # One target per package (debian/rules uses them): the daemon and CLI with
 # the translations, the GTK window, the KiDesktop modules. `make install`
 # does what can be built here.
-install: install-daemon $(if $(GTK_TARGETS),install-gtk) $(if $(KD_TARGETS),install-kidesktop)
+install: install-daemon $(if $(GTK_TARGETS),install-gtk) $(if $(KD_TARGETS),install-kidesktop) $(if $(MIRROR_TARGETS),install-mirror)
+
+# The jar the mirror pushes to the phone: fetched (and checked) once.
+$(BUILD)/scrcpy-server: config.mk
+	scripts/fetch-scrcpy-server.sh $@
+
+# kiremote-mirror finds the jar in $(DATADIR)/kiremote (kr_server_find_jar);
+# the interfaces find the program in the PATH.
+install-mirror: $(BUILD)/kiremote-mirror $(BUILD)/scrcpy-server
+	install -Dm755 $(BUILD)/kiremote-mirror $(DESTDIR)$(BINDIR)/kiremote-mirror
+	install -Dm644 $(BUILD)/scrcpy-server $(DESTDIR)$(DATADIR)/kiremote/scrcpy-server
 
 install-daemon: $(BUILD)/kiremoted $(BUILD)/kiremote-cli $(MO_FILES)
 	install -Dm755 $(BUILD)/kiremoted $(DESTDIR)$(BINDIR)/kiremoted
@@ -335,6 +345,7 @@ install-kidesktop: $(KD_TARGETS)
 
 uninstall:
 	rm -f $(DESTDIR)$(BINDIR)/kiremoted $(DESTDIR)$(BINDIR)/kiremote-cli $(DESTDIR)$(BINDIR)/kiremote
+	rm -f $(DESTDIR)$(BINDIR)/kiremote-mirror $(DESTDIR)$(DATADIR)/kiremote/scrcpy-server
 	rm -f $(DESTDIR)$(DATADIR)/applications/kiremote.desktop $(DESTDIR)$(DATADIR)/kiconf/tabs/kiremote.desktop
 	rm -f $(DESTDIR)$(LIBDIR)/kiremote/kiremote-tab.so $(DESTDIR)$(LIBDIR)/xisserve/pages/kiremote.so
 	rm -f $(DESTDIR)$(LIBDIR)/xispanel/widgets/kiremote.so $(DESTDIR)$(LIBDIR)/xispanel/widgets/kiremote.widget
