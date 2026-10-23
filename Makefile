@@ -51,7 +51,8 @@ LIB_SRC = src/log.c \
       mirror/stream.c \
       mirror/adb.c \
       mirror/server.c \
-      mirror/ctlmsg.c
+      mirror/ctlmsg.c \
+      mirror/keys.c
 VENDOR_SRC = vendor/cjson/cJSON.c
 LIBKR = $(BUILD)/libkr.a
 
