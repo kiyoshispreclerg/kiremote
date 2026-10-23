@@ -58,6 +58,9 @@ void kr_ui_default_hooks(kr_ui_hooks *out);
  * of actions; pairing buttons; "look for devices". compact: less padding,
  * for a popup. Accepts files dropped on a connected device. */
 GtkWidget *kr_ui_devices_new(kr_ui *ui, gboolean compact);
+/* Puts a button on the left of the row at the foot of the list, the one
+ * "look for devices" is on the right of. */
+void kr_ui_devices_add_footer(GtkWidget *devices, GtkWidget *button);
 
 /* All the settings, built from what the daemon says it has (config-schema),
  * one tab per group; saves each change as it is made. */

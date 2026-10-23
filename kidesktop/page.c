@@ -127,13 +127,12 @@ static GtkWidget *build(void)
 
     GtkWidget *box = gtk_vbox_new(FALSE, 6);
     gtk_container_set_border_width(GTK_CONTAINER(box), 8);
-    gtk_box_pack_start(GTK_BOX(box), kr_ui_devices_new(g_ui, TRUE), TRUE, TRUE, 0);
+    GtkWidget *devices = kr_ui_devices_new(g_ui, TRUE);
+    gtk_box_pack_start(GTK_BOX(box), devices, TRUE, TRUE, 0);
 
     GtkWidget *settings = gtk_button_new_with_label(_("Settings..."));
     g_signal_connect(settings, "clicked", G_CALLBACK(open_settings), NULL);
-    GtkWidget *bar = gtk_hbox_new(FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(bar), settings, FALSE, FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(box), bar, FALSE, FALSE, 0);
+    kr_ui_devices_add_footer(devices, settings);
     gtk_widget_show_all(box);
     return box;
 }

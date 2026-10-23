@@ -275,10 +275,18 @@ GtkWidget *kr_ui_devices_new(kr_ui *ui, gboolean compact)
     g_signal_connect(refresh, "clicked", G_CALLBACK(refresh_clicked), dv);
     gtk_box_pack_end(GTK_BOX(bar), refresh, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(dv->root), bar, FALSE, FALSE, compact ? 2 : 6);
+    g_object_set_data(G_OBJECT(dv->root), "kr-footer", bar);
 
     dv->listener = kr_ui_listen(ui, on_change, dv);
     g_signal_connect(dv->root, "destroy", G_CALLBACK(root_destroyed), dv);
     rebuild(dv);
     gtk_widget_show_all(dv->root);
     return dv->root;
+}
+
+void kr_ui_devices_add_footer(GtkWidget *devices, GtkWidget *button)
+{
+    GtkWidget *bar = g_object_get_data(G_OBJECT(devices), "kr-footer");
+    if (bar)
+        gtk_box_pack_start(GTK_BOX(bar), button, FALSE, FALSE, 0);
 }
