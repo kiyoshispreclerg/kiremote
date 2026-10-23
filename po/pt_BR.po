@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kiremote\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-23 20:25-0300\n"
+"POT-Creation-Date: 2026-10-23 20:38-0300\n"
 "PO-Revision-Date: 2026-10-17 21:00-0300\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -1332,47 +1332,51 @@ msgstr "Um aparelho quer parear"
 msgid "No device connected"
 msgstr "Nenhum aparelho conectado"
 
-#: ui/krmodel.c:418
+#: ui/krmodel.c:427
 msgid "Send a ping"
 msgstr "Enviar um ping"
 
-#: ui/krmodel.c:420
+#: ui/krmodel.c:429
 msgid "Ring my phone"
 msgstr "Fazer meu celular tocar"
 
-#: ui/krmodel.c:422
+#: ui/krmodel.c:431
 msgid "Send files..."
 msgstr "Enviar arquivos..."
 
-#: ui/krmodel.c:424
+#: ui/krmodel.c:433
 msgid "Send text..."
 msgstr "Enviar texto..."
 
-#: ui/krmodel.c:426
+#: ui/krmodel.c:435
 msgid "Browse files"
 msgstr "Navegar pelos arquivos"
 
-#: ui/krmodel.c:428
+#: ui/krmodel.c:437
+msgid "Mirror the screen"
+msgstr "Espelhar a tela"
+
+#: ui/krmodel.c:439
 msgid "Pair"
 msgstr "Parear"
 
-#: ui/krmodel.c:430
+#: ui/krmodel.c:441
 msgid "Accept"
 msgstr "Aceitar"
 
-#: ui/krmodel.c:432
+#: ui/krmodel.c:443
 msgid "Refuse"
 msgstr "Recusar"
 
-#: ui/krmodel.c:434
+#: ui/krmodel.c:445
 msgid "Cancel pairing"
 msgstr "Cancelar o pareamento"
 
-#: ui/krmodel.c:436
+#: ui/krmodel.c:447
 msgid "Unpair"
 msgstr "Desparear"
 
-#: ui/krmodel.c:438
+#: ui/krmodel.c:449
 msgid "Look for devices"
 msgstr "Procurar aparelhos"
 
@@ -1393,17 +1397,22 @@ msgstr "_Enviar"
 msgid "Send text"
 msgstr "Enviar texto"
 
-#: ui/gtk/kractions.c:150
+#: ui/gtk/kractions.c:77 mirror/server.c:106
+#, c-format
+msgid "Could not run %s: %s"
+msgstr "Não foi possível executar %s: %s"
+
+#: ui/gtk/kractions.c:169
 #, c-format
 msgid "Refuse the pairing request from %s?"
 msgstr "Recusar o pedido de pareamento de %s?"
 
-#: ui/gtk/kractions.c:151
+#: ui/gtk/kractions.c:170
 #, c-format
 msgid "Unpair from %s?"
 msgstr "Desparear de %s?"
 
-#: ui/gtk/kractions.c:231
+#: ui/gtk/kractions.c:251
 msgid "Nothing to do"
 msgstr "Nada a fazer"
 
@@ -1412,7 +1421,7 @@ msgstr "Nada a fazer"
 msgid "Verification key: %s"
 msgstr "Chave de verificação: %s"
 
-#: ui/gtk/krdevices.c:280
+#: ui/gtk/krdevices.c:281
 msgid ""
 "Kiremote is not running.\n"
 "Start kiremoted and this list fills in by itself."
@@ -1420,7 +1429,7 @@ msgstr ""
 "O Kiremote não está rodando.\n"
 "Inicie o kiremoted e esta lista se preenche sozinha."
 
-#: ui/gtk/krdevices.c:284
+#: ui/gtk/krdevices.c:285
 msgid ""
 "No devices around.\n"
 "Open KDE Connect on the phone, on the same network as this computer."
@@ -1531,16 +1540,16 @@ msgstr "Não"
 msgid "Yes"
 msgstr "Sim"
 
-#: kidesktop/page.c:115 kidesktop/tab.c:20 mirror/stream.c:164
+#: kidesktop/page.c:132 kidesktop/tab.c:20 mirror/stream.c:164
 #: mirror/screen.c:151 mirror/main.c:126 mirror/main.c:263
 msgid "Out of memory"
 msgstr "Sem memória"
 
-#: kidesktop/page.c:133
+#: kidesktop/page.c:150
 msgid "Settings..."
 msgstr "Configurações..."
 
-#: kidesktop/page.c:142
+#: kidesktop/page.c:159
 msgid "Kiremote"
 msgstr "Kiremote"
 
@@ -1597,11 +1606,6 @@ msgid "No phone found by adb: connect it by USB with USB debugging on"
 msgstr ""
 "O adb não achou nenhum celular: conecte-o pelo USB com a depuração USB ligada"
 
-#: mirror/server.c:106
-#, c-format
-msgid "Could not run %s: %s"
-msgstr "Não foi possível executar %s: %s"
-
 #: mirror/server.c:131 mirror/server.c:134
 msgid "The server on the phone stopped"
 msgstr "O servidor no celular parou"
@@ -1655,12 +1659,27 @@ msgid ""
 "  -v, --verbose         debug messages (and the server's)\n"
 "  -V, --version         show the version and exit\n"
 "  -h, --help            show this help and exit\n"
-msgstr "Uso: %s [OPÇÃO]...\nMostra a tela do celular numa janela (a depuração USB precisa estar ligada).\n\n  -s, --serial SERIAL   o celular, como o adb o chama (padrão: o único)\n  -m, --max-size N      lado maior do vídeo, em pixels (padrão: o do celular)\n  -b, --bit-rate N      taxa de bits do vídeo, em bits por segundo\n      --max-fps N       quadros por segundo, no máximo\n      --codec CODEC     h264 (padrão), h265 ou av1\n  -v, --verbose         mensagens de depuração (e as do servidor)\n  -V, --version         mostra a versão e sai\n  -h, --help            mostra esta ajuda e sai\n"
+msgstr ""
+"Uso: %s [OPÇÃO]...\n"
+"Mostra a tela do celular numa janela (a depuração USB precisa estar "
+"ligada).\n"
+"\n"
+"  -s, --serial SERIAL   o celular, como o adb o chama (padrão: o único)\n"
+"  -m, --max-size N      lado maior do vídeo, em pixels (padrão: o do "
+"celular)\n"
+"  -b, --bit-rate N      taxa de bits do vídeo, em bits por segundo\n"
+"      --max-fps N       quadros por segundo, no máximo\n"
+"      --codec CODEC     h264 (padrão), h265 ou av1\n"
+"  -v, --verbose         mensagens de depuração (e as do servidor)\n"
+"  -V, --version         mostra a versão e sai\n"
+"  -h, --help            mostra esta ajuda e sai\n"
 
 #: mirror/main.c:78
 msgid ""
 "This computer cannot decode the phone's video (no decoder in libavcodec)"
-msgstr "Este computador não consegue decodificar o vídeo do celular (a libavcodec não tem o decodificador)"
+msgstr ""
+"Este computador não consegue decodificar o vídeo do celular (a libavcodec "
+"não tem o decodificador)"
 
 #: mirror/main.c:113
 msgid "The video could not be decoded"
@@ -1679,7 +1698,8 @@ msgstr "O celular fechou a conexão"
 #, c-format
 msgid ""
 "scrcpy-server %s not found (scripts/fetch-scrcpy-server.sh downloads it)"
-msgstr "scrcpy-server %s não encontrado (o scripts/fetch-scrcpy-server.sh baixa)"
+msgstr ""
+"scrcpy-server %s não encontrado (o scripts/fetch-scrcpy-server.sh baixa)"
 
 #~ msgid "More actions"
 #~ msgstr "Mais ações"

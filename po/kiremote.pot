@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kiremote\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-23 20:25-0300\n"
+"POT-Creation-Date: 2026-10-23 20:38-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1263,47 +1263,51 @@ msgstr ""
 msgid "No device connected"
 msgstr ""
 
-#: ui/krmodel.c:418
+#: ui/krmodel.c:427
 msgid "Send a ping"
 msgstr ""
 
-#: ui/krmodel.c:420
+#: ui/krmodel.c:429
 msgid "Ring my phone"
 msgstr ""
 
-#: ui/krmodel.c:422
+#: ui/krmodel.c:431
 msgid "Send files..."
 msgstr ""
 
-#: ui/krmodel.c:424
+#: ui/krmodel.c:433
 msgid "Send text..."
 msgstr ""
 
-#: ui/krmodel.c:426
+#: ui/krmodel.c:435
 msgid "Browse files"
 msgstr ""
 
-#: ui/krmodel.c:428
+#: ui/krmodel.c:437
+msgid "Mirror the screen"
+msgstr ""
+
+#: ui/krmodel.c:439
 msgid "Pair"
 msgstr ""
 
-#: ui/krmodel.c:430
+#: ui/krmodel.c:441
 msgid "Accept"
 msgstr ""
 
-#: ui/krmodel.c:432
+#: ui/krmodel.c:443
 msgid "Refuse"
 msgstr ""
 
-#: ui/krmodel.c:434
+#: ui/krmodel.c:445
 msgid "Cancel pairing"
 msgstr ""
 
-#: ui/krmodel.c:436
+#: ui/krmodel.c:447
 msgid "Unpair"
 msgstr ""
 
-#: ui/krmodel.c:438
+#: ui/krmodel.c:449
 msgid "Look for devices"
 msgstr ""
 
@@ -1324,17 +1328,22 @@ msgstr ""
 msgid "Send text"
 msgstr ""
 
-#: ui/gtk/kractions.c:150
+#: ui/gtk/kractions.c:77 mirror/server.c:106
+#, c-format
+msgid "Could not run %s: %s"
+msgstr ""
+
+#: ui/gtk/kractions.c:169
 #, c-format
 msgid "Refuse the pairing request from %s?"
 msgstr ""
 
-#: ui/gtk/kractions.c:151
+#: ui/gtk/kractions.c:170
 #, c-format
 msgid "Unpair from %s?"
 msgstr ""
 
-#: ui/gtk/kractions.c:231
+#: ui/gtk/kractions.c:251
 msgid "Nothing to do"
 msgstr ""
 
@@ -1343,13 +1352,13 @@ msgstr ""
 msgid "Verification key: %s"
 msgstr ""
 
-#: ui/gtk/krdevices.c:280
+#: ui/gtk/krdevices.c:281
 msgid ""
 "Kiremote is not running.\n"
 "Start kiremoted and this list fills in by itself."
 msgstr ""
 
-#: ui/gtk/krdevices.c:284
+#: ui/gtk/krdevices.c:285
 msgid ""
 "No devices around.\n"
 "Open KDE Connect on the phone, on the same network as this computer."
@@ -1442,16 +1451,16 @@ msgstr ""
 msgid "Yes"
 msgstr ""
 
-#: kidesktop/page.c:115 kidesktop/tab.c:20 mirror/stream.c:164
+#: kidesktop/page.c:132 kidesktop/tab.c:20 mirror/stream.c:164
 #: mirror/screen.c:151 mirror/main.c:126 mirror/main.c:263
 msgid "Out of memory"
 msgstr ""
 
-#: kidesktop/page.c:133
+#: kidesktop/page.c:150
 msgid "Settings..."
 msgstr ""
 
-#: kidesktop/page.c:142
+#: kidesktop/page.c:159
 msgid "Kiremote"
 msgstr ""
 
@@ -1503,11 +1512,6 @@ msgstr ""
 
 #: mirror/adb.c:123
 msgid "No phone found by adb: connect it by USB with USB debugging on"
-msgstr ""
-
-#: mirror/server.c:106
-#, c-format
-msgid "Could not run %s: %s"
 msgstr ""
 
 #: mirror/server.c:131 mirror/server.c:134

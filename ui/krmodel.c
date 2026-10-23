@@ -389,6 +389,13 @@ static bool has_plugin(const kr_dev *d, const char *name)
 
 #define BIT(a) (1u << (a))
 
+static bool mirror_available;
+
+void kr_actions_set_mirror(bool available)
+{
+    mirror_available = available;
+}
+
 unsigned kr_dev_actions(const kr_dev *d)
 {
     unsigned a = 0;
@@ -407,6 +414,8 @@ unsigned kr_dev_actions(const kr_dev *d)
             a |= BIT(KR_ACT_SEND_FILES) | BIT(KR_ACT_SEND_TEXT);
         if (has_plugin(d, "sftp"))
             a |= BIT(KR_ACT_BROWSE);
+        if (mirror_available)
+            a |= BIT(KR_ACT_MIRROR);
     }
     return a | BIT(KR_ACT_UNPAIR);
 }
@@ -424,6 +433,8 @@ const char *kr_action_label(kr_action a)
         return _("Send text...");
     case KR_ACT_BROWSE:
         return _("Browse files");
+    case KR_ACT_MIRROR:
+        return _("Mirror the screen");
     case KR_ACT_PAIR:
         return _("Pair");
     case KR_ACT_ACCEPT:
@@ -490,6 +501,7 @@ cJSON *kr_action_request(kr_action a, const char *device_id, const char *arg)
             cJSON_AddStringToObject(r, "text", arg);
         return r;
     case KR_ACT_SEND_FILES:
+    case KR_ACT_MIRROR:
     case KR_ACT_COUNT:
         break;
     }

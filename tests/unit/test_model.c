@@ -171,6 +171,15 @@ TEST(actions_follow_the_state_and_the_plugins)
     CHECK_INT_EQ(kr_dev_actions(kr_model_find(m, "c-near")), 1u << KR_ACT_PAIR);
     CHECK_INT_EQ(kr_dev_actions(kr_model_find(m, "a-ask")), (1u << KR_ACT_ACCEPT) | (1u << KR_ACT_REFUSE));
 
+    /* Mirroring: only when the host found kiremote-mirror, and only for a
+     * paired phone that is there. */
+    CHECK(!HAS(kr_dev_actions(kr_model_find(m, "b-phone")), KR_ACT_MIRROR));
+    kr_actions_set_mirror(true);
+    CHECK(HAS(kr_dev_actions(kr_model_find(m, "b-phone")), KR_ACT_MIRROR));
+    CHECK_INT_EQ(kr_dev_actions(kr_model_find(m, "z-away")), 1u << KR_ACT_UNPAIR);
+    CHECK_INT_EQ(kr_dev_actions(kr_model_find(m, "c-near")), 1u << KR_ACT_PAIR);
+    kr_actions_set_mirror(false);
+
     cJSON *ev = cJSON_Parse("{\"event\":\"device\",\"device\":{\"id\":\"c-near\",\"name\":\"Vizinho\",\"state\":\"requested\"}}");
     CHECK_INT_EQ(kr_model_apply_event(m, ev, NULL), KR_EV_DEVICES);
     cJSON_Delete(ev);
@@ -185,6 +194,10 @@ TEST(every_action_has_a_label_and_a_request)
         cJSON *r = kr_action_request((kr_action)a, "dev", "text");
         if (a == KR_ACT_SEND_FILES) {
             CHECK(!r && kr_action_needs_input((kr_action)a));
+            continue;
+        }
+        if (a == KR_ACT_MIRROR) { /* a program the host runs, not a request */
+            CHECK(!r);
             continue;
         }
         CHECK_MSG(r, "no request for %d", a);

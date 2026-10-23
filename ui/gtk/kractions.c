@@ -69,9 +69,21 @@ static void default_show_error(GtkWindow *parent, const char *message)
     gtk_widget_destroy(d);
 }
 
+static gboolean default_spawn(GtkWindow *parent, const char *const *argv)
+{
+    GError *err = NULL;
+    if (g_spawn_async(NULL, (char **)argv, NULL, G_SPAWN_DEFAULT, NULL, NULL, NULL, &err))
+        return TRUE;
+    char *msg = g_strdup_printf(_("Could not run %s: %s"), argv[0], err->message);
+    default_show_error(parent, msg);
+    g_free(msg);
+    g_error_free(err);
+    return FALSE;
+}
+
 void kr_ui_default_hooks(kr_ui_hooks *h)
 {
-    *h = (kr_ui_hooks){default_confirm, default_choose_files, default_ask_text, default_show_error};
+    *h = (kr_ui_hooks){default_confirm, default_choose_files, default_ask_text, default_show_error, default_spawn};
 }
 
 /* ---- sending ------------------------------------------------------------------ */
@@ -133,7 +145,14 @@ void kr_ui_run_action(kr_ui *ui, GtkWindow *parent, kr_action action, const char
     char *name = g_strdup(d && d->name[0] ? d->name : device_id);
     char *id = g_strdup(device_id); /* the hooks may run a nested loop that updates the model */
 
-    if (action == KR_ACT_SEND_FILES) {
+    if (action == KR_ACT_MIRROR) {
+        /* Its own process and window; it finds the phone through adb. */
+        const char *prog = kr_ui_mirror_program();
+        if (prog) {
+            const char *argv[] = {prog, NULL};
+            h->spawn(parent, argv);
+        }
+    } else if (action == KR_ACT_SEND_FILES) {
         char **paths = h->choose_files(parent);
         if (paths && paths[0])
             kr_ui_send_files(ui, parent, id, (const char *const *)paths);
@@ -207,7 +226,8 @@ GtkWidget *kr_ui_device_menu_new(kr_ui *ui, GtkWindow *parent, const char *devic
     const kr_dev *d = kr_model_find(kr_ui_model(ui), device_id);
     unsigned acts = d ? kr_dev_actions(d) : 0;
     /* What you do with the phone, then what concerns the pairing. */
-    static const kr_action about_phone[] = {KR_ACT_PING, KR_ACT_FIND, KR_ACT_SEND_FILES, KR_ACT_SEND_TEXT, KR_ACT_BROWSE};
+    static const kr_action about_phone[] = {KR_ACT_PING,      KR_ACT_FIND,   KR_ACT_SEND_FILES,
+                                            KR_ACT_SEND_TEXT, KR_ACT_BROWSE, KR_ACT_MIRROR};
     static const kr_action pairing[] = {KR_ACT_PAIR, KR_ACT_ACCEPT, KR_ACT_REFUSE, KR_ACT_CANCEL, KR_ACT_UNPAIR};
     int n = 0;
     for (size_t i = 0; i < G_N_ELEMENTS(about_phone); i++)

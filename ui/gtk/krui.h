@@ -47,6 +47,9 @@ typedef struct {
     char *(*ask_text)(GtkWindow *parent);
     /* A request failed. */
     void (*show_error)(GtkWindow *parent, const char *message);
+    /* Runs a program of ours (kiremote-mirror) on its own: argv[0] is an
+     * absolute path. FALSE if it could not start (the error is shown). */
+    gboolean (*spawn)(GtkWindow *parent, const char *const *argv);
 } kr_ui_hooks;
 void kr_ui_set_hooks(kr_ui *ui, const kr_ui_hooks *hooks);
 /* The ones a user answers (GTK dialogs), for a host that wraps them. */

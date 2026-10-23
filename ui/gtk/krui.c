@@ -126,12 +126,45 @@ static void on_change(void *ud, kr_change what, const char *id)
     g_array_free(copy, TRUE);
 }
 
+const char *kr_ui_mirror_program(void)
+{
+    static char path[KR_PATH_MAX];
+    static gboolean looked;
+    if (looked)
+        return path[0] ? path : NULL;
+    looked = TRUE;
+    const char *env = g_getenv("KIREMOTE_MIRROR");
+    if (env && *env) {
+        if (g_path_is_absolute(env) && g_file_test(env, G_FILE_TEST_IS_EXECUTABLE))
+            g_strlcpy(path, env, sizeof path);
+        return path[0] ? path : NULL;
+    }
+    char *exe = g_file_read_link("/proc/self/exe", NULL);
+    if (exe) {
+        char *dir = g_path_get_dirname(exe);
+        char *p = g_build_filename(dir, "kiremote-mirror", NULL);
+        if (g_file_test(p, G_FILE_TEST_IS_EXECUTABLE))
+            g_strlcpy(path, p, sizeof path);
+        g_free(p);
+        g_free(dir);
+        g_free(exe);
+    }
+    if (!path[0]) {
+        char *p = g_find_program_in_path("kiremote-mirror");
+        if (p && g_path_is_absolute(p))
+            g_strlcpy(path, p, sizeof path);
+        g_free(p);
+    }
+    return path[0] ? path : NULL;
+}
+
 kr_ui *kr_ui_new(const char *socket_path)
 {
     kr_ui *ui = g_new0(kr_ui, 1);
     ui->listeners = g_array_new(FALSE, FALSE, sizeof(listener));
     ui->next_id = 1;
     kr_ui_default_hooks(&ui->hooks);
+    kr_actions_set_mirror(kr_ui_mirror_program() != NULL);
 
     static const kr_client_ops ops = {on_change};
     ui->client = kr_client_new(socket_path, &ops, ui);
@@ -199,6 +232,8 @@ void kr_ui_set_hooks(kr_ui *ui, const kr_ui_hooks *hooks)
             ui->hooks.ask_text = hooks->ask_text;
         if (hooks->show_error)
             ui->hooks.show_error = hooks->show_error;
+        if (hooks->spawn)
+            ui->hooks.spawn = hooks->spawn;
     }
 }
 

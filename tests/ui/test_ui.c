@@ -242,6 +242,7 @@ static struct {
     char **files;
     char *text;
     GPtrArray *errors;
+    char spawned[256]; /* argv[0] of the last program run */
 } ask;
 
 static gboolean h_confirm(GtkWindow *p, const char *q)
@@ -270,10 +271,17 @@ static void h_error(GtkWindow *p, const char *m)
     g_ptr_array_add(ask.errors, g_strdup(m));
 }
 
+static gboolean h_spawn(GtkWindow *p, const char *const *argv)
+{
+    (void)p;
+    g_strlcpy(ask.spawned, argv[0], sizeof ask.spawned);
+    return TRUE;
+}
+
 static kr_ui *new_ui(void)
 {
     kr_ui *ui = kr_ui_new(F.path);
-    static const kr_ui_hooks hooks = {h_confirm, h_files, h_text, h_error};
+    static const kr_ui_hooks hooks = {h_confirm, h_files, h_text, h_error, h_spawn};
     kr_ui_set_hooks(ui, &hooks);
     ask.confirms = 0;
     ask.confirm_answer = FALSE;
@@ -281,6 +289,7 @@ static kr_ui *new_ui(void)
     ask.files = NULL;
     g_free(ask.text);
     ask.text = NULL;
+    ask.spawned[0] = 0;
     g_ptr_array_set_size(ask.errors, 0);
     return ui;
 }
@@ -442,6 +451,7 @@ TEST(the_menu_offers_what_the_model_allows)
     CHECK(has_label(l, "Send a ping") && has_label(l, "Ring my phone") && has_label(l, "Send files..."));
     CHECK(has_label(l, "Send text...") && has_label(l, "Browse files") && has_label(l, "Unpair"));
     CHECK(!has_label(l, "Pair"));
+    CHECK(has_label(l, "Mirror the screen")); /* KIREMOTE_MIRROR is set (main) */
     g_list_free_full(l, g_free);
     gtk_widget_destroy(m);
     g_object_unref(m);
@@ -456,7 +466,7 @@ TEST(the_menu_offers_what_the_model_allows)
 
     m = g_object_ref_sink(kr_ui_device_menu_new(ui, NULL, "c-near"));
     l = menu_labels(m);
-    CHECK(has_label(l, "Pair") && !has_label(l, "Send a ping"));
+    CHECK(has_label(l, "Pair") && !has_label(l, "Send a ping") && !has_label(l, "Mirror the screen"));
     g_list_free_full(l, g_free);
     gtk_widget_destroy(m);
     g_object_unref(m);
@@ -497,6 +507,10 @@ TEST(actions_send_their_requests)
     gtk_menu_item_activate(GTK_MENU_ITEM(menu_item(m, "Send text...")));
     CHECK(wait_until(c_logged, "\"type\":\"share-text\",\"device\":\"b-phone\",\"text\":\"olá, tudo bem?\"", 3));
     CHECK_INT_EQ(ask.errors->len, 0);
+
+    /* Mirroring runs the program, it is not a request. */
+    gtk_menu_item_activate(GTK_MENU_ITEM(menu_item(m, "Mirror the screen")));
+    CHECK_STR_EQ(ask.spawned, "/bin/true");
     gtk_widget_destroy(m);
     g_object_unref(m);
     kr_ui_free(ui);
@@ -1061,6 +1075,8 @@ int main(int argc, char **argv)
     if (!fake_open())
         return 1;
     ask.errors = g_ptr_array_new_with_free_func(g_free);
+    /* A program to mirror with: the action shows (h_spawn records it). */
+    setenv("KIREMOTE_MIRROR", "/bin/true", 1);
     if (getenv("KR_UI_SHOT")) {
         screenshot(getenv("KR_UI_SHOT"));
         fake_close();

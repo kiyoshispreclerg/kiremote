@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kiremote\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-23 20:25-0300\n"
+"POT-Creation-Date: 2026-10-23 20:38-0300\n"
 "PO-Revision-Date: 2026-10-09 08:41-0300\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -1323,47 +1323,51 @@ msgstr "A device wants to pair"
 msgid "No device connected"
 msgstr "No device connected"
 
-#: ui/krmodel.c:418
+#: ui/krmodel.c:427
 msgid "Send a ping"
 msgstr "Send a ping"
 
-#: ui/krmodel.c:420
+#: ui/krmodel.c:429
 msgid "Ring my phone"
 msgstr "Ring my phone"
 
-#: ui/krmodel.c:422
+#: ui/krmodel.c:431
 msgid "Send files..."
 msgstr "Send files..."
 
-#: ui/krmodel.c:424
+#: ui/krmodel.c:433
 msgid "Send text..."
 msgstr "Send text..."
 
-#: ui/krmodel.c:426
+#: ui/krmodel.c:435
 msgid "Browse files"
 msgstr "Browse files"
 
-#: ui/krmodel.c:428
+#: ui/krmodel.c:437
+msgid "Mirror the screen"
+msgstr "Mirror the screen"
+
+#: ui/krmodel.c:439
 msgid "Pair"
 msgstr "Pair"
 
-#: ui/krmodel.c:430
+#: ui/krmodel.c:441
 msgid "Accept"
 msgstr "Accept"
 
-#: ui/krmodel.c:432
+#: ui/krmodel.c:443
 msgid "Refuse"
 msgstr "Refuse"
 
-#: ui/krmodel.c:434
+#: ui/krmodel.c:445
 msgid "Cancel pairing"
 msgstr "Cancel pairing"
 
-#: ui/krmodel.c:436
+#: ui/krmodel.c:447
 msgid "Unpair"
 msgstr "Unpair"
 
-#: ui/krmodel.c:438
+#: ui/krmodel.c:449
 msgid "Look for devices"
 msgstr "Look for devices"
 
@@ -1384,17 +1388,22 @@ msgstr "_Send"
 msgid "Send text"
 msgstr "Send text"
 
-#: ui/gtk/kractions.c:150
+#: ui/gtk/kractions.c:77 mirror/server.c:106
+#, c-format
+msgid "Could not run %s: %s"
+msgstr "Could not run %s: %s"
+
+#: ui/gtk/kractions.c:169
 #, c-format
 msgid "Refuse the pairing request from %s?"
 msgstr "Refuse the pairing request from %s?"
 
-#: ui/gtk/kractions.c:151
+#: ui/gtk/kractions.c:170
 #, c-format
 msgid "Unpair from %s?"
 msgstr "Unpair from %s?"
 
-#: ui/gtk/kractions.c:231
+#: ui/gtk/kractions.c:251
 msgid "Nothing to do"
 msgstr "Nothing to do"
 
@@ -1403,7 +1412,7 @@ msgstr "Nothing to do"
 msgid "Verification key: %s"
 msgstr "Verification key: %s"
 
-#: ui/gtk/krdevices.c:280
+#: ui/gtk/krdevices.c:281
 msgid ""
 "Kiremote is not running.\n"
 "Start kiremoted and this list fills in by itself."
@@ -1411,7 +1420,7 @@ msgstr ""
 "Kiremote is not running.\n"
 "Start kiremoted and this list fills in by itself."
 
-#: ui/gtk/krdevices.c:284
+#: ui/gtk/krdevices.c:285
 msgid ""
 "No devices around.\n"
 "Open KDE Connect on the phone, on the same network as this computer."
@@ -1522,16 +1531,16 @@ msgstr "No"
 msgid "Yes"
 msgstr "Yes"
 
-#: kidesktop/page.c:115 kidesktop/tab.c:20 mirror/stream.c:164
+#: kidesktop/page.c:132 kidesktop/tab.c:20 mirror/stream.c:164
 #: mirror/screen.c:151 mirror/main.c:126 mirror/main.c:263
 msgid "Out of memory"
 msgstr "Out of memory"
 
-#: kidesktop/page.c:133
+#: kidesktop/page.c:150
 msgid "Settings..."
 msgstr "Settings..."
 
-#: kidesktop/page.c:142
+#: kidesktop/page.c:159
 msgid "Kiremote"
 msgstr "Kiremote"
 
@@ -1587,11 +1596,6 @@ msgstr "The phone is not ready for adb (offline)"
 msgid "No phone found by adb: connect it by USB with USB debugging on"
 msgstr "No phone found by adb: connect it by USB with USB debugging on"
 
-#: mirror/server.c:106
-#, c-format
-msgid "Could not run %s: %s"
-msgstr "Could not run %s: %s"
-
 #: mirror/server.c:131 mirror/server.c:134
 msgid "The server on the phone stopped"
 msgstr "The server on the phone stopped"
@@ -1645,12 +1649,25 @@ msgid ""
 "  -v, --verbose         debug messages (and the server's)\n"
 "  -V, --version         show the version and exit\n"
 "  -h, --help            show this help and exit\n"
-msgstr "Usage: %s [OPTION]...\nShows the phone's screen in a window (USB debugging must be on).\n\n  -s, --serial SERIAL   the phone, as adb names it (default: the only one)\n  -m, --max-size N      longer side of the video, in pixels (default: the phone's)\n  -b, --bit-rate N      video bit rate, in bits per second\n      --max-fps N       frames per second at most\n      --codec CODEC     h264 (default), h265 or av1\n  -v, --verbose         debug messages (and the server's)\n  -V, --version         show the version and exit\n  -h, --help            show this help and exit\n"
+msgstr ""
+"Usage: %s [OPTION]...\n"
+"Shows the phone's screen in a window (USB debugging must be on).\n"
+"\n"
+"  -s, --serial SERIAL   the phone, as adb names it (default: the only one)\n"
+"  -m, --max-size N      longer side of the video, in pixels (default: the "
+"phone's)\n"
+"  -b, --bit-rate N      video bit rate, in bits per second\n"
+"      --max-fps N       frames per second at most\n"
+"      --codec CODEC     h264 (default), h265 or av1\n"
+"  -v, --verbose         debug messages (and the server's)\n"
+"  -V, --version         show the version and exit\n"
+"  -h, --help            show this help and exit\n"
 
 #: mirror/main.c:78
 msgid ""
 "This computer cannot decode the phone's video (no decoder in libavcodec)"
-msgstr "This computer cannot decode the phone's video (no decoder in libavcodec)"
+msgstr ""
+"This computer cannot decode the phone's video (no decoder in libavcodec)"
 
 #: mirror/main.c:113
 msgid "The video could not be decoded"
@@ -1669,7 +1686,8 @@ msgstr "The phone closed the connection"
 #, c-format
 msgid ""
 "scrcpy-server %s not found (scripts/fetch-scrcpy-server.sh downloads it)"
-msgstr "scrcpy-server %s not found (scripts/fetch-scrcpy-server.sh downloads it)"
+msgstr ""
+"scrcpy-server %s not found (scripts/fetch-scrcpy-server.sh downloads it)"
 
 #~ msgid "More actions"
 #~ msgstr "More actions"

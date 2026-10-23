@@ -97,6 +97,23 @@ static void page_show_error(GtkWindow *parent, const char *message)
     xisserve_transient_popup_end();
 }
 
+/* Through xisserve, so the program gets its own scope instead of living in
+ * the panel's cgroup; the popup closes, the program opens its window. */
+static gboolean page_spawn(GtkWindow *parent, const char *const *argv)
+{
+    (void)parent;
+    GString *cmd = g_string_new(NULL);
+    for (; *argv; argv++) {
+        char q[4096];
+        shell_quote(*argv, q, sizeof q);
+        g_string_append_printf(cmd, "%s%s", cmd->len ? " " : "", q);
+    }
+    run_detached(cmd->str);
+    g_string_free(cmd, TRUE);
+    xisserve_hide();
+    return TRUE;
+}
+
 /* ---- the page --------------------------------------------------------------------- */
 
 static void open_settings(GtkButton *b, gpointer data)
@@ -122,7 +139,7 @@ static GtkWidget *build(void)
     bg = (GdkColor){0, (guint16)(r * 65535), (guint16)(g * 65535), (guint16)(b * 65535)};
     kr_ui_set_colors(g_ui, &fg, &bg);
     kr_ui_default_hooks(&g_default);
-    kr_ui_hooks hooks = {page_confirm, page_choose_files, page_ask_text, page_show_error};
+    kr_ui_hooks hooks = {page_confirm, page_choose_files, page_ask_text, page_show_error, page_spawn};
     kr_ui_set_hooks(g_ui, &hooks);
 
     GtkWidget *box = gtk_vbox_new(FALSE, 6);

@@ -111,6 +111,7 @@ typedef enum {
     KR_ACT_SEND_FILES, /* the host asks for the files, then kr_action_files */
     KR_ACT_SEND_TEXT,  /* the host asks for the text, then arg */
     KR_ACT_BROWSE,     /* its files in the file manager */
+    KR_ACT_MIRROR,     /* its screen in kiremote-mirror (the host runs it; no request) */
     KR_ACT_PAIR,
     KR_ACT_ACCEPT,     /* their pairing request */
     KR_ACT_REFUSE,
@@ -123,6 +124,9 @@ typedef enum {
 /* Bitmask of (1u << kr_action): what this device offers right now. The
  * same in every interface. Never includes KR_ACT_REFRESH. */
 unsigned kr_dev_actions(const kr_dev *d);
+/* Is kiremote-mirror there to run? The host looks for the program and says
+ * so; until then KR_ACT_MIRROR is never offered. */
+void kr_actions_set_mirror(bool available);
 /* "Send a ping", "Send files..."; ellipsis where the host must ask more. */
 const char *kr_action_label(kr_action a);
 /* Does the action need more from the user (files, text)? */

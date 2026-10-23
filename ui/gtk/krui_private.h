@@ -19,6 +19,10 @@ gboolean kr_ui_colors(kr_ui *ui, GdkColor *fg, GdkColor *bg);
 /* Is kr_ui_free running? */
 gboolean kr_ui_closing(kr_ui *ui);
 
+/* kiremote-mirror's absolute path: $KIREMOTE_MIRROR, next to this
+ * executable (a build tree), else from the PATH. NULL if there is none. */
+const char *kr_ui_mirror_program(void);
+
 /* Sends req (taken over) and shows the error, if any, over parent. */
 void kr_ui_request(kr_ui *ui, GtkWindow *parent, cJSON *req);
 
