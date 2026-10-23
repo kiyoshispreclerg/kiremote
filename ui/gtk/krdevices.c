@@ -28,6 +28,40 @@ static void tint_bg(devs *dv, GtkWidget *w)
         gtk_widget_modify_bg(w, GTK_STATE_NORMAL, &bg);
 }
 
+/* The row under the pointer: the host's text color faintly over its
+ * background, or the theme's prelight. */
+static void hover_color(devs *dv, GtkWidget *w, GdkColor *out)
+{
+    GdkColor fg, bg;
+    if (kr_ui_colors(dv->ui, &fg, &bg)) {
+        out->red = (guint16)(bg.red + (fg.red - bg.red) * 0.14);
+        out->green = (guint16)(bg.green + (fg.green - bg.green) * 0.14);
+        out->blue = (guint16)(bg.blue + (fg.blue - bg.blue) * 0.14);
+    } else {
+        *out = gtk_widget_get_style(w)->bg[GTK_STATE_PRELIGHT];
+    }
+}
+
+static gboolean row_crossing(GtkWidget *w, GdkEventCrossing *ev, gpointer data)
+{
+    devs *dv = data;
+    /* Moving onto a child (a button) is still inside the row. */
+    if (ev->detail == GDK_NOTIFY_INFERIOR)
+        return FALSE;
+    if (ev->type == GDK_ENTER_NOTIFY) {
+        GdkColor c;
+        hover_color(dv, w, &c);
+        gtk_widget_modify_bg(w, GTK_STATE_NORMAL, &c);
+    } else {
+        GdkColor fg, bg;
+        if (kr_ui_colors(dv->ui, &fg, &bg))
+            gtk_widget_modify_bg(w, GTK_STATE_NORMAL, &bg);
+        else
+            gtk_widget_modify_bg(w, GTK_STATE_NORMAL, NULL);
+    }
+    return FALSE;
+}
+
 static GtkWindow *toplevel_of(GtkWidget *w)
 {
     GtkWidget *t = gtk_widget_get_toplevel(w);
@@ -114,6 +148,9 @@ static GtkWidget *row_new(devs *dv, const kr_dev *d)
 {
     GtkWidget *event = gtk_event_box_new();
     tint_bg(dv, event);
+    gtk_widget_add_events(event, GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK);
+    g_signal_connect(event, "enter-notify-event", G_CALLBACK(row_crossing), dv);
+    g_signal_connect(event, "leave-notify-event", G_CALLBACK(row_crossing), dv);
     GtkWidget *hbox = gtk_hbox_new(FALSE, 10);
     gtk_container_set_border_width(GTK_CONTAINER(hbox), dv->compact ? 4 : 8);
     gtk_container_add(GTK_CONTAINER(event), hbox);
