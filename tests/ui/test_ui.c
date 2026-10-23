@@ -357,6 +357,53 @@ TEST(devices_list_follows_the_daemon_coming_and_going)
     kr_ui_free(ui);
 }
 
+static gboolean m_tip_button(GtkWidget *w, const void *text)
+{
+    char *t = gtk_widget_get_tooltip_text(w);
+    gboolean yes = t && GTK_IS_BUTTON(w) && strcmp(t, text) == 0;
+    g_free(t);
+    return yes;
+}
+
+static gboolean c_tip_button(void *a)
+{
+    void **p = a;
+    return find(p[0], m_tip_button, p[1]) != NULL;
+}
+
+TEST(clicking_a_row_opens_its_actions_under_it)
+{
+    kr_ui *ui = connected_ui();
+    GtkWidget *w = g_object_ref_sink(kr_ui_devices_new(ui, FALSE));
+    CHECK(wait_label(w, "moto g", 3));
+    CHECK(!find(w, m_tip_button, "Send a ping"));
+
+    GtkWidget *name = label_with(w, "moto g");
+    GtkWidget *event = gtk_widget_get_ancestor(name, GTK_TYPE_EVENT_BOX);
+    CHECK(event);
+    GdkEventButton ev = {.type = GDK_BUTTON_PRESS, .button = 1};
+    gboolean handled = FALSE;
+    g_signal_emit_by_name(event, "button-press-event", &ev, &handled);
+    CHECK(handled);
+    void *a[2] = {w, "Send a ping"};
+    CHECK(wait_until(c_tip_button, a, 3));
+    CHECK(find(w, m_tip_button, "Send files..."));
+
+    /* Pressing the action does it. */
+    gtk_button_clicked(GTK_BUTTON(find(w, m_tip_button, "Send a ping")));
+    CHECK(wait_until(c_logged, "\"type\":\"ping\",\"device\":\"b-phone\"", 3));
+
+    /* A second click closes it. */
+    name = label_with(w, "moto g");
+    event = gtk_widget_get_ancestor(name, GTK_TYPE_EVENT_BOX);
+    g_signal_emit_by_name(event, "button-press-event", &ev, &handled);
+    spin(30);
+    CHECK(!find(w, m_tip_button, "Send a ping"));
+    gtk_widget_destroy(w);
+    g_object_unref(w);
+    kr_ui_free(ui);
+}
+
 static GList *menu_labels(GtkWidget *menu)
 {
     GList *out = NULL;
@@ -1022,6 +1069,7 @@ int main(int argc, char **argv)
 
     RUN(devices_list_shows_what_the_model_says);
     RUN(devices_list_follows_the_daemon_coming_and_going);
+    RUN(clicking_a_row_opens_its_actions_under_it);
     RUN(the_menu_offers_what_the_model_allows);
     RUN(actions_send_their_requests);
     RUN(unpairing_asks_first);

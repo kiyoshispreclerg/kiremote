@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kiremote\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-20 18:34-0300\n"
+"POT-Creation-Date: 2026-10-23 19:26-0300\n"
 "PO-Revision-Date: 2026-10-09 08:41-0300\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -1398,16 +1398,12 @@ msgstr "Unpair from %s?"
 msgid "Nothing to do"
 msgstr "Nothing to do"
 
-#: ui/gtk/krdevices.c:104
+#: ui/gtk/krdevices.c:136
 #, c-format
 msgid "Verification key: %s"
 msgstr "Verification key: %s"
 
-#: ui/gtk/krdevices.c:162
-msgid "More actions"
-msgstr "More actions"
-
-#: ui/gtk/krdevices.c:193
+#: ui/gtk/krdevices.c:280
 msgid ""
 "Kiremote is not running.\n"
 "Start kiremoted and this list fills in by itself."
@@ -1415,7 +1411,7 @@ msgstr ""
 "Kiremote is not running.\n"
 "Start kiremoted and this list fills in by itself."
 
-#: ui/gtk/krdevices.c:197
+#: ui/gtk/krdevices.c:284
 msgid ""
 "No devices around.\n"
 "Open KDE Connect on the phone, on the same network as this computer."
@@ -1530,13 +1526,16 @@ msgstr "Yes"
 msgid "Out of memory"
 msgstr "Out of memory"
 
-#: kidesktop/page.c:132
+#: kidesktop/page.c:133
 msgid "Settings..."
 msgstr "Settings..."
 
-#: kidesktop/page.c:143
+#: kidesktop/page.c:142
 msgid "Kiremote"
 msgstr "Kiremote"
+
+#~ msgid "More actions"
+#~ msgstr "More actions"
 
 #, c-format
 #~ msgid "%s shared a text: %s"

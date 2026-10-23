@@ -9,7 +9,8 @@
 typedef struct {
     kr_ui *ui;
     gboolean compact;
-    GtkWidget *root, *rows, *notice, *menu;
+    GtkWidget *root, *rows, *notice;
+    char expanded[64]; /* the device whose actions are open, or "" */
     guint listener, rebuild_idle;
 } devs;
 
@@ -68,6 +69,8 @@ static GtkWindow *toplevel_of(GtkWidget *w)
     return GTK_WIDGET_TOPLEVEL(t) ? GTK_WINDOW(t) : NULL;
 }
 
+static void schedule_rebuild(devs *dv);
+
 /* ---- one row ---------------------------------------------------------------- */
 
 typedef struct {
@@ -88,26 +91,19 @@ static void inline_clicked(GtkButton *b, gpointer data)
     kr_ui_run_action(c->d->ui, toplevel_of(GTK_WIDGET(b)), c->action, c->id);
 }
 
-static void menu_position(GtkMenu *menu, gint *x, gint *y, gboolean *push_in, gpointer data)
+/* Clicking the row opens (or closes) its actions under the data. */
+static gboolean row_pressed(GtkWidget *w, GdkEventButton *ev, gpointer data)
 {
-    GtkWidget *button = data;
-    GtkRequisition req;
-    gdk_window_get_origin(button->window, x, y);
-    gtk_widget_size_request(GTK_WIDGET(menu), &req);
-    *x += button->allocation.x + button->allocation.width - req.width;
-    *y += button->allocation.y + button->allocation.height;
-    *push_in = TRUE;
-}
-
-static void menu_clicked(GtkButton *b, gpointer data)
-{
+    (void)w;
     click_ctx *c = data;
-    if (c->d->menu) {
-        gtk_widget_destroy(c->d->menu);
-        g_object_unref(c->d->menu);
-    }
-    c->d->menu = g_object_ref_sink(kr_ui_device_menu_new(c->d->ui, toplevel_of(GTK_WIDGET(b)), c->id));
-    gtk_menu_popup(GTK_MENU(c->d->menu), NULL, NULL, menu_position, b, 1, gtk_get_current_event_time());
+    if (ev->button != 1 || ev->type != GDK_BUTTON_PRESS)
+        return FALSE;
+    if (!strcmp(c->d->expanded, c->id))
+        c->d->expanded[0] = 0;
+    else
+        g_snprintf(c->d->expanded, sizeof c->d->expanded, "%s", c->id);
+    schedule_rebuild(c->d);
+    return TRUE;
 }
 
 static void uris_dropped(GtkWidget *w, GdkDragContext *ctx, gint x, gint y, GtkSelectionData *sel, guint info,
@@ -144,6 +140,54 @@ static char *detail_text(const kr_dev *d)
     return g_string_free(s, FALSE);
 }
 
+/* A themed icon for each action; the label stands in if the theme has none. */
+static const char *action_icon(kr_action a)
+{
+    switch (a) {
+    case KR_ACT_PING: return "dialog-information";
+    case KR_ACT_FIND: return "audio-volume-high";
+    case KR_ACT_SEND_FILES: return "document-send";
+    case KR_ACT_SEND_TEXT: return "mail-send";
+    case KR_ACT_BROWSE: return "folder-remote";
+    case KR_ACT_UNPAIR: return "edit-delete";
+    default: return NULL;
+    }
+}
+
+/* What you do with the phone, then what undoes the pairing (as in the menu). */
+static const kr_action expand_acts[] = {KR_ACT_PING, KR_ACT_FIND, KR_ACT_SEND_FILES, KR_ACT_SEND_TEXT, KR_ACT_BROWSE,
+                                        KR_ACT_UNPAIR};
+#define PAIRING_ACTS ((1u << KR_ACT_PAIR) | (1u << KR_ACT_ACCEPT) | (1u << KR_ACT_REFUSE) | (1u << KR_ACT_CANCEL))
+
+static GtkWidget *actions_bar(devs *dv, const kr_dev *d, unsigned acts)
+{
+    GtkWidget *bar = gtk_hbox_new(FALSE, 4);
+    gtk_container_set_border_width(GTK_CONTAINER(bar), dv->compact ? 4 : 8);
+    GtkIconTheme *theme = gtk_icon_theme_get_default();
+    for (size_t i = 0; i < G_N_ELEMENTS(expand_acts); i++) {
+        kr_action a = expand_acts[i];
+        if (!(acts & (1u << a)))
+            continue;
+        const char *icon = action_icon(a);
+        GtkWidget *b;
+        if (icon && gtk_icon_theme_has_icon(theme, icon)) {
+            b = gtk_button_new();
+            gtk_container_add(GTK_CONTAINER(b), gtk_image_new_from_icon_name(icon, GTK_ICON_SIZE_LARGE_TOOLBAR));
+        } else {
+            b = gtk_button_new_with_label(kr_action_label(a));
+        }
+        gtk_widget_set_tooltip_text(b, kr_action_label(a));
+        gtk_button_set_relief(GTK_BUTTON(b), GTK_RELIEF_NONE);
+        click_ctx *c = g_new0(click_ctx, 1);
+        c->d = dv;
+        c->action = a;
+        g_snprintf(c->id, sizeof c->id, "%s", d->id);
+        g_signal_connect_data(b, "clicked", G_CALLBACK(inline_clicked), c, click_free, 0);
+        gtk_box_pack_start(GTK_BOX(bar), b, FALSE, FALSE, 0);
+    }
+    return bar;
+}
+
 static GtkWidget *row_new(devs *dv, const kr_dev *d)
 {
     GtkWidget *event = gtk_event_box_new();
@@ -151,9 +195,17 @@ static GtkWidget *row_new(devs *dv, const kr_dev *d)
     gtk_widget_add_events(event, GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK);
     g_signal_connect(event, "enter-notify-event", G_CALLBACK(row_crossing), dv);
     g_signal_connect(event, "leave-notify-event", G_CALLBACK(row_crossing), dv);
+    unsigned acts = kr_dev_actions(d);
+    gboolean can_expand = (acts & ~PAIRING_ACTS) != 0;
+    gboolean open = can_expand && !strcmp(dv->expanded, d->id);
+    GtkWidget *frame = gtk_frame_new(NULL);
+    gtk_frame_set_shadow_type(GTK_FRAME(frame), open ? GTK_SHADOW_ETCHED_IN : GTK_SHADOW_NONE);
+    gtk_container_add(GTK_CONTAINER(frame), event);
+    GtkWidget *content = gtk_vbox_new(FALSE, 0);
+    gtk_container_add(GTK_CONTAINER(event), content);
     GtkWidget *hbox = gtk_hbox_new(FALSE, 10);
     gtk_container_set_border_width(GTK_CONTAINER(hbox), dv->compact ? 4 : 8);
-    gtk_container_add(GTK_CONTAINER(event), hbox);
+    gtk_box_pack_start(GTK_BOX(content), hbox, FALSE, FALSE, 0);
 
     GtkWidget *icon = gtk_image_new_from_icon_name(kr_dev_icon(d), dv->compact ? GTK_ICON_SIZE_LARGE_TOOLBAR : GTK_ICON_SIZE_DND);
     gtk_box_pack_start(GTK_BOX(hbox), icon, FALSE, FALSE, 0);
@@ -179,7 +231,6 @@ static GtkWidget *row_new(devs *dv, const kr_dev *d)
     gtk_box_pack_start(GTK_BOX(text), l2, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(hbox), text, TRUE, TRUE, 0);
 
-    unsigned acts = kr_dev_actions(d);
     /* The pairing answers are right on the row: the question is waiting. */
     static const kr_action inline_acts[] = {KR_ACT_PAIR, KR_ACT_ACCEPT, KR_ACT_REFUSE, KR_ACT_CANCEL};
     for (size_t i = 0; i < G_N_ELEMENTS(inline_acts); i++) {
@@ -193,18 +244,15 @@ static GtkWidget *row_new(devs *dv, const kr_dev *d)
         g_signal_connect_data(b, "clicked", G_CALLBACK(inline_clicked), c, click_free, 0);
         gtk_box_pack_start(GTK_BOX(hbox), b, FALSE, FALSE, 0);
     }
-    /* Everything else, in the menu (the pairing answers are not repeated). */
-    unsigned menu_acts = acts & ~((1u << KR_ACT_PAIR) | (1u << KR_ACT_ACCEPT) | (1u << KR_ACT_REFUSE) | (1u << KR_ACT_CANCEL));
-    if (menu_acts) {
-        GtkWidget *b = gtk_button_new();
-        gtk_container_add(GTK_CONTAINER(b), gtk_arrow_new(GTK_ARROW_DOWN, GTK_SHADOW_NONE));
-        gtk_widget_set_tooltip_text(b, _("More actions"));
+    /* Everything else, under the data when the row is clicked. */
+    if (can_expand) {
         click_ctx *c = g_new0(click_ctx, 1);
         c->d = dv;
         g_snprintf(c->id, sizeof c->id, "%s", d->id);
-        g_signal_connect_data(b, "clicked", G_CALLBACK(menu_clicked), c, click_free, 0);
-        gtk_box_pack_start(GTK_BOX(hbox), b, FALSE, FALSE, 0);
+        g_signal_connect_data(event, "button-press-event", G_CALLBACK(row_pressed), c, click_free, 0);
     }
+    if (open)
+        gtk_box_pack_start(GTK_BOX(content), actions_bar(dv, d, acts), FALSE, FALSE, 0);
 
     if (acts & (1u << KR_ACT_SEND_FILES)) {
         static const GtkTargetEntry targets[] = {{"text/uri-list", 0, 0}};
@@ -214,7 +262,7 @@ static GtkWidget *row_new(devs *dv, const kr_dev *d)
         g_snprintf(c->id, sizeof c->id, "%s", d->id);
         g_signal_connect_data(event, "drag-data-received", G_CALLBACK(uris_dropped), c, click_free, 0);
     }
-    return event;
+    return frame;
 }
 
 /* ---- the list ------------------------------------------------------------------ */
@@ -238,6 +286,8 @@ static void rebuild(devs *dv)
     } else {
         gtk_widget_hide(dv->notice);
     }
+    if (dv->expanded[0] && !kr_model_find(m, dv->expanded))
+        dv->expanded[0] = 0;
     for (int i = 0; i < n; i++) {
         GtkWidget *row = row_new(dv, kr_model_at(m, i));
         gtk_box_pack_start(GTK_BOX(dv->rows), row, FALSE, FALSE, 0);
@@ -255,12 +305,18 @@ static gboolean rebuild_idle(gpointer data)
     return G_SOURCE_REMOVE;
 }
 
+static void schedule_rebuild(devs *dv)
+{
+    if (!dv->rebuild_idle)
+        dv->rebuild_idle = g_idle_add(rebuild_idle, dv);
+}
+
 static void on_change(void *ud, kr_change what, const char *id)
 {
     devs *dv = ud;
     (void)id;
-    if ((what == KR_CH_DAEMON || what == KR_CH_DEVICES || what == KR_CH_PAIR_REQUEST) && !dv->rebuild_idle)
-        dv->rebuild_idle = g_idle_add(rebuild_idle, dv);
+    if (what == KR_CH_DAEMON || what == KR_CH_DEVICES || what == KR_CH_PAIR_REQUEST)
+        schedule_rebuild(dv);
 }
 
 static void refresh_clicked(GtkButton *b, gpointer data)
@@ -276,10 +332,6 @@ static void root_destroyed(GtkWidget *w, gpointer data)
     kr_ui_unlisten(dv->ui, dv->listener);
     if (dv->rebuild_idle)
         g_source_remove(dv->rebuild_idle);
-    if (dv->menu) {
-        gtk_widget_destroy(dv->menu);
-        g_object_unref(dv->menu);
-    }
     g_free(dv);
 }
 
