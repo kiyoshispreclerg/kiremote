@@ -541,6 +541,43 @@ de 12 bytes:
 Gravado do aparelho de teste (Android 12, `max_size=800`): nome
 `2201117TL`, `h264`, sessão 360×800, config de 31 bytes.
 
+**Controle** (`app/src/control_msg.c`, `device_msg.c`, `android/input.h`,
+`android/keycodes.h`; vetores em `app/tests/test_control_msg_serialize.c`).
+O socket de controle é o último (com só vídeo e controle: o segundo); tudo
+big-endian. Do cliente para o celular, 1 byte de tipo e depois:
+
+| Tipo | Corpo |
+|---|---|
+| 0 tecla | ação (0 desce, 1 sobe), keycode u32, repeat u32, metastate u32 |
+| 1 texto | tamanho u32 + UTF-8, no máximo 300 bytes (cortado sem partir caractere) |
+| 2 toque | ação u8 (0 desce, 1 sobe, 2 move, 7 hover), ponteiro u64 (mouse = −1), x i32, y i32, largura u16, altura u16 do vídeo, pressão u16 (ponto fixo de [0, 1]), botão da ação u32, botões u32 |
+| 3 rolagem | x, y, largura, altura como acima, h e v i16 (ponto fixo de [−1, 1] = [−16, 16] / 16), botões u32 |
+| 4 voltar ou ligar a tela | ação u8 |
+| 5, 6, 7 | abrir notificações, abrir configurações rápidas, fechar painéis (sem corpo) |
+| 8 pedir clipboard | tecla de cópia u8 (0 nada, 1 copiar, 2 recortar) |
+| 9 pôr clipboard | sequência u64, colar u8, tamanho u32 + UTF-8 |
+| 10 energia da tela | ligada u8 |
+| 11 girar | sem corpo |
+
+A posição é em pixels do vídeo, com o tamanho do vídeo a que se refere: o
+servidor descarta eventos de outro tamanho (depois de girar). Botões
+(`AMOTION_EVENT_BUTTON_*`): primário 1, secundário 2, terciário 4, voltar 8,
+avançar 16. O cliente oficial manda o clique esquerdo como toque, o direito
+como "voltar ou ligar a tela", o do meio como a tecla HOME (keycode 3),
+o 4º como APP_SWITCH (187) e o 5º abre as notificações (`cli.c`, atalhos
+padrão); com o mouse parado e sem botão, `HOVER_MOVE`. No teclado (modo
+padrão `mixed`, `keyboard_sdk.c`), letras e espaço vão como keycode com o
+metastate dos modificadores (shift 0x41/0x81, ctrl 0x3000/0x5000, alt
+0x12/0x22, meta 0x30000/0x50000, caps 0x100000, num 0x200000), as teclas de
+navegação também (Enter 66, Backspace 67, Tab 61, Esc 111, Delete 112,
+setas 19–22, Home 122, End 123, PgUp 92, PgDn 93); o resto do que se digita
+vai como texto.
+
+Do celular para o cliente, no mesmo socket: tipo 0 clipboard (tamanho u32
++ texto, até 256 KiB), tipo 1 confirmação de "pôr clipboard" (sequência
+u64), tipo 2 saída UHID (id u16, tamanho u16, dados). Tipo desconhecido:
+não há como achar o próximo, o cliente para de ler.
+
 ## Pendente de leitura
 
 - mDNS (`mdnsdiscovery`): serviço, campos TXT (fase 6).
