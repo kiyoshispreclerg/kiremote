@@ -62,10 +62,6 @@ FUZZ_RUNNERS = $(patsubst %,$(BUILD)/tests/fuzz-run-%,$(FUZZ_TARGETS))
 ALL_CFLAGS  = $(STDFLAGS) $(OPTFLAGS) $(SANFLAGS) $(PKG_CFLAGS) $(CFLAGS)
 ALL_LDFLAGS = $(SANFLAGS) $(LDFLAGS)
 
-# Only the interface tests (GTK2 and Xvfb).
-test-ui: all $(GTK_TESTS)
-	tests/ui/run.sh $(BUILD)
-
 .PHONY: install-daemon install-gtk install-kidesktop test-ui all test test-net run asan asan-run fuzz fuzz-targets install uninstall lint clean locale pot update-po
 
 # The GTK2 interface is built when GTK2 is there: the daemon and the CLI don't
@@ -270,6 +266,11 @@ test: all $(UNIT_TESTS) $(GTK_TESTS) $(KD_TESTS) $(FUZZ_RUNNERS) $(BUILD)/tests/
 	$(if $(and $(KD_TESTS),$(filter 0,$(SANITIZE))),tests/ui/kidesktop.sh $(BUILD) || fail=1;) \
 	if [ $$fail -ne 0 ]; then echo "*** tests FAILED"; exit 1; fi; \
 	echo "*** all tests passed"
+
+# Only the interface tests (GTK2 and Xvfb). After GTK_TESTS is set: a
+# rule's prerequisites are expanded when make reads it.
+test-ui: all $(GTK_TESTS)
+	tests/ui/run.sh $(BUILD)
 
 # Only the two daemons in network namespaces (tests/net/pair.sh).
 test-net: all $(BUILD)/tests/fakephone $(BUILD)/tests/xtool
