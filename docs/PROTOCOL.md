@@ -488,6 +488,59 @@ permissão de arquivos, sem armazenamento configurado). O desktop monta com
 `sshfs user@ip:path` (com `multiPaths`, a raiz `/`) e mostra os `multiPaths`
 como pastas; só aceita o pacote se tiver pedido (`startBrowsing`) antes.
 
+## Espelhamento (scrcpy-server)
+
+Não é KDE Connect: é o protocolo entre o cliente do scrcpy e o
+`scrcpy-server`, versão fixada em `config.mk` (`SCRCPY_VERSION`, hoje 5.0.1).
+O protocolo muda entre versões e o servidor recusa outra versão do cliente.
+Lido em `upstream/scrcpy` (v5.0.1): `app/src/server.c`, `app/src/demuxer.c`,
+`app/src/adb/adb.c`, `app/src/adb/adb_tunnel.c`,
+`server/.../device/DesktopConnection.java`, `.../device/Streamer.java`,
+`.../Options.java`. O jar vem da release
+(`install_release.sh`: URL e SHA-256).
+
+**Subir o servidor.** Tudo pelo executável `adb`, como o cliente oficial:
+
+1. `adb -s SERIAL push scrcpy-server /data/local/tmp/<nome>.jar`.
+2. Túnel reverso: o cliente escuta numa porta TCP local e roda
+   `adb -s SERIAL reverse localabstract:scrcpy_<scid> tcp:<porta>`; o
+   servidor conecta nele. `scid`: 31 bits aleatórios, em hexadecimal com 8
+   dígitos (`%08x`; `scrcpy_generate_scid`). Se o `reverse` falhar, o oficial
+   cai para `forward` (o cliente conecta e o servidor manda um byte 0 para
+   provar que está escutando); não usamos ainda.
+3. `adb -s SERIAL shell CLASSPATH=/data/local/tmp/<nome>.jar app_process /
+   com.genymobile.scrcpy.Server <versão> chave=valor...`. Chaves que usamos:
+   `scid`, `log_level` (`verbose`, `debug`, `info`, `warn`, `error`),
+   `video` / `audio` / `control` (`false` desliga), `video_codec` (`h264`,
+   `h265`, `av1`), `max_size` (lado maior, em pixels), `video_bit_rate`,
+   `max_fps`, `cleanup`. A saída do shell é o log do servidor.
+4. Depois de conectados os sockets, `adb reverse --remove
+   localabstract:scrcpy_<scid>`.
+
+**Sockets.** Um por fluxo ligado, sempre na ordem vídeo, áudio, controle.
+O primeiro começa com 64 bytes: o nome do aparelho em UTF-8, completado
+com zeros (o cliente força o último byte a 0).
+
+**Fluxo de vídeo e de áudio.** 4 bytes big-endian com o codec: `h264`
+`0x68323634`, `h265` `0x68323635`, `av1` `0x00617631`, `opus`
+`0x6f707573`, `aac` `0x00616163`, `flac` `0x666c6163`, `raw` `0x00726177`
+(PCM s16le); `0` = o aparelho desligou o fluxo (sem captura de áudio:
+segue só com vídeo); `1` = erro de configuração (parar). Depois, cabeçalhos
+de 12 bytes:
+
+- bit 63 ligado: **sessão** (só vídeo; a primeira vem logo depois do
+  codec, e uma nova a cada rotação ou mudança de tamanho). Bytes 0–3:
+  `0x80000000`, com o bit 0 = redimensionado pelo cliente; 4–7 largura,
+  8–11 altura (big-endian).
+- bit 63 desligado: **pacote**. Bytes 0–7: PTS em µs com flags (bit 62 =
+  config, sem PTS; bit 61 = keyframe); 8–11: tamanho (nunca 0), seguido do
+  pacote cru do MediaCodec. Em H.264/H.265 o pacote de config (SPS/PPS)
+  vai grudado na frente do próximo pacote antes de decodificar
+  (`sc_packet_merger`). Áudio é sempre estéreo, 48 kHz.
+
+Gravado do aparelho de teste (Android 12, `max_size=800`): nome
+`2201117TL`, `h264`, sessão 360×800, config de 31 bytes.
+
 ## Pendente de leitura
 
 - mDNS (`mdnsdiscovery`): serviço, campos TXT (fase 6).

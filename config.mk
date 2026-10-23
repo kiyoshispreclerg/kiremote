@@ -42,3 +42,9 @@ ifeq ($(SANITIZE),fuzz)
 OPTFLAGS = -O1 -g -fno-omit-frame-pointer
 SANFLAGS = -fsanitize=fuzzer-no-link,address,undefined -fno-sanitize-recover=all
 endif
+
+# The scrcpy-server kiremote-mirror runs on the phone. The client must send
+# this exact version (the server refuses any other). URL and checksum from
+# upstream/scrcpy/install_release.sh; scripts/fetch-scrcpy-server.sh gets it.
+SCRCPY_VERSION = 5.0.1
+SCRCPY_SERVER_SHA256 = 764eb6f79811d5211fe9df341120882ba9994c7a61b897d7bf3fb662e53bc536
