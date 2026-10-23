@@ -135,8 +135,20 @@ kr_proc *kr_proc_spawn_ex(kr_procs *ps, const char *const *argv, unsigned flags,
     posix_spawnattr_t attr;
     bool fa_ok = posix_spawn_file_actions_init(&fa) == 0;
     bool attr_ok = posix_spawnattr_init(&attr) == 0;
-    if (attr_ok && (flags & KR_PROC_USER))
-        posix_spawnattr_setflags(&attr, POSIX_SPAWN_SETSID);
+    if (attr_ok) {
+        /* The daemon blocks SIGTERM/SIGINT (signalfd) and ignores SIGPIPE;
+         * children would inherit that and ignore kr_proc_kill()'s SIGTERM,
+         * so give them a clean mask and default dispositions. */
+        sigset_t none, all;
+        sigemptyset(&none);
+        sigfillset(&all);
+        posix_spawnattr_setsigmask(&attr, &none);
+        posix_spawnattr_setsigdefault(&attr, &all);
+        short af = POSIX_SPAWN_SETSIGMASK | POSIX_SPAWN_SETSIGDEF;
+        if (flags & KR_PROC_USER)
+            af |= POSIX_SPAWN_SETSID;
+        posix_spawnattr_setflags(&attr, af);
+    }
     int err = ENOMEM;
     if (p && env && fa_ok) {
         posix_spawn_file_actions_addopen(&fa, 0, "/dev/null", O_RDONLY, 0);
