@@ -1,0 +1,58 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+#ifndef KR_SERVER_H
+#define KR_SERVER_H
+
+/* Starts the scrcpy-server on the phone and hands over its video socket
+ * (docs/PROTOCOL.md, "Espelhamento"): `adb devices -l` to pick the phone,
+ * `adb push` of the jar, a local TCP port on 127.0.0.1 behind an `adb
+ * reverse` tunnel, then `adb shell ... app_process` with the options, and
+ * the server connects back. Every step is a child process of the caller's
+ * loop (kr_procs) or the listening socket: nothing blocks.
+ *
+ * The kr_server owns the shell that runs the server: freeing it stops the
+ * server (and removes the tunnel if it is still there). */
+
+#include <poll.h>
+#include <stdbool.h>
+
+#include "proc.h"
+
+typedef struct {
+    const char *serial;   /* NULL: the only phone adb has */
+    const char *jar;      /* the scrcpy-server to push */
+    unsigned max_size;    /* longer side, 0 = the phone's */
+    unsigned bit_rate;    /* 0 = the server's default */
+    unsigned max_fps;     /* 0 = no limit */
+    const char *codec;    /* "h264" (default), "h265", "av1" */
+    double timeout;       /* seconds for the server to connect, 0 = 10 */
+} kr_server_opts;
+
+typedef struct {
+    /* The video socket is connected (blocking mode; the caller owns it).
+     * serial and model: the phone adb picked. */
+    void (*on_ready)(void *ud, int video_fd, const char *serial, const char *model);
+    /* It could not start, or the server ended (before or after on_ready):
+     * a translated sentence. Comes once; nothing else follows. */
+    void (*on_error)(void *ud, const char *message);
+    /* A line the server printed (its log). Optional. */
+    void (*on_log)(void *ud, const char *line);
+} kr_server_cb;
+
+typedef struct kr_server kr_server;
+
+kr_server *kr_server_start(kr_procs *ps, const kr_server_opts *opts, const kr_server_cb *cb, void *ud);
+void kr_server_free(kr_server *s);
+
+/* The listening socket, while the server is expected. */
+int kr_server_pollfds(kr_server *s, struct pollfd *fds, int max);
+void kr_server_dispatch(kr_server *s, const struct pollfd *fds, int n);
+/* When the wait for the server runs out (kr_now() time), 0 for none. */
+double kr_server_deadline(const kr_server *s);
+/* Call when the deadline passed. */
+void kr_server_tick(kr_server *s);
+
+/* Where the jar is: $KIREMOTE_SCRCPY_SERVER, next to the executable (a
+ * build tree), else the installed one. false if none exists. */
+bool kr_server_find_jar(char *out, size_t size);
+
+#endif

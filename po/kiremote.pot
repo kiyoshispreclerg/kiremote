@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kiremote\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-23 20:18-0300\n"
+"POT-Creation-Date: 2026-10-23 20:25-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -481,7 +481,7 @@ msgid ""
 "  -h, --help         show this help and exit\n"
 msgstr ""
 
-#: src/kiremoted.c:96
+#: src/kiremoted.c:96 mirror/main.c:253
 #, c-format
 msgid "cannot watch signals: %s"
 msgstr ""
@@ -1443,6 +1443,7 @@ msgid "Yes"
 msgstr ""
 
 #: kidesktop/page.c:115 kidesktop/tab.c:20 mirror/stream.c:164
+#: mirror/screen.c:151 mirror/main.c:126 mirror/main.c:263
 msgid "Out of memory"
 msgstr ""
 
@@ -1502,4 +1503,88 @@ msgstr ""
 
 #: mirror/adb.c:123
 msgid "No phone found by adb: connect it by USB with USB debugging on"
+msgstr ""
+
+#: mirror/server.c:106
+#, c-format
+msgid "Could not run %s: %s"
+msgstr ""
+
+#: mirror/server.c:131 mirror/server.c:134
+msgid "The server on the phone stopped"
+msgstr ""
+
+#: mirror/server.c:178
+msgid "Could not open the adb tunnel to the phone"
+msgstr ""
+
+#: mirror/server.c:199
+#, c-format
+msgid "Could not open a local port: %s"
+msgstr ""
+
+#: mirror/server.c:233
+msgid "Could not copy the server to the phone"
+msgstr ""
+
+#: mirror/server.c:246
+msgid "adb could not list the devices"
+msgstr ""
+
+#: mirror/server.c:334
+#, c-format
+msgid "Could not accept the server's connection: %s"
+msgstr ""
+
+#: mirror/server.c:361 mirror/server.c:364
+msgid "The server on the phone did not connect"
+msgstr ""
+
+#: mirror/screen.c:156
+msgid "Could not open the X display"
+msgstr ""
+
+#: mirror/screen.c:185
+msgid "The X display needs 24-bit color for the mirror"
+msgstr ""
+
+#: mirror/main.c:29
+#, c-format
+msgid ""
+"Usage: %s [OPTION]...\n"
+"Shows the phone's screen in a window (USB debugging must be on).\n"
+"\n"
+"  -s, --serial SERIAL   the phone, as adb names it (default: the only one)\n"
+"  -m, --max-size N      longer side of the video, in pixels (default: the "
+"phone's)\n"
+"  -b, --bit-rate N      video bit rate, in bits per second\n"
+"      --max-fps N       frames per second at most\n"
+"      --codec CODEC     h264 (default), h265 or av1\n"
+"  -v, --verbose         debug messages (and the server's)\n"
+"  -V, --version         show the version and exit\n"
+"  -h, --help            show this help and exit\n"
+msgstr ""
+
+#: mirror/main.c:78
+msgid ""
+"This computer cannot decode the phone's video (no decoder in libavcodec)"
+msgstr ""
+
+#: mirror/main.c:113
+msgid "The video could not be decoded"
+msgstr ""
+
+#: mirror/main.c:119
+#, c-format
+msgid "Mirroring %s"
+msgstr ""
+
+#: mirror/main.c:152
+msgid "The phone closed the connection"
+msgstr ""
+
+#: mirror/main.c:246
+#, c-format
+msgid ""
+"scrcpy-server %s not found (scripts/fetch-scrcpy-server.sh downloads it)"
 msgstr ""

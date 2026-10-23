@@ -49,7 +49,8 @@ LIB_SRC = src/log.c \
       ui/krmodel.c \
       ui/krclient.c \
       mirror/stream.c \
-      mirror/adb.c
+      mirror/adb.c \
+      mirror/server.c
 VENDOR_SRC = vendor/cjson/cJSON.c
 LIBKR = $(BUILD)/libkr.a
 
@@ -105,13 +106,25 @@ KD_TARGETS += $(KD_OUT)/widgets/kiremote.so $(KD_OUT)/widgets/kiremote.widget
 KD_TESTS += $(BUILD)/tests/test_widget
 endif
 
+# kiremote-mirror (the phone's screen in a window): needs libavcodec,
+# libswscale and Xext; without them it is skipped. Its protocol parts
+# (stream, adb, server) are in libkr, so the tests do not need libav.
+MIRROR_PKGS = libavcodec libavutil libswscale x11 xext
+HAVE_MIRROR := $(shell $(PKG_CONFIG) --exists $(MIRROR_PKGS) && echo 1)
+ifeq ($(HAVE_MIRROR),1)
+MIRROR_CFLAGS = $(shell $(PKG_CONFIG) --cflags $(MIRROR_PKGS) | sed 's/-I/-isystem /g')
+MIRROR_LIBS = $(shell $(PKG_CONFIG) --libs $(MIRROR_PKGS))
+MIRROR_SRC = mirror/main.c mirror/decode.c mirror/screen.c
+MIRROR_TARGETS = $(BUILD)/kiremote-mirror
+endif
+
 # Translations (po/LINGUAS lists the languages), built into $(BUILD)/locale,
 # which the programs find next to their own executable.
 LINGUAS = $(shell sed 's/\#.*//' po/LINGUAS)
 HAVE_MSGFMT := $(shell command -v msgfmt >/dev/null 2>&1 && echo 1)
 MO_FILES = $(if $(HAVE_MSGFMT),$(foreach l,$(LINGUAS),$(BUILD)/locale/$(l)/LC_MESSAGES/kiremote.mo))
 
-all: $(BUILD)/kiremoted $(BUILD)/kiremote-cli $(MO_FILES) $(GTK_TARGETS) $(KD_TARGETS)
+all: $(BUILD)/kiremoted $(BUILD)/kiremote-cli $(MO_FILES) $(GTK_TARGETS) $(KD_TARGETS) $(MIRROR_TARGETS)
 locale: $(MO_FILES)
 
 $(BUILD)/locale/%/LC_MESSAGES/kiremote.mo: po/%.po
@@ -199,6 +212,13 @@ $(BUILD)/tests/test_ui: tests/ui/test_ui.c tests/harness.h $(LIBKRUI) $(LIBKR)
 
 $(BUILD)/kiremote: $(BUILD)/ui/gtk/main.o $(LIBKRUI) $(LIBKR)
 	$(CC) $(ALL_LDFLAGS) -o $@ $^ $(GTK_LIBS) $(LDLIBS)
+
+$(BUILD)/mirror/%.o: mirror/%.c
+	@mkdir -p $(@D)
+	$(CC) $(CPPFLAGS) $(ALL_CFLAGS) $(MIRROR_CFLAGS) $(WARNFLAGS) -MMD -MP -c -o $@ $<
+
+$(BUILD)/kiremote-mirror: $(patsubst %.c,$(BUILD)/%.o,$(MIRROR_SRC)) $(LIBKR)
+	$(CC) $(ALL_LDFLAGS) -o $@ $^ $(MIRROR_LIBS) $(LDLIBS)
 
 $(LIBKR): $(patsubst %.c,$(BUILD)/%.o,$(LIB_SRC) $(VENDOR_SRC))
 	$(AR) rcs $@ $^

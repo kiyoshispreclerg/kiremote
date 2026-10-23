@@ -537,11 +537,23 @@ contra o qual foi compilado no `Depends`.
 
 ### 4. SMS e contatos
 
-### 5. Espelhamento
+### 5. Espelhamento (em andamento)
 
 `kiremote-mirror`: adb, servidor, vídeo, Xv, controle, clipboard; depois
 áudio; depois Wi-Fi casado pelo IP do KDE Connect. Botão na interface e no
 menu da bandeja.
+
+Feito: o protocolo do `scrcpy-server` 5.0.1 em `docs/PROTOCOL.md`, versão e
+SHA-256 do jar em `config.mk` (`scripts/fetch-scrcpy-server.sh`), o parser
+dos fluxos (`mirror/stream.c`, com teste num fluxo gravado do celular e alvo
+de fuzz), `adb devices -l` (`mirror/adb.c`), subir o servidor pelo adb no
+`poll()` (`mirror/server.c`, testado com `tests/tools/fake_adb`) e o vídeo
+numa janela Xlib com libavcodec e libswscale + XShm. Testado com o celular
+de verdade (Android 12, USB, 460×1024): ~25 MB de RSS e ~10% de um núcleo.
+O X desta máquina não tem Xv, então a reserva (libswscale) veio primeiro.
+
+Falta: Xv; controle (toque, teclas, texto, clipboard, girar); áudio; Wi-Fi;
+o botão "Espelhar" nas interfaces; o pacote `kiremote-mirror`.
 
 ### 6. Fechamento dos plugins
 

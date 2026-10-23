@@ -71,6 +71,17 @@ com `kiremote-cli -d <aparelho> --pair` (ou recusa com `--unpair`). Os
 arquivos recebidos vão para a pasta de downloads; a configuração está em
 [data/kiremote.ini](data/kiremote.ini).
 
+Espelhamento (fase 5, começando: por enquanto só a imagem, sem controle nem
+áudio): ligue a depuração USB no celular, conecte pelo USB e rode
+
+```sh
+scripts/fetch-scrcpy-server.sh   # uma vez: baixa e confere o scrcpy-server (fica em build/)
+build/kiremote-mirror            # -s SERIAL com mais de um celular; -m 1024 limita o tamanho
+```
+
+Ele usa o `adb` do sistema e o `scrcpy-server` da versão fixada no
+`config.mk`; o celular não precisa do app do scrcpy.
+
 Se o computador não aparecer no celular, confira se o firewall deixa passar
 UDP e TCP de 1716 a 1764, ou adicione o IP do computador no app ("Adicionar
 dispositivos pelo IP"). O Kiremote convive com um KDE Connect rodando na
@@ -79,7 +90,8 @@ mesma máquina: os dois aparecem no celular como computadores diferentes.
 ## Compilar
 
 Precisa de um compilador C11, `make`, `pkg-config`, OpenSSL e gettext
-(`msgfmt`).
+(`msgfmt`). O `kiremote-mirror` só é compilado se houver libavcodec,
+libswscale e Xext (`libavcodec-dev libswscale-dev libxext-dev`).
 
 ```sh
 make

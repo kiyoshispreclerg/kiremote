@@ -1,0 +1,57 @@
+#!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-3.0-or-later
+"""A stand-in adb for kiremote-mirror's tests (KIREMOTE_ADB points at it).
+
+Every call is appended to $FAKEADB_LOG (one line, the arguments joined by
+spaces). The port of the last `reverse` is kept in $FAKEADB_LOG.port; `shell`
+then plays the phone's server: connects there and sends $FAKEADB_STREAM
+(a capture), then waits until the client closes. $FAKEADB_MODE changes it:
+
+  unauthorized   `devices -l` lists the phone as unauthorized
+  push-fails     `push` fails as adb does
+  dies           the server prints an error and exits without connecting
+  silent         the server never connects (the client times out)
+"""
+import os, socket, sys, time
+
+args = sys.argv[1:]
+log = os.environ['FAKEADB_LOG']
+mode = os.environ.get('FAKEADB_MODE', '')
+with open(log, 'a') as f:
+    f.write(' '.join(args) + '\n')
+if len(args) >= 2 and args[0] == '-s':
+    args = args[2:]
+
+if args[:2] == ['devices', '-l']:
+    state = 'unauthorized' if mode == 'unauthorized' else 'device'
+    print('List of devices attached')
+    print(f'FAKE123                {state} usb:1-1 product:fake model:Fake_Phone device:fake transport_id:7')
+    sys.exit(0)
+if args[:1] == ['push']:
+    if mode == 'push-fails':
+        print("adb: error: failed to copy 'x' to '/data/local/tmp/x': remote Read-only file system", file=sys.stderr)
+        sys.exit(1)
+    if not os.path.isfile(args[1]):
+        sys.exit(1)
+    print(f'{args[1]}: 1 file pushed.')
+    sys.exit(0)
+if args[:1] == ['reverse']:
+    if args[1] != '--remove':
+        with open(log + '.port', 'w') as f:
+            f.write(args[2].split(':')[1])
+    sys.exit(0)
+if args[:1] == ['shell']:
+    print('[server] INFO: Device: [Fake] Fake_Phone (Android 12)', flush=True)
+    if mode == 'dies':
+        print('[server] ERROR: The server version (5.0.1) does not match the client', flush=True)
+        sys.exit(1)
+    if mode == 'silent':
+        time.sleep(30)
+        sys.exit(0)
+    port = int(open(log + '.port').read())
+    s = socket.create_connection(('127.0.0.1', port))
+    s.sendall(open(os.environ['FAKEADB_STREAM'], 'rb').read())
+    s.recv(1)  # until the client closes
+    sys.exit(0)
+print('fake_adb: unexpected', args, file=sys.stderr)
+sys.exit(1)

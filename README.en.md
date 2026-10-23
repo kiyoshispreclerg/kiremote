@@ -73,6 +73,17 @@ the phone asks, the daemon logs the key and you accept with
 files go to your downloads folder; the settings are described in
 [data/kiremote.ini](data/kiremote.ini).
 
+Mirroring (phase 5, just started: only the picture for now, no control or
+audio): turn on USB debugging on the phone, plug it in and run
+
+```sh
+scripts/fetch-scrcpy-server.sh   # once: downloads and checks the scrcpy-server (into build/)
+build/kiremote-mirror            # -s SERIAL with more than one phone; -m 1024 limits the size
+```
+
+It uses the system's `adb` and the `scrcpy-server` of the version pinned in
+`config.mk`; the phone does not need the scrcpy app.
+
 If the computer doesn't show up on the phone, check that the firewall lets
 UDP and TCP 1716 to 1764 through, or add the computer's IP in the app ("Add
 devices by IP"). Kiremote can run next to KDE Connect on the same machine:
@@ -81,6 +92,8 @@ the phone sees them as two different computers.
 ## Building
 
 Needs a C11 compiler, `make`, `pkg-config`, OpenSSL and gettext (`msgfmt`).
+`kiremote-mirror` is only built with libavcodec, libswscale and Xext
+(`libavcodec-dev libswscale-dev libxext-dev`).
 
 ```sh
 make

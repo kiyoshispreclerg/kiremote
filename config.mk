@@ -27,7 +27,7 @@ PKGS       = openssl dbus-1 x11 xfixes xtst xext
 PKG_CFLAGS = $(shell $(PKG_CONFIG) --cflags $(PKGS) | sed 's/-I/-isystem /g')
 PKG_LIBS   = $(shell $(PKG_CONFIG) --libs $(PKGS))
 
-CPPFLAGS += -Isrc -Iui -Iui/gtk -Imirror -Ivendor/cjson -DKR_VERSION='"$(VERSION)"' -DLOCALEDIR='"$(LOCALEDIR)"'
+CPPFLAGS += -Isrc -Iui -Iui/gtk -Imirror -Ivendor/cjson -DKR_VERSION='"$(VERSION)"' -DLOCALEDIR='"$(LOCALEDIR)"' -DKR_DATADIR='"$(DATADIR)"' -DKR_SCRCPY_VERSION='"$(SCRCPY_VERSION)"'
 LDLIBS   += $(PKG_LIBS) -lm
 
 # `make asan` sets SANITIZE=1.
