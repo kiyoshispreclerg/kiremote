@@ -48,7 +48,8 @@ LIB_SRC = src/log.c \
       src/plugin_sftp.c \
       ui/krmodel.c \
       ui/krclient.c \
-      mirror/stream.c
+      mirror/stream.c \
+      mirror/adb.c
 VENDOR_SRC = vendor/cjson/cJSON.c
 LIBKR = $(BUILD)/libkr.a
 

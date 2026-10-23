@@ -33,3 +33,4 @@ kidesktop/tab.c
 kidesktop/widget.c
 ui/gtk/instance.c
 mirror/stream.c
+mirror/adb.c

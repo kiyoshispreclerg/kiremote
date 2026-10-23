@@ -170,10 +170,11 @@ para Wi-Fi, depuração sem fio, Android 11+).
 
 Peças:
 
-1. **adb**: falar direto com o servidor do adb na porta 5037 (protocolo de
-   texto simples: `host:transport:<serial>`, `shell:`, `sync:` para enviar
-   o jar, `reverse:`/`forward`). Nada de rodar `adb` a cada comando; só
-   `adb start-server` se ele não estiver no ar.
+1. **adb**: pelo executável `adb` (`devices -l`, `push`, `reverse`,
+   `shell`), como o cliente oficial, em processos filhos no laço
+   (`src/proc.c`): são poucos comandos, só ao abrir. Falar direto com o
+   servidor do adb na porta 5037 ficou para depois: o protocolo dele não
+   está em nenhum dos `upstream/`, e não inventamos protocolo.
 2. **Servidor**: enviar o `scrcpy-server` para `/data/local/tmp`, iniciar
    com a **mesma versão** que o cliente espera (o servidor recusa versão
    diferente), `scid` aleatório. Sockets na ordem vídeo, áudio, controle.

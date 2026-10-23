@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kiremote\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-23 20:16-0300\n"
+"POT-Creation-Date: 2026-10-23 20:18-0300\n"
 "PO-Revision-Date: 2026-10-09 08:41-0300\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -1561,6 +1561,28 @@ msgstr "The phone sent a packet of invalid size"
 #: mirror/stream.c:201
 msgid "The phone sent data on a stream it turned off"
 msgstr "The phone sent data on a stream it turned off"
+
+#: mirror/adb.c:109
+msgid "That device is not connected to adb"
+msgstr "That device is not connected to adb"
+
+#: mirror/adb.c:113
+msgid "More than one device is connected: choose one with --serial"
+msgstr "More than one device is connected: choose one with --serial"
+
+#: mirror/adb.c:119 mirror/adb.c:127
+msgid ""
+"The phone has not allowed this computer yet: accept the USB debugging prompt "
+"on it"
+msgstr "The phone has not allowed this computer yet: accept the USB debugging prompt on it"
+
+#: mirror/adb.c:122 mirror/adb.c:131
+msgid "The phone is not ready for adb (offline)"
+msgstr "The phone is not ready for adb (offline)"
+
+#: mirror/adb.c:123
+msgid "No phone found by adb: connect it by USB with USB debugging on"
+msgstr "No phone found by adb: connect it by USB with USB debugging on"
 
 #~ msgid "More actions"
 #~ msgstr "More actions"

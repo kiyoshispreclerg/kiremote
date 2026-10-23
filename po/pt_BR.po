@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kiremote\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-23 20:16-0300\n"
+"POT-Creation-Date: 2026-10-23 20:18-0300\n"
 "PO-Revision-Date: 2026-10-17 21:00-0300\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -1570,6 +1570,28 @@ msgstr "O celular mandou um pacote de tamanho inválido"
 #: mirror/stream.c:201
 msgid "The phone sent data on a stream it turned off"
 msgstr "O celular mandou dados num fluxo que ele desligou"
+
+#: mirror/adb.c:109
+msgid "That device is not connected to adb"
+msgstr "Esse aparelho não está conectado ao adb"
+
+#: mirror/adb.c:113
+msgid "More than one device is connected: choose one with --serial"
+msgstr "Há mais de um aparelho conectado: escolha um com --serial"
+
+#: mirror/adb.c:119 mirror/adb.c:127
+msgid ""
+"The phone has not allowed this computer yet: accept the USB debugging prompt "
+"on it"
+msgstr "O celular ainda não autorizou este computador: aceite o pedido de depuração USB nele"
+
+#: mirror/adb.c:122 mirror/adb.c:131
+msgid "The phone is not ready for adb (offline)"
+msgstr "O celular não está pronto para o adb (offline)"
+
+#: mirror/adb.c:123
+msgid "No phone found by adb: connect it by USB with USB debugging on"
+msgstr "O adb não achou nenhum celular: conecte-o pelo USB com a depuração USB ligada"
 
 #~ msgid "More actions"
 #~ msgstr "Mais ações"
