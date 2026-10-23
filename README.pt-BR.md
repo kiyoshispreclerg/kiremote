@@ -71,8 +71,8 @@ com `kiremote-cli -d <aparelho> --pair` (ou recusa com `--unpair`). Os
 arquivos recebidos vão para a pasta de downloads; a configuração está em
 [data/kiremote.ini](data/kiremote.ini).
 
-Espelhamento (fase 5, começando: por enquanto só a imagem, sem controle nem
-áudio): ligue a depuração USB no celular, conecte pelo USB e rode
+Espelhamento (fase 5, em andamento: imagem, mouse e teclado; ainda sem áudio
+nem clipboard): ligue a depuração USB no celular, conecte pelo USB e rode
 
 ```sh
 scripts/fetch-scrcpy-server.sh   # uma vez: baixa e confere o scrcpy-server (fica em build/)
@@ -80,7 +80,11 @@ build/kiremote-mirror            # -s SERIAL com mais de um celular; -m 1024 lim
 ```
 
 Ele usa o `adb` do sistema e o `scrcpy-server` da versão fixada no
-`config.mk`; o celular não precisa do app do scrcpy.
+`config.mk`; o celular não precisa do app do scrcpy. Como no scrcpy, o botão
+esquerdo toca, o direito é Voltar, o do meio é Início, os laterais são os
+apps recentes e as notificações; o que você digita vai para o celular (`-n`
+só mostra a tela). A ação "Espelhar a tela" na lista de aparelhos também o
+abre.
 
 Se o computador não aparecer no celular, confira se o firewall deixa passar
 UDP e TCP de 1716 a 1764, ou adicione o IP do computador no app ("Adicionar

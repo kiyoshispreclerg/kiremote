@@ -13,7 +13,8 @@ daemon), 3b (`krclient`/`krmodel`), 3c (`libkrui` e o `kiremote`, uma janela por
 sessão) 3d (módulos do KiDesktop) e 3e (`debian/`, scripts e CI) feitas. Versão 0.1.0.
 Fase 4 (SMS e contatos) adiada: o KiDesktop não tem onde guardar contatos.
 Fase 5 (espelhamento) em andamento: vídeo pelo USB funciona (`kiremote-mirror`);
-faltam Xv, controle, áudio, Wi-Fi e o botão nas interfaces. Veja o `PLANO.md`.
+com mouse e teclado, e a ação "Espelhar a tela" nas interfaces; faltam
+clipboard, Xv, áudio e Wi-Fi. Veja o `PLANO.md`.
 
 O usuário escreve em português (pt-BR) e quer as respostas em português.
 Comentários e identificadores no código, em inglês. Todo texto que o usuário
@@ -123,7 +124,7 @@ LANGUAGE=en build/kiremoted --help   # o catálogo vem de build/locale
 | `tests/net/pair.sh` | integração: dois daemons em network namespaces (também eventos, arquivo de estado e `--set`) |
 | `tests/net/plugins.sh`, `tests/net/desktop.sh`, `tests/tools/` | integração dos plugins: celular falso (`fakephone.c`, serve payloads), D-Bus de sessão e de sistema privados com serviços falsos (Python), Xvfb, `xtool.c`, `pactl`/`paplay`/`xdg-*` falsos |
 | `tests/fuzz/` | alvos de fuzz, `driver.c` (sem libFuzzer) e corpus |
-| `mirror/stream.c`, `mirror/adb.c`, `mirror/server.c` | espelhamento sem libav (na `libkr`): fluxo do scrcpy-server (alvo de fuzz), `adb devices -l`, subir o servidor pelo adb no `poll()` |
+| `mirror/stream.c`, `mirror/adb.c`, `mirror/server.c`, `mirror/ctlmsg.c`, `mirror/keys.c` | espelhamento sem libav (na `libkr`): fluxo do scrcpy-server e respostas do controle (alvos de fuzz), `adb devices -l`, subir o servidor pelo adb no `poll()`, mensagens de controle, teclas X → Android |
 | `mirror/main.c`, `decode.c`, `screen.c` | o `kiremote-mirror`: libavcodec, janela Xlib (libswscale + XShm); só compila com libavcodec/libswscale/xext |
 | `docs/PROTOCOL.md` | o protocolo, conferido no upstream |
 | `docs/UPSTREAM.md` | versões dos submódulos e divergências |

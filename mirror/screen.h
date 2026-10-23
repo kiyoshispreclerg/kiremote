@@ -28,4 +28,20 @@ void kr_screen_video_size(kr_screen *s, unsigned width, unsigned height);
 /* Draws a frame (kept for redrawing). */
 void kr_screen_frame(kr_screen *s, const struct AVFrame *frame);
 
+/* What the user does in the window. Positions are already in the video's
+ * pixels (clamped to it); state is X's modifier and button mask. */
+typedef struct {
+    /* X button 1 (left) to 9; down or up. */
+    void (*on_button)(void *ud, int button, bool down, int x, int y, unsigned state);
+    void (*on_motion)(void *ud, int x, int y, unsigned state);
+    /* keysym as X looked it up; text: what the key typed (UTF-8, through
+     * the input method, so dead keys and compose work), "" on release or
+     * for keys that type nothing. repeat: the key is held (auto-repeat). */
+    void (*on_key)(void *ud, unsigned long keysym, bool down, bool repeat, unsigned state, const char *text);
+    /* The window lost the keyboard: whatever is held is let go. */
+    void (*on_focus_out)(void *ud);
+} kr_screen_input;
+
+void kr_screen_set_input(kr_screen *s, const kr_screen_input *cbs, void *ud);
+
 #endif

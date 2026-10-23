@@ -73,8 +73,8 @@ the phone asks, the daemon logs the key and you accept with
 files go to your downloads folder; the settings are described in
 [data/kiremote.ini](data/kiremote.ini).
 
-Mirroring (phase 5, just started: only the picture for now, no control or
-audio): turn on USB debugging on the phone, plug it in and run
+Mirroring (phase 5, under way: picture, mouse and keyboard; no audio or
+clipboard yet): turn on USB debugging on the phone, plug it in and run
 
 ```sh
 scripts/fetch-scrcpy-server.sh   # once: downloads and checks the scrcpy-server (into build/)
@@ -82,7 +82,11 @@ build/kiremote-mirror            # -s SERIAL with more than one phone; -m 1024 l
 ```
 
 It uses the system's `adb` and the `scrcpy-server` of the version pinned in
-`config.mk`; the phone does not need the scrcpy app.
+`config.mk`; the phone does not need the scrcpy app. As in scrcpy, the left
+button touches, the right one is Back, the middle one Home, the side ones
+recent apps and the notifications; what you type goes to the phone
+(`-n` only shows the screen). The "Mirror the screen" action in the device
+list starts it too.
 
 If the computer doesn't show up on the phone, check that the firewall lets
 UDP and TCP 1716 to 1764 through, or add the computer's IP in the app ("Add

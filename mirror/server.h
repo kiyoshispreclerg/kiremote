@@ -25,12 +25,14 @@ typedef struct {
     unsigned max_fps;     /* 0 = no limit */
     const char *codec;    /* "h264" (default), "h265", "av1" */
     double timeout;       /* seconds for the server to connect, 0 = 10 */
+    bool view_only;       /* no control socket: the phone is only shown */
 } kr_server_opts;
 
 typedef struct {
-    /* The video socket is connected (blocking mode; the caller owns it).
-     * serial and model: the phone adb picked. */
-    void (*on_ready)(void *ud, int video_fd, const char *serial, const char *model);
+    /* The sockets are connected (blocking mode; the caller owns them):
+     * video, and control (-1 with view_only). serial and model: the phone
+     * adb picked. */
+    void (*on_ready)(void *ud, int video_fd, int control_fd, const char *serial, const char *model);
     /* It could not start, or the server ended (before or after on_ready):
      * a translated sentence. Comes once; nothing else follows. */
     void (*on_error)(void *ud, const char *message);

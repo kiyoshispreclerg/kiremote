@@ -43,6 +43,7 @@ struct kr_server {
     kr_proc *shell; /* the server */
     bool reverse_on;
     int listen_fd;
+    int video_fd; /* accepted, waiting for the control socket */
     double deadline;
     char last_line[256]; /* the server's, to say why it ended */
 };
@@ -143,8 +144,10 @@ static void start_shell(kr_server *s)
     snprintf(codec, sizeof codec, "video_codec=%s", s->codec);
     const char *args[24] = {"shell", cp, "app_process", "/", "com.genymobile.scrcpy.Server", KR_SCRCPY_VERSION,
                             scid,    kr_log_verbose() ? "log_level=debug" : "log_level=info",
-                            "audio=false", "control=false", codec};
-    int n = 11;
+                            "audio=false", codec};
+    int n = 10;
+    if (s->o.view_only)
+        args[n++] = "control=false";
     if (s->o.max_size) {
         snprintf(max_size, sizeof max_size, "max_size=%u", s->o.max_size);
         args[n++] = max_size;
@@ -193,7 +196,7 @@ static void open_tunnel(kr_server *s)
     s->listen_fd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0);
     struct sockaddr_in a = {.sin_family = AF_INET, .sin_addr.s_addr = htonl(INADDR_LOOPBACK)};
     socklen_t alen = sizeof a;
-    if (s->listen_fd < 0 || bind(s->listen_fd, (struct sockaddr *)&a, sizeof a) < 0 || listen(s->listen_fd, 1) < 0 ||
+    if (s->listen_fd < 0 || bind(s->listen_fd, (struct sockaddr *)&a, sizeof a) < 0 || listen(s->listen_fd, 2) < 0 ||
         getsockname(s->listen_fd, (struct sockaddr *)&a, &alen) < 0) {
         char buf[256];
         snprintf(buf, sizeof buf, _("Could not open a local port: %s"), strerror(errno));
@@ -276,6 +279,7 @@ kr_server *kr_server_start(kr_procs *ps, const kr_server_opts *opts, const kr_se
     s->ud = ud;
     s->o = *opts;
     s->listen_fd = -1;
+    s->video_fd = -1;
     snprintf(s->jar, sizeof s->jar, "%s", opts->jar);
     snprintf(s->codec, sizeof s->codec, "%s", opts->codec && *opts->codec ? opts->codec : "h264");
     s->o.jar = s->jar;
@@ -308,6 +312,8 @@ void kr_server_free(kr_server *s)
     remove_tunnel(s);
     if (s->listen_fd >= 0)
         close(s->listen_fd);
+    if (s->video_fd >= 0)
+        close(s->video_fd);
     free(s);
 }
 
@@ -337,13 +343,26 @@ void kr_server_dispatch(kr_server *s, const struct pollfd *fds, int n)
         }
         fcntl(fd, F_SETFD, FD_CLOEXEC);
         fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) & ~O_NONBLOCK); /* as promised in server.h */
-        /* Only one socket (video): the tunnel is no longer needed. */
+        /* Video first, then control (the server's order). */
+        if (s->video_fd < 0 && !s->o.view_only) {
+            s->video_fd = fd;
+            return;
+        }
+        int video = s->video_fd >= 0 ? s->video_fd : fd;
+        int control = s->video_fd >= 0 ? fd : -1;
+        s->video_fd = -1;
+        if (control >= 0) {
+            /* Small and urgent: no Nagle (sc_server_connect_to). */
+            int one = 1;
+            setsockopt(control, IPPROTO_TCP, TCP_NODELAY, &one, sizeof one);
+        }
+        /* All connected: the tunnel is no longer needed. */
         close(s->listen_fd);
         s->listen_fd = -1;
         s->deadline = 0;
         remove_tunnel(s);
         s->st = ST_RUNNING;
-        s->cb.on_ready(s->ud, fd, s->serial, s->model);
+        s->cb.on_ready(s->ud, video, control, s->serial, s->model);
         return;
     }
 }

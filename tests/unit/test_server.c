@@ -16,17 +16,18 @@
 
 typedef struct {
     bool ready, failed;
-    int fd;
+    int fd, control_fd;
     char serial[64], model[64];
     char error[512];
     int log_lines;
 } result;
 
-static void on_ready(void *ud, int fd, const char *serial, const char *model)
+static void on_ready(void *ud, int fd, int control_fd, const char *serial, const char *model)
 {
     result *r = ud;
     r->ready = true;
     r->fd = fd;
+    r->control_fd = control_fd;
     snprintf(r->serial, sizeof r->serial, "%s", serial);
     snprintf(r->model, sizeof r->model, "%s", model);
 }
@@ -150,7 +151,7 @@ TEST(the_server_starts_and_its_socket_is_handed_over)
     char want[256];
     snprintf(want, sizeof want,
              "-s FAKE123 shell CLASSPATH=/data/local/tmp/kiremote-scrcpy-server.jar app_process / "
-             "com.genymobile.scrcpy.Server " KR_SCRCPY_VERSION " scid=%s log_level=info audio=false control=false "
+             "com.genymobile.scrcpy.Server " KR_SCRCPY_VERSION " scid=%s log_level=info audio=false "
              "video_codec=h264 max_size=800\n",
              scid);
     CHECK_STR_HAS(log, want);
@@ -159,6 +160,12 @@ TEST(the_server_starts_and_its_socket_is_handed_over)
     CHECK(r.log_lines >= 1);
     free(log);
 
+    /* The control socket is the second one the server opened. */
+    CHECK(r.control_fd >= 0);
+    CHECK(write(r.control_fd, "\x04\x00", 2) == 2); /* back, down */
+    char echo[2];
+    CHECK(read(r.control_fd, echo, 2) == 2 && echo[0] == 4);
+    close(r.control_fd);
     close(r.fd);
     kr_server_free(s);
     kr_procs_free(ps);

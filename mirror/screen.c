@@ -4,6 +4,7 @@
  * RGB conversion are libswscale's. */
 #include "screen.h"
 
+#include <X11/XKBlib.h>
 #include <X11/Xatom.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -35,6 +36,11 @@ struct kr_screen {
     int dst_x, dst_y;
     struct SwsContext *sws;
     AVFrame *last;
+    XIM im;
+    XIC ic;
+    kr_screen_input in;
+    void *in_ud;
+    unsigned char held[256]; /* keycodes down, to tell auto-repeat */
 };
 
 static void free_image(kr_screen *s)
@@ -196,7 +202,9 @@ kr_screen *kr_screen_new(const char *title, unsigned width, unsigned height, con
     s->vid_h = height;
     initial_size(s, &s->win_w, &s->win_h);
     XSetWindowAttributes a = {.background_pixel = BlackPixel(s->dpy, scr),
-                              .event_mask = ExposureMask | StructureNotifyMask | KeyPressMask};
+                              .event_mask = ExposureMask | StructureNotifyMask | KeyPressMask | KeyReleaseMask |
+                                            ButtonPressMask | ButtonReleaseMask | PointerMotionMask |
+                                            FocusChangeMask};
     s->win = XCreateWindow(s->dpy, RootWindow(s->dpy, scr), 0, 0, s->win_w, s->win_h, 0, CopyFromParent,
                            InputOutput, CopyFromParent, CWBackPixel | CWEventMask, &a);
     s->gc = XCreateGC(s->dpy, s->win, 0, NULL);
@@ -216,9 +224,27 @@ kr_screen *kr_screen_new(const char *title, unsigned width, unsigned height, con
     s->wm_delete = XInternAtom(s->dpy, "WM_DELETE_WINDOW", False);
     XSetWMProtocols(s->dpy, s->win, &s->wm_delete, 1);
     set_hints(s);
+
+    /* Auto-repeat as presses only (no release in between), and an input
+     * method for the text keys type (dead keys, compose). */
+    XkbSetDetectableAutoRepeat(s->dpy, True, NULL);
+    XSetLocaleModifiers("");
+    s->im = XOpenIM(s->dpy, NULL, NULL, NULL);
+    if (s->im)
+        s->ic = XCreateIC(s->im, XNInputStyle, XIMPreeditNothing | XIMStatusNothing, XNClientWindow, s->win,
+                          XNFocusWindow, s->win, NULL);
+    if (!s->ic)
+        kr_log_debug("screen: no input method, keys only as X looks them up");
+
     XMapWindow(s->dpy, s->win);
     XFlush(s->dpy);
     return s;
+}
+
+void kr_screen_set_input(kr_screen *s, const kr_screen_input *cbs, void *ud)
+{
+    s->in = *cbs;
+    s->in_ud = ud;
 }
 
 void kr_screen_free(kr_screen *s)
@@ -226,6 +252,10 @@ void kr_screen_free(kr_screen *s)
     if (!s)
         return;
     free_image(s);
+    if (s->ic)
+        XDestroyIC(s->ic);
+    if (s->im)
+        XCloseIM(s->im);
     sws_freeContext(s->sws);
     av_frame_free(&s->last);
     XFreeGC(s->dpy, s->gc);
@@ -305,13 +335,101 @@ void kr_screen_video_size(kr_screen *s, unsigned width, unsigned height)
     XFlush(s->dpy);
 }
 
+/* A window position to the video's pixels, clamped to the picture. */
+static void to_video(const kr_screen *s, int wx, int wy, int *x, int *y)
+{
+    int iw = s->img ? (int)s->img_w : (int)s->win_w, ih = s->img ? (int)s->img_h : (int)s->win_h;
+    int px = wx - (s->img ? s->dst_x : 0), py = wy - (s->img ? s->dst_y : 0);
+    if (px < 0)
+        px = 0;
+    if (py < 0)
+        py = 0;
+    if (px >= iw)
+        px = iw - 1;
+    if (py >= ih)
+        py = ih - 1;
+    *x = (int)((long long)px * s->vid_w / (iw > 0 ? iw : 1));
+    *y = (int)((long long)py * s->vid_h / (ih > 0 ? ih : 1));
+}
+
+static void key_event(kr_screen *s, XKeyEvent *k)
+{
+    if (!s->in.on_key)
+        return;
+    bool down = k->type == KeyPress;
+    unsigned char *held = &s->held[k->keycode & 0xff];
+    bool repeat = down && *held;
+    *held = down;
+    char text[64] = "";
+    KeySym sym = NoSymbol;
+    if (down && s->ic) {
+        Status st;
+        int n = Xutf8LookupString(s->ic, k, text, sizeof text - 1, &sym, &st);
+        if (st == XBufferOverflow || n < 0)
+            n = 0;
+        text[n] = 0;
+        if (st != XLookupKeySym && st != XLookupBoth)
+            sym = NoSymbol;
+        if (st != XLookupChars && st != XLookupBoth)
+            text[0] = 0;
+    } else {
+        int n = XLookupString(k, text, sizeof text - 1, &sym, NULL);
+        text[n > 0 ? n : 0] = 0;
+        if (!down || (unsigned char)text[0] >= 0x80)
+            text[0] = 0; /* Latin-1 from XLookupString: only ASCII is safe as UTF-8 */
+    }
+    /* The keysym without the modifiers' effect, so letters are found by
+     * their key whatever Shift or Caps do (and on release, when the input
+     * method says nothing). */
+    KeySym base = XLookupKeysym(k, 0);
+    if (sym == NoSymbol && !down)
+        XLookupString(k, NULL, 0, &sym, NULL);
+    /* The keypad is the other way round: Num Lock decides what it is. */
+    KeySym use = (IsKeypadKey(base) && sym != NoSymbol) || base == NoSymbol ? sym : base;
+    s->in.on_key(s->in_ud, use, down, repeat, k->state, text);
+}
+
 bool kr_screen_dispatch(kr_screen *s)
 {
     bool open = true;
     while (XPending(s->dpy)) {
         XEvent ev;
         XNextEvent(s->dpy, &ev);
+        if (XFilterEvent(&ev, None))
+            continue; /* the input method took it (a dead key, compose) */
+        int x, y;
         switch (ev.type) {
+        case KeyPress:
+        case KeyRelease:
+            key_event(s, &ev.xkey);
+            break;
+        case ButtonPress:
+        case ButtonRelease:
+            if (s->in.on_button) {
+                to_video(s, ev.xbutton.x, ev.xbutton.y, &x, &y);
+                s->in.on_button(s->in_ud, (int)ev.xbutton.button, ev.type == ButtonPress, x, y, ev.xbutton.state);
+            }
+            break;
+        case MotionNotify:
+            /* Only the latest of a burst of motions. */
+            while (XCheckTypedWindowEvent(s->dpy, s->win, MotionNotify, &ev))
+                ;
+            if (s->in.on_motion) {
+                to_video(s, ev.xmotion.x, ev.xmotion.y, &x, &y);
+                s->in.on_motion(s->in_ud, x, y, ev.xmotion.state);
+            }
+            break;
+        case FocusIn:
+            if (s->ic)
+                XSetICFocus(s->ic);
+            break;
+        case FocusOut:
+            if (s->ic)
+                XUnsetICFocus(s->ic);
+            memset(s->held, 0, sizeof s->held);
+            if (s->in.on_focus_out)
+                s->in.on_focus_out(s->in_ud);
+            break;
         case ConfigureNotify:
             if ((unsigned)ev.xconfigure.width != s->win_w || (unsigned)ev.xconfigure.height != s->win_h) {
                 s->win_w = (unsigned)ev.xconfigure.width;

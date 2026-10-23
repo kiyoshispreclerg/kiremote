@@ -4,8 +4,9 @@
 
 Every call is appended to $FAKEADB_LOG (one line, the arguments joined by
 spaces). The port of the last `reverse` is kept in $FAKEADB_LOG.port; `shell`
-then plays the phone's server: connects there and sends $FAKEADB_STREAM
-(a capture), then waits until the client closes. $FAKEADB_MODE changes it:
+then plays the phone's server: connects there (twice: video, then control unless
+control=false) and sends $FAKEADB_STREAM (a capture) on the first; the second
+echoes what it gets. Then it waits until the client closes. $FAKEADB_MODE changes it:
 
   unauthorized   `devices -l` lists the phone as unauthorized
   push-fails     `push` fails as adb does
@@ -50,7 +51,15 @@ if args[:1] == ['shell']:
         sys.exit(0)
     port = int(open(log + '.port').read())
     s = socket.create_connection(('127.0.0.1', port))
+    # The control socket, unless turned off: it echoes what it gets.
+    c = None if 'control=false' in args else socket.create_connection(('127.0.0.1', port))
     s.sendall(open(os.environ['FAKEADB_STREAM'], 'rb').read())
+    if c:
+        while True:
+            b = c.recv(4096)
+            if not b:
+                break
+            c.sendall(b)
     s.recv(1)  # until the client closes
     sys.exit(0)
 print('fake_adb: unexpected', args, file=sys.stderr)

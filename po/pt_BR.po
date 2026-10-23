@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kiremote\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-23 20:38-0300\n"
+"POT-Creation-Date: 2026-10-23 20:46-0300\n"
 "PO-Revision-Date: 2026-10-17 21:00-0300\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -536,7 +536,7 @@ msgstr ""
 "  -V, --version         mostra a versão e sai\n"
 "  -h, --help            mostra esta ajuda e sai\n"
 
-#: src/kiremoted.c:96 mirror/main.c:253
+#: src/kiremoted.c:96 mirror/main.c:431
 #, c-format
 msgid "cannot watch signals: %s"
 msgstr "não foi possível observar os sinais: %s"
@@ -1397,7 +1397,7 @@ msgstr "_Enviar"
 msgid "Send text"
 msgstr "Enviar texto"
 
-#: ui/gtk/kractions.c:77 mirror/server.c:106
+#: ui/gtk/kractions.c:77 mirror/server.c:107
 #, c-format
 msgid "Could not run %s: %s"
 msgstr "Não foi possível executar %s: %s"
@@ -1541,7 +1541,7 @@ msgid "Yes"
 msgstr "Sim"
 
 #: kidesktop/page.c:132 kidesktop/tab.c:20 mirror/stream.c:164
-#: mirror/screen.c:151 mirror/main.c:126 mirror/main.c:263
+#: mirror/screen.c:157 mirror/main.c:300 mirror/main.c:441
 msgid "Out of memory"
 msgstr "Sem memória"
 
@@ -1606,45 +1606,45 @@ msgid "No phone found by adb: connect it by USB with USB debugging on"
 msgstr ""
 "O adb não achou nenhum celular: conecte-o pelo USB com a depuração USB ligada"
 
-#: mirror/server.c:131 mirror/server.c:134
+#: mirror/server.c:132 mirror/server.c:135
 msgid "The server on the phone stopped"
 msgstr "O servidor no celular parou"
 
-#: mirror/server.c:178
+#: mirror/server.c:181
 msgid "Could not open the adb tunnel to the phone"
 msgstr "Não foi possível abrir o túnel do adb até o celular"
 
-#: mirror/server.c:199
+#: mirror/server.c:202
 #, c-format
 msgid "Could not open a local port: %s"
 msgstr "Não foi possível abrir uma porta local: %s"
 
-#: mirror/server.c:233
+#: mirror/server.c:236
 msgid "Could not copy the server to the phone"
 msgstr "Não foi possível copiar o servidor para o celular"
 
-#: mirror/server.c:246
+#: mirror/server.c:249
 msgid "adb could not list the devices"
 msgstr "O adb não conseguiu listar os aparelhos"
 
-#: mirror/server.c:334
+#: mirror/server.c:340
 #, c-format
 msgid "Could not accept the server's connection: %s"
 msgstr "Não foi possível aceitar a conexão do servidor: %s"
 
-#: mirror/server.c:361 mirror/server.c:364
+#: mirror/server.c:380 mirror/server.c:383
 msgid "The server on the phone did not connect"
 msgstr "O servidor no celular não conectou"
 
-#: mirror/screen.c:156
+#: mirror/screen.c:162
 msgid "Could not open the X display"
 msgstr "Não foi possível abrir a tela X"
 
-#: mirror/screen.c:185
+#: mirror/screen.c:191
 msgid "The X display needs 24-bit color for the mirror"
 msgstr "O espelhamento precisa de uma tela X com cor de 24 bits"
 
-#: mirror/main.c:29
+#: mirror/main.c:31
 #, c-format
 msgid ""
 "Usage: %s [OPTION]...\n"
@@ -1656,45 +1656,37 @@ msgid ""
 "  -b, --bit-rate N      video bit rate, in bits per second\n"
 "      --max-fps N       frames per second at most\n"
 "      --codec CODEC     h264 (default), h265 or av1\n"
+"  -n, --no-control      only show the screen, no mouse or keyboard\n"
 "  -v, --verbose         debug messages (and the server's)\n"
 "  -V, --version         show the version and exit\n"
 "  -h, --help            show this help and exit\n"
-msgstr ""
-"Uso: %s [OPÇÃO]...\n"
-"Mostra a tela do celular numa janela (a depuração USB precisa estar "
-"ligada).\n"
-"\n"
-"  -s, --serial SERIAL   o celular, como o adb o chama (padrão: o único)\n"
-"  -m, --max-size N      lado maior do vídeo, em pixels (padrão: o do "
-"celular)\n"
-"  -b, --bit-rate N      taxa de bits do vídeo, em bits por segundo\n"
-"      --max-fps N       quadros por segundo, no máximo\n"
-"      --codec CODEC     h264 (padrão), h265 ou av1\n"
-"  -v, --verbose         mensagens de depuração (e as do servidor)\n"
-"  -V, --version         mostra a versão e sai\n"
-"  -h, --help            mostra esta ajuda e sai\n"
+msgstr "Uso: %s [OPÇÃO]...\nMostra a tela do celular numa janela (a depuração USB precisa estar ligada).\n\n  -s, --serial SERIAL   o celular, como o adb o chama (padrão: o único)\n  -m, --max-size N      lado maior do vídeo, em pixels (padrão: o do celular)\n  -b, --bit-rate N      taxa de bits do vídeo, em bits por segundo\n      --max-fps N       quadros por segundo, no máximo\n      --codec CODEC     h264 (padrão), h265 ou av1\n  -n, --no-control      só mostra a tela, sem mouse nem teclado\n  -v, --verbose         mensagens de depuração (e as do servidor)\n  -V, --version         mostra a versão e sai\n  -h, --help            mostra esta ajuda e sai\n"
 
-#: mirror/main.c:78
+#: mirror/main.c:215
+msgid "The phone sent a message that could not be read"
+msgstr "O celular mandou uma mensagem que não deu para ler"
+
+#: mirror/main.c:219 mirror/main.c:326
+msgid "The phone closed the connection"
+msgstr "O celular fechou a conexão"
+
+#: mirror/main.c:240
 msgid ""
 "This computer cannot decode the phone's video (no decoder in libavcodec)"
 msgstr ""
 "Este computador não consegue decodificar o vídeo do celular (a libavcodec "
 "não tem o decodificador)"
 
-#: mirror/main.c:113
+#: mirror/main.c:281
 msgid "The video could not be decoded"
 msgstr "Não foi possível decodificar o vídeo"
 
-#: mirror/main.c:119
+#: mirror/main.c:293
 #, c-format
 msgid "Mirroring %s"
 msgstr "Espelhando %s"
 
-#: mirror/main.c:152
-msgid "The phone closed the connection"
-msgstr "O celular fechou a conexão"
-
-#: mirror/main.c:246
+#: mirror/main.c:424
 #, c-format
 msgid ""
 "scrcpy-server %s not found (scripts/fetch-scrcpy-server.sh downloads it)"

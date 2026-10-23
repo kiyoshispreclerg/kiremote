@@ -552,8 +552,15 @@ numa janela Xlib com libavcodec e libswscale + XShm. Testado com o celular
 de verdade (Android 12, USB, 460×1024): ~25 MB de RSS e ~10% de um núcleo.
 O X desta máquina não tem Xv, então a reserva (libswscale) veio primeiro.
 
-Falta: Xv; controle (toque, teclas, texto, clipboard, girar); áudio; Wi-Fi;
-o botão "Espelhar" nas interfaces; o pacote `kiremote-mirror`.
+Depois: a ação "Espelhar a tela" nas interfaces (`KR_ACT_MIRROR`, só com o
+`kiremote-mirror` instalado) e o controle: mensagens do socket de controle
+(`mirror/ctlmsg.c`, conferidas nos vetores dos testes do upstream, alvo de
+fuzz para as respostas), teclas X → Android (`mirror/keys.c`, modo `mixed`
+do scrcpy), mouse com os atalhos padrão do scrcpy e texto pelo input method
+do X (teclas mortas e compose).
+
+Falta: clipboard nos dois sentidos; atalhos de teclado (girar, desligar a
+tela); Xv; áudio; Wi-Fi; o pacote `kiremote-mirror`.
 
 ### 6. Fechamento dos plugins
 
