@@ -68,7 +68,7 @@ if [ "$have_mirror" = yes ]; then
 	chmod +x "$tmp/adb"
 	out=$(KIREMOTE_ADB="$tmp/adb" kiremote-mirror -c "$tmp/kiremote.ini" 2>&1) && fail "kiremote-mirror without a phone succeeded"
 	echo "$out" | grep -q 'No phone found' || { echo "$out"; fail "kiremote-mirror without a phone: $out"; }
-	[ "$(kiremote-cli --schema | grep -c '^mirror\.')" -ge 1 ] || fail "the daemon does not know the [mirror] settings"
+	[ "$(kiremote-cli --schema | grep -c '^ *mirror\.')" -ge 1 ] || fail "the daemon does not know the [mirror] settings"
 fi
 
 if [ "$have_gtk" = no ] && [ "$have_kd" = no ]; then
