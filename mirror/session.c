@@ -39,7 +39,7 @@ static bool sock_path(const char *key, char *out, size_t size)
 {
     char dir[KR_PATH_MAX], clean[KEY_MAX + 1];
     size_t n = 0;
-    for (; key[n] && n < KEY_MAX; n++) {
+    for (; n < KEY_MAX && key[n]; n++) {
         unsigned char c = (unsigned char)key[n];
         clean[n] = (c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '.' ||
                            c == '-' || c == '_'

@@ -39,3 +39,5 @@ mirror/screen.c
 mirror/main.c
 mirror/conf.c
 mirror/audio.c
+mirror/v4linfo.c
+mirror/v4l2.c

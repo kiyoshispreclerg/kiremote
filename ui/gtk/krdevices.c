@@ -150,6 +150,7 @@ static const char *action_icon(kr_action a)
     case KR_ACT_SEND_TEXT: return "mail-send";
     case KR_ACT_BROWSE: return "folder-remote";
     case KR_ACT_MIRROR: return "video-display";
+    case KR_ACT_CAMERA: return "camera-web";
     case KR_ACT_UNPAIR: return "edit-delete";
     default: return NULL;
     }
@@ -157,7 +158,7 @@ static const char *action_icon(kr_action a)
 
 /* What you do with the phone, then what undoes the pairing (as in the menu). */
 static const kr_action expand_acts[] = {KR_ACT_PING,   KR_ACT_FIND,   KR_ACT_SEND_FILES, KR_ACT_SEND_TEXT,
-                                        KR_ACT_BROWSE, KR_ACT_MIRROR, KR_ACT_UNPAIR};
+                                        KR_ACT_BROWSE, KR_ACT_MIRROR, KR_ACT_CAMERA, KR_ACT_UNPAIR};
 #define PAIRING_ACTS ((1u << KR_ACT_PAIR) | (1u << KR_ACT_ACCEPT) | (1u << KR_ACT_REFUSE) | (1u << KR_ACT_CANCEL))
 
 static GtkWidget *actions_bar(devs *dv, const kr_dev *d, unsigned acts)

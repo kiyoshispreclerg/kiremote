@@ -99,6 +99,19 @@ um com a depuração sem fio do Android ligada. A lista de aparelhos passa o
 endereço do celular que ela já conhece (`--wifi`), usado só se nenhum celular
 estiver no cabo.
 
+A câmera do celular como webcam: `kiremote-mirror --camera` (ou "Usar como
+webcam" na lista de aparelhos) manda a imagem da câmera do celular, sem janela,
+para um dispositivo de vídeo v4l2loopback, que navegadores, chamadas de vídeo
+e o OBS enxergam como webcam (Android 12 ou mais novo). O módulo do kernel é
+você quem carrega, como root (`sudo modprobe v4l2loopback video_nr=10
+card_label=Kiremote exclusive_caps=1`; o pacote é o `v4l2loopback-dkms`): a
+aba Câmera das configurações diz se ele está carregado e como fazer, e tem o
+dispositivo, a câmera (traseira, frontal, externa), o tamanho e a inversão
+da esquerda para a direita. O módulo do DroidCam (`v4l2loopback_dc`) é outro e
+fica em paz. Um celular é ocupado por um `kiremote-mirror` de cada vez,
+espelhando ou como câmera: pedir de novo traz a janela para a frente, e o
+outro uso é recusado com o motivo.
+
 Se o computador não aparecer no celular, confira se o firewall deixa passar
 UDP e TCP de 1716 a 1764, ou adicione o IP do computador no app ("Adicionar
 dispositivos pelo IP"). O Kiremote convive com um KDE Connect rodando na

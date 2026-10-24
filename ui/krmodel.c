@@ -415,7 +415,7 @@ unsigned kr_dev_actions(const kr_dev *d)
         if (has_plugin(d, "sftp"))
             a |= BIT(KR_ACT_BROWSE);
         if (mirror_available)
-            a |= BIT(KR_ACT_MIRROR);
+            a |= BIT(KR_ACT_MIRROR) | BIT(KR_ACT_CAMERA);
     }
     return a | BIT(KR_ACT_UNPAIR);
 }
@@ -435,6 +435,8 @@ const char *kr_action_label(kr_action a)
         return _("Browse files");
     case KR_ACT_MIRROR:
         return _("Mirror the screen");
+    case KR_ACT_CAMERA:
+        return _("Use as webcam");
     case KR_ACT_PAIR:
         return _("Pair");
     case KR_ACT_ACCEPT:
@@ -502,6 +504,7 @@ cJSON *kr_action_request(kr_action a, const char *device_id, const char *arg)
         return r;
     case KR_ACT_SEND_FILES:
     case KR_ACT_MIRROR:
+    case KR_ACT_CAMERA:
     case KR_ACT_COUNT:
         break;
     }

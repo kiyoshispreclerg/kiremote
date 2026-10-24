@@ -93,7 +93,7 @@ KD_PAGE_H = $(wildcard $(KD_INCDIR)/xisserve/xisserve_page.h)
 KD_WIDGET_H = $(wildcard $(KD_INCDIR)/xispanel/xispanel_widget.h)
 HAVE_CAIRO := $(shell $(PKG_CONFIG) --exists cairo && echo 1)
 KD_OUT = $(BUILD)/kidesktop
-PIC_SRC = src/util.c src/log.c src/i18n.c src/control.c ui/krmodel.c ui/krclient.c
+PIC_SRC = src/util.c src/log.c src/i18n.c src/control.c ui/krmodel.c ui/krclient.c mirror/session.c
 KD_TARGETS =
 KD_TESTS =
 ifeq ($(HAVE_GTK),1)

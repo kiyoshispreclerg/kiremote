@@ -93,12 +93,17 @@ Depends: ${shlibs:Depends},
          ${misc:Depends},
          kiremote (= ${binary:Version})
 Recommends: adb
-Suggests: pulseaudio | pipewire-pulse
+Suggests: pulseaudio | pipewire-pulse,
+          v4l2loopback-dkms
 Description: shows and controls the phone's screen in a window
  kiremote-mirror: the phone's screen (and sound) in a window of its own,
  with the mouse, the keyboard and the clipboard acting on the phone. It
  speaks the protocol of scrcpy's server, which it copies to the phone through
  adb, so USB debugging must be on; it works over a cable or over Wi-Fi.
+ .
+ It can also send the phone's camera, without a window, to a v4l2loopback
+ video device that programs see as a webcam (the kernel module is the user's to
+ load).
  .
  The window is plain Xlib (no SDL): the video is decoded with libavcodec and
  scaled with libswscale, and the sound goes to PulseAudio (or PipeWire). The

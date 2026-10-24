@@ -44,6 +44,7 @@ make asan       # os testes com ASan/UBSan
 make test-net   # só tests/net/pair.sh: dois daemons em network namespaces
 make test-ui    # só tests/ui/run.sh (precisa de GTK2 e Xvfb)
 tests/mirror/run.sh build   # a janela e o clipboard do mirror num Xvfb privado (precisa de xsel)
+tests/mirror/camera.sh build # --camera e um processo por celular, com o adb falso e um arquivo no lugar do dispositivo
 ./scripts/build-deb.sh   # os 4 .deb em dist/ (KIREMOTE_SKIP_DEPS_CHECK=1 e KD_INCDIR=/usr/local/include se o kidesktop-core veio do fonte; SCRCPY_SERVER=arquivo evita baixar o jar)
 make fuzz       # libFuzzer (clang): build/fuzz/fuzz_packet tests/fuzz/corpus/packet
 make lint       # cppcheck + funções proibidas (strcpy, strcat, sprintf, vsprintf, gets)
@@ -131,6 +132,8 @@ LANGUAGE=en build/kiremoted --help   # o catálogo vem de build/locale
 | `tests/net/plugins.sh`, `tests/net/desktop.sh`, `tests/tools/` | integração dos plugins: celular falso (`fakephone.c`, serve payloads), D-Bus de sessão e de sistema privados com serviços falsos (Python), Xvfb, `xtool.c`, `pactl`/`paplay`/`xdg-*` falsos |
 | `tests/fuzz/` | alvos de fuzz, `driver.c` (sem libFuzzer) e corpus |
 | `mirror/stream.c`, `mirror/adb.c`, `mirror/server.c`, `mirror/ctlmsg.c`, `mirror/keys.c` | espelhamento sem libav (na `libkr`): fluxo do scrcpy-server e respostas do controle (alvos de fuzz), `adb devices -l`, subir o servidor pelo adb no `poll()`, mensagens de controle, teclas X → Android |
+| `mirror/session.c` | um `kiremote-mirror` por celular (socket por aparelho; raise/quit/status); libkr, as interfaces perguntam por ele |
+| `mirror/v4linfo.c`, `v4l2.c`, `camera.c` | a câmera como webcam: o que há em `/sys` sem root (módulo, dispositivos), a escrita no v4l2loopback (só o driver `v4l2 loopback`), libswscale + inversão |
 | `mirror/conf.c` | `[mirror]` do .ini → opções do `kiremote-mirror` (a linha de comando vale mais; as chaves estão no `src/schema.c`) |
 | `mirror/main.c`, `decode.c`, `screen.c`, `audio.c` | o `kiremote-mirror`: libavcodec, janela Xlib (libswscale + XShm, clipboard com XFixes), som pelo libpulse dentro do `poll()` (`kr_audio_poll`); só compila com libavcodec/libswscale/xext/xfixes/libpulse |
 | `docs/PROTOCOL.md` | o protocolo, conferido no upstream |

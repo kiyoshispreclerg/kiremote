@@ -342,6 +342,27 @@ TEST(config_save_keeps_comments)
     CHECK(system(cmd) == 0);
 }
 
+/* The Camera tab's first line is not a setting: the daemon writes it, from how
+ * things stand, and nobody can set it. */
+TEST(the_camera_note_is_read_only_and_alive)
+{
+    const kr_setting *s = kr_schema_find("camera.status", NULL);
+    CHECK(s && s->type == KR_S_NOTE);
+    char norm[64], err[160];
+    CHECK(!check("camera.status", "anything", norm, err));
+    CHECK_STR_HAS(err, "not a setting");
+
+    kr_config *c = kr_config_parse("[camera]\ndevice = /nonexistent/video9\n");
+    cJSON *r = cJSON_CreateObject();
+    kr_schema_values_to_json(c, r);
+    const cJSON *v = cJSON_GetObjectItemCaseSensitive(cJSON_GetObjectItemCaseSensitive(r, "values"), "camera.status");
+    CHECK(cJSON_IsString(v));
+    CHECK_STR_HAS(v->valuestring, "Cannot use /nonexistent/video9");
+    CHECK(!cJSON_GetObjectItemCaseSensitive(cJSON_GetObjectItemCaseSensitive(r, "set"), "camera.status"));
+    cJSON_Delete(r);
+    kr_config_free(c);
+}
+
 int main(void)
 {
     RUN(every_plugin_has_a_switch);
@@ -360,5 +381,6 @@ int main(void)
     RUN(config_set_keeps_derived_values_fresh);
     RUN(config_save_needs_a_file);
     RUN(config_save_keeps_comments);
+    RUN(the_camera_note_is_read_only_and_alive);
     return harness_report();
 }

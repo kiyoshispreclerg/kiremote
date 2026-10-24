@@ -101,6 +101,18 @@ listening, such as one with Android's wireless debugging turned on. The
 device list passes the phone's address it already knows (`--wifi`), used only
 when no phone is on a cable.
 
+The phone's camera as a webcam: `kiremote-mirror --camera` (or "Use as webcam"
+in the device list) sends the picture of the phone's camera, without a window,
+to a v4l2loopback video device, which browsers, video calls and OBS see as a
+webcam (Android 12 or newer). The kernel module is yours to load, as root
+(`sudo modprobe v4l2loopback video_nr=10 card_label=Kiremote
+exclusive_caps=1`; the package is `v4l2loopback-dkms`): the Camera tab of the
+settings says whether it is loaded and how to do it, and has the device, the
+camera (back, front, external), the size and the left-right flip. DroidCam's
+module (`v4l2loopback_dc`) is another one and is left alone. A phone is
+taken by one `kiremote-mirror` at a time, mirrored or camera: asking again
+brings the window forward, and the other use is refused with the reason.
+
 If the computer doesn't show up on the phone, check that the firewall lets
 UDP and TCP 1716 to 1764 through, or add the computer's IP in the app ("Add
 devices by IP"). Kiremote can run next to KDE Connect on the same machine:

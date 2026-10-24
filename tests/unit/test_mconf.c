@@ -1,5 +1,6 @@
 /* SPDX-License-Identifier: GPL-3.0-or-later */
 /* [mirror] in kiremote.ini, and every choice the settings offer for it. */
+#include <stdlib.h>
 #include <string.h>
 
 #include "../harness.h"
@@ -45,6 +46,31 @@ TEST(nonsense_falls_back)
     kr_config_free(cfg);
 }
 
+TEST(the_camera_section)
+{
+    kr_mirror_conf c;
+    kr_mirror_conf_load(&c, NULL);
+    CHECK_STR_EQ(c.camera_device, "");
+    CHECK_STR_EQ(c.camera_facing, "back");
+    CHECK_INT_EQ(c.camera_max_size, 1280);
+    CHECK(!c.camera_flip);
+
+    kr_config *cfg = kr_config_parse("[camera]\ndevice = /dev/video10\nfacing = front\nmax_size = 640\nmirror = yes\n");
+    kr_mirror_conf_load(&c, cfg);
+    CHECK_STR_EQ(c.camera_device, "/dev/video10");
+    CHECK_STR_EQ(c.camera_facing, "front");
+    CHECK_INT_EQ(c.camera_max_size, 640);
+    CHECK(c.camera_flip);
+    kr_config_free(cfg);
+
+    cfg = kr_config_parse("[camera]\ndevice = video10\nfacing = rear\nmax_size = huge\n");
+    kr_mirror_conf_load(&c, cfg);
+    CHECK_STR_EQ(c.camera_device, "");
+    CHECK_STR_EQ(c.camera_facing, "back");
+    CHECK_INT_EQ(c.camera_max_size, 1280);
+    kr_config_free(cfg);
+}
+
 TEST(bit_rates)
 {
     unsigned v;
@@ -65,15 +91,20 @@ TEST(every_choice_is_read)
     const kr_setting *all = kr_schema_all(&n);
     for (int i = 0; i < n; i++) {
         const kr_setting *s = &all[i];
-        if (strcmp(s->section, "mirror") != 0 || s->type != KR_S_ENUM)
+        bool cam = strcmp(s->section, "camera") == 0;
+        if ((strcmp(s->section, "mirror") != 0 && !cam) || s->type != KR_S_ENUM)
             continue;
         for (const char *const *ch = s->choices; *ch; ch++) {
             char ini[128];
-            snprintf(ini, sizeof ini, "[mirror]\n%s = %s\n", s->key, *ch);
+            snprintf(ini, sizeof ini, "[%s]\n%s = %s\n", s->section, s->key, *ch);
             kr_config *cfg = kr_config_parse(ini);
             kr_mirror_conf c;
             kr_mirror_conf_load(&c, cfg);
-            if (!strcmp(s->key, "max_size"))
+            if (cam && !strcmp(s->key, "max_size"))
+                CHECK_INT_EQ(c.camera_max_size, atoi(*ch));
+            else if (cam)
+                CHECK_STR_EQ(c.camera_facing, *ch);
+            else if (!strcmp(s->key, "max_size"))
                 CHECK_MSG(!**ch || c.max_size, "max_size %s", *ch);
             else if (!strcmp(s->key, "bit_rate"))
                 CHECK_MSG(!**ch || c.bit_rate, "bit_rate %s", *ch);
@@ -91,6 +122,7 @@ int main(void)
     RUN(defaults_without_a_file);
     RUN(reads_the_section);
     RUN(nonsense_falls_back);
+    RUN(the_camera_section);
     RUN(bit_rates);
     RUN(every_choice_is_read);
     return harness_report();

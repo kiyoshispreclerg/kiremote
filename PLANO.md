@@ -590,6 +590,26 @@ resto), reconectar sozinho quando o Wi-Fi cai, avisar na interface quando o
 `kiremote-mirror` não está instalado (a aba Mirroring aparece mesmo assim),
 `adb pair` e mDNS (fase 6).
 
+**Câmera como webcam (feita).** `--camera` pede `video_source=camera`
+ao servidor, decodifica e escreve num dispositivo v4l2loopback
+(`mirror/v4l2.c`: YU12 de tamanho fixo, só aceita o driver `v4l2 loopback`;
+`mirror/camera.c`: libswscale, com inversão esquerda-direita opcional). Sem
+janela, controle nem som. A aba "Camera" (`[camera]` no .ini) tem o dispositivo,
+a câmera, o tamanho e a inversão, e um parágrafo que o daemon escreve (tipo
+`note` do esquema, `camera.status`, atualizado a cada 3 s com a janela aberta):
+o módulo `v4l2loopback` está carregado? (`/sys/module`, sem root; o
+`v4l2loopback_dc` do DroidCam é outro e é ignorado), que dispositivos há
+(`mirror/v4linfo.c`), e, se faltar, o `modprobe` e como deixar permanente. A
+rotação é a do sensor, fixa. **Um processo por celular** (`mirror/session.c`:
+um socket por aparelho em `$XDG_RUNTIME_DIR/kiremote-mirror/<id>.sock`, o id do
+KDE Connect, que as interfaces passam com `--id`; sem ele, o serial do adb):
+pedir o espelhamento de novo traz a janela para a frente; o celular ocupado
+como câmera não vira espelho nem outra câmera, e vice-versa, com a razão num
+diálogo; pedir "Usar como webcam" de novo pergunta se quer parar. Testado
+com o celular de verdade até o arquivo (sem módulo carregado aqui: o teste do
+dispositivo de verdade fica com quem carregar o `v4l2loopback`); o resto,
+com o adb falso (`tests/mirror/camera.sh`).
+
 ### 6. Fechamento dos plugins
 
 Foto, notificações do desktop → celular, migrar pareamentos do KDE
@@ -601,8 +621,8 @@ nosso certificado; senão só importar nomes), mDNS.
 
 Escolher conforme o custo; nenhum entra no daemon.
 
-- Câmera do celular como webcam (`video_source=camera` do scrcpy →
-  v4l2loopback).
+- ~~Câmera do celular como webcam~~ (feita, junto com a fase 5:
+  `kiremote-mirror --camera` → v4l2loopback; veja abaixo "Câmera").
 - Abrir um app do celular numa janela própria (tela virtual do scrcpy 3,
   `new_display`).
 - Gravar o espelhamento (H.264 cru → .mkv com libavformat, só se pedido).

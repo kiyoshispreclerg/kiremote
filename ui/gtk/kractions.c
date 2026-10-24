@@ -6,6 +6,7 @@
 
 #include "i18n.h"
 #include "krui_private.h"
+#include "session.h"
 
 /* ---- the dialogs a user answers ------------------------------------------- */
 
@@ -145,14 +146,43 @@ void kr_ui_run_action(kr_ui *ui, GtkWindow *parent, kr_action action, const char
     char *name = g_strdup(d && d->name[0] ? d->name : device_id);
     char *id = g_strdup(device_id); /* the hooks may run a nested loop that updates the model */
 
-    if (action == KR_ACT_MIRROR) {
-        /* Its own process and window; it finds the phone through adb: on a
-         * cable, or else over Wi-Fi at the address we know it by. */
+    if (action == KR_ACT_MIRROR || action == KR_ACT_CAMERA) {
+        /* Its own process; it finds the phone through adb: on a cable, or else
+         * over Wi-Fi at the address we know it by. One process per phone,
+         * whichever of the two it does (mirror/session.h): ask first. */
         const char *prog = kr_ui_mirror_program();
-        if (prog) {
-            const char *with_wifi[] = {prog, "--wifi", d ? d->address : "", NULL};
-            const char *plain[] = {prog, NULL};
-            h->spawn(parent, d && d->address[0] ? with_wifi : plain);
+        char mode[16];
+        gboolean camera = action == KR_ACT_CAMERA;
+        if (kr_inst_query(id, mode, sizeof mode)) {
+            gboolean running_camera = strcmp(mode, "camera") == 0;
+            if (running_camera == camera && camera) {
+                char *q = g_strdup_printf(_("Stop using %s as a webcam?"), name);
+                if (h->confirm(parent, q))
+                    kr_inst_send(id, "quit");
+                g_free(q);
+            } else if (running_camera == camera) {
+                kr_inst_send(id, "raise"); /* the window it already has */
+            } else {
+                char *m = g_strdup_printf(running_camera ? _("%s is being used as a webcam. Stop that first.")
+                                                         : _("The screen of %s is being mirrored. Close its window first."),
+                                          name);
+                h->show_error(parent, m);
+                g_free(m);
+            }
+        } else if (prog) {
+            const char *argv[8];
+            int n = 0;
+            argv[n++] = prog;
+            if (camera)
+                argv[n++] = "--camera";
+            argv[n++] = "--id";
+            argv[n++] = id;
+            if (d && d->address[0]) {
+                argv[n++] = "--wifi";
+                argv[n++] = d->address;
+            }
+            argv[n] = NULL;
+            h->spawn(parent, argv);
         }
     } else if (action == KR_ACT_SEND_FILES) {
         char **paths = h->choose_files(parent);
@@ -229,7 +259,7 @@ GtkWidget *kr_ui_device_menu_new(kr_ui *ui, GtkWindow *parent, const char *devic
     unsigned acts = d ? kr_dev_actions(d) : 0;
     /* What you do with the phone, then what concerns the pairing. */
     static const kr_action about_phone[] = {KR_ACT_PING,      KR_ACT_FIND,   KR_ACT_SEND_FILES,
-                                            KR_ACT_SEND_TEXT, KR_ACT_BROWSE, KR_ACT_MIRROR};
+                                            KR_ACT_SEND_TEXT, KR_ACT_BROWSE, KR_ACT_MIRROR, KR_ACT_CAMERA};
     static const kr_action pairing[] = {KR_ACT_PAIR, KR_ACT_ACCEPT, KR_ACT_REFUSE, KR_ACT_CANCEL, KR_ACT_UNPAIR};
     int n = 0;
     for (size_t i = 0; i < G_N_ELEMENTS(about_phone); i++)

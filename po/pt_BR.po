@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kiremote\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-24 00:19-0300\n"
+"POT-Creation-Date: 2026-10-24 01:21-0300\n"
 "PO-Revision-Date: 2026-10-17 21:00-0300\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -536,7 +536,7 @@ msgstr ""
 "  -V, --version         mostra a versão e sai\n"
 "  -h, --help            mostra esta ajuda e sai\n"
 
-#: src/kiremoted.c:96 mirror/main.c:696
+#: src/kiremoted.c:96 mirror/main.c:832
 #, c-format
 msgid "cannot watch signals: %s"
 msgstr "não foi possível observar os sinais: %s"
@@ -882,111 +882,127 @@ msgstr "Silenciar chamada"
 msgid "pactl not found: the volume control is off"
 msgstr "pactl não encontrado: o controle de volume está desligado"
 
-#: src/schema.c:29
+#: src/schema.c:32
 msgid "(default)"
 msgstr "(padrão)"
 
-#: src/schema.c:30
+#: src/schema.c:33
 msgid "Automatic"
 msgstr "Automático"
 
-#: src/schema.c:31
+#: src/schema.c:34
 msgid "Always"
 msgstr "Sempre"
 
-#: src/schema.c:32
+#: src/schema.c:35
 msgid "Never"
 msgstr "Nunca"
 
-#: src/schema.c:33
+#: src/schema.c:36
 msgid "Desktop"
 msgstr "Computador"
 
-#: src/schema.c:34
+#: src/schema.c:37
 msgid "Laptop"
 msgstr "Notebook"
 
-#: src/schema.c:35
+#: src/schema.c:38
 msgid "Phone"
 msgstr "Celular"
 
-#: src/schema.c:36
+#: src/schema.c:39
 msgid "Tablet"
 msgstr "Tablet"
 
-#: src/schema.c:37
+#: src/schema.c:40
 msgid "TV"
 msgstr "TV"
 
 #: src/schema.c:41
+msgid "Back"
+msgstr "Traseira"
+
+#: src/schema.c:42
+msgid "Front (selfie)"
+msgstr "Frontal (selfie)"
+
+#: src/schema.c:43
+msgid "External (USB)"
+msgstr "Externa (USB)"
+
+#: src/schema.c:47
 msgid "This computer"
 msgstr "Este computador"
 
-#: src/schema.c:42
+#: src/schema.c:48
 msgid "Network"
 msgstr "Rede"
 
-#: src/schema.c:43
+#: src/schema.c:49
 msgid "Files"
 msgstr "Arquivos"
 
-#: src/schema.c:44
+#: src/schema.c:50
 msgid "Features"
 msgstr "Recursos"
 
-#: src/schema.c:45 src/schema.c:85
+#: src/schema.c:51 src/schema.c:92
 msgid "Clipboard"
 msgstr "Área de transferência"
 
-#: src/schema.c:46
+#: src/schema.c:52
 msgid "Media"
 msgstr "Mídia"
 
-#: src/schema.c:47 src/schema.c:80
+#: src/schema.c:53 src/schema.c:87
 msgid "Find my phone"
 msgstr "Achar meu celular"
 
-#: src/schema.c:48
+#: src/schema.c:54
 msgid "Screen lock"
 msgstr "Bloqueio de tela"
 
-#: src/schema.c:49
+#: src/schema.c:55
 msgid "Commands"
 msgstr "Comandos"
 
-#: src/schema.c:50
+#: src/schema.c:56
 msgid "Mirroring"
 msgstr "Espelhamento"
 
-#: src/schema.c:51
+#: src/schema.c:57 src/schema.c:159
+msgid "Camera"
+msgstr "Câmera"
+
+#: src/schema.c:58
 msgid "Interface"
 msgstr "Interface"
 
-#: src/schema.c:52
+#: src/schema.c:59
 msgid "Advanced"
 msgstr "Avançado"
 
-#: src/schema.c:61 ui/gtk/krsettings.c:241 ui/gtk/krsettings.c:334
+#: src/schema.c:68 ui/gtk/krsettings.c:241 ui/gtk/krsettings.c:348
 msgid "Name"
 msgstr "Nome"
 
-#: src/schema.c:62
+#: src/schema.c:69
 msgid "How the phone calls this computer. Empty: the host name."
 msgstr "Como o celular chama este computador. Vazio: o nome da máquina."
 
-#: src/schema.c:63
+#: src/schema.c:70
 msgid "Type"
 msgstr "Tipo"
 
-#: src/schema.c:64
+#: src/schema.c:71
 msgid "Only changes the icon on the phone."
 msgstr "Só muda o ícone no celular."
 
-#: src/schema.c:66
+#: src/schema.c:73
 msgid "Extra addresses"
 msgstr "Endereços extras"
 
-#: src/schema.c:67
+#: src/schema.c:74
 msgid ""
 "IPv4 addresses that also get our discovery packet, separated by commas. For "
 "networks that block broadcasts."
@@ -994,231 +1010,231 @@ msgstr ""
 "Endereços IPv4 que também recebem o nosso pacote de descoberta, separados "
 "por vírgula. Para redes que bloqueiam broadcast."
 
-#: src/schema.c:71
+#: src/schema.c:78
 msgid "Received files"
 msgstr "Arquivos recebidos"
 
-#: src/schema.c:72
+#: src/schema.c:79
 msgid "Where files from the phone go. Empty: your downloads folder."
 msgstr "Para onde vão os arquivos do celular. Vazio: a sua pasta de downloads."
 
-#: src/schema.c:73
+#: src/schema.c:80
 msgid "sshfs program"
 msgstr "Programa sshfs"
 
-#: src/schema.c:74
+#: src/schema.c:81
 msgid "The program that mounts the phone's files. Empty: sshfs."
 msgstr "O programa que monta os arquivos do celular. Vazio: sshfs."
 
-#: src/schema.c:76
+#: src/schema.c:83
 msgid "Ping"
 msgstr "Ping"
 
-#: src/schema.c:76
+#: src/schema.c:83
 msgid "Send and receive pings."
 msgstr "Enviar e receber pings."
 
-#: src/schema.c:77
+#: src/schema.c:84
 msgid "Share files and text"
 msgstr "Compartilhar arquivos e texto"
 
-#: src/schema.c:77
+#: src/schema.c:84
 msgid "Send and receive files, text and links."
 msgstr "Enviar e receber arquivos, textos e links."
 
-#: src/schema.c:78
+#: src/schema.c:85
 msgid "Battery"
 msgstr "Bateria"
 
-#: src/schema.c:78
+#: src/schema.c:85
 msgid "Show the phone's battery and tell it ours."
 msgstr "Mostrar a bateria do celular e informar a nossa."
 
-#: src/schema.c:79
+#: src/schema.c:86
 msgid "Signal"
 msgstr "Sinal"
 
-#: src/schema.c:79
+#: src/schema.c:86
 msgid "Show the phone's mobile signal."
 msgstr "Mostrar o sinal da operadora do celular."
 
-#: src/schema.c:80
+#: src/schema.c:87
 msgid "Make the phone ring, and answer when it looks for this computer."
 msgstr ""
 "Fazer o celular tocar, e responder quando ele procurar este computador."
 
-#: src/schema.c:81
+#: src/schema.c:88
 msgid "Calls"
 msgstr "Chamadas"
 
-#: src/schema.c:81
+#: src/schema.c:88
 msgid "Notify about calls and let you mute the ringer."
 msgstr "Avisar sobre chamadas e deixar silenciar o toque."
 
-#: src/schema.c:82
+#: src/schema.c:89
 msgid "Pause media on calls"
 msgstr "Pausar a mídia nas chamadas"
 
-#: src/schema.c:82
+#: src/schema.c:89
 msgid "Pause the players here while the phone rings."
 msgstr "Pausar os players daqui enquanto o celular toca."
 
-#: src/schema.c:83
+#: src/schema.c:90
 msgid "Media players"
 msgstr "Players de mídia"
 
-#: src/schema.c:83
+#: src/schema.c:90
 msgid "Control this computer's players from the phone."
 msgstr "Controlar os players deste computador pelo celular."
 
-#: src/schema.c:84
+#: src/schema.c:91
 msgid "Volume"
 msgstr "Volume"
 
-#: src/schema.c:84
+#: src/schema.c:91
 msgid "Let the phone change this computer's volume."
 msgstr "Deixar o celular mudar o volume deste computador."
 
-#: src/schema.c:85
+#: src/schema.c:92
 msgid "Share the clipboard with the phone."
 msgstr "Compartilhar a área de transferência com o celular."
 
-#: src/schema.c:86
+#: src/schema.c:93
 msgid "Phone notifications"
 msgstr "Notificações do celular"
 
-#: src/schema.c:86
+#: src/schema.c:93
 msgid "Show the phone's notifications here."
 msgstr "Mostrar aqui as notificações do celular."
 
-#: src/schema.c:87
+#: src/schema.c:94
 msgid "Run commands"
 msgstr "Executar comandos"
 
-#: src/schema.c:87
+#: src/schema.c:94
 msgid "Let the phone run the commands listed under Commands."
 msgstr "Deixar o celular executar os comandos listados em Comandos."
 
-#: src/schema.c:88
+#: src/schema.c:95
 msgid "Remote mouse and keyboard"
 msgstr "Mouse e teclado remotos"
 
-#: src/schema.c:88
+#: src/schema.c:95
 msgid "Let the phone move the pointer and type here."
 msgstr "Deixar o celular mover o ponteiro e digitar aqui."
 
-#: src/schema.c:89
+#: src/schema.c:96
 msgid "Presentation pointer"
 msgstr "Ponteiro de apresentação"
 
-#: src/schema.c:89
+#: src/schema.c:96
 msgid "Let the phone point at the screen during a presentation."
 msgstr "Deixar o celular apontar na tela durante uma apresentação."
 
-#: src/schema.c:90
+#: src/schema.c:97
 msgid "Lock the screen"
 msgstr "Bloquear a tela"
 
-#: src/schema.c:90
+#: src/schema.c:97
 msgid "Let the phone lock this computer."
 msgstr "Deixar o celular bloquear este computador."
 
-#: src/schema.c:91
+#: src/schema.c:98
 msgid "Keep the screen awake"
 msgstr "Manter a tela acesa"
 
-#: src/schema.c:91
+#: src/schema.c:98
 msgid "Do not let the screen sleep while a phone is connected."
 msgstr "Não deixar a tela apagar enquanto houver um celular conectado."
 
-#: src/schema.c:92
+#: src/schema.c:99
 msgid "Browse phone files"
 msgstr "Navegar pelos arquivos do celular"
 
-#: src/schema.c:92
+#: src/schema.c:99
 msgid "Mount the phone's storage as a folder."
 msgstr "Montar o armazenamento do celular como uma pasta."
 
-#: src/schema.c:94
+#: src/schema.c:101
 msgid "Send what I copy"
 msgstr "Enviar o que eu copio"
 
-#: src/schema.c:95
+#: src/schema.c:102
 msgid "Send what is copied here to the phone as soon as it is copied."
 msgstr "Enviar para o celular o que for copiado aqui, assim que copiar."
 
-#: src/schema.c:96
+#: src/schema.c:103
 msgid "Send passwords too"
 msgstr "Enviar senhas também"
 
-#: src/schema.c:97
+#: src/schema.c:104
 msgid "Also send what a password manager marks as secret."
 msgstr "Enviar também o que um gerenciador de senhas marca como secreto."
 
-#: src/schema.c:99
+#: src/schema.c:106
 msgid "Pause only when answered"
 msgstr "Pausar só ao atender"
 
-#: src/schema.c:100
+#: src/schema.c:107
 msgid "Wait until the call is answered instead of pausing while it rings."
 msgstr "Esperar a chamada ser atendida em vez de pausar enquanto toca."
 
-#: src/schema.c:101
+#: src/schema.c:108
 msgid "Resume afterwards"
 msgstr "Retomar depois"
 
-#: src/schema.c:102
+#: src/schema.c:109
 msgid "Start the players again when the call ends."
 msgstr "Tocar os players de novo quando a chamada acabar."
 
-#: src/schema.c:104
+#: src/schema.c:111
 msgid "Sound"
 msgstr "Som"
 
-#: src/schema.c:105
+#: src/schema.c:112
 msgid "The sound played when the phone looks for this computer. Empty: a beep."
 msgstr "O som tocado quando o celular procura este computador. Vazio: um bipe."
 
-#: src/schema.c:106
+#: src/schema.c:113
 msgid "Player"
 msgstr "Player"
 
-#: src/schema.c:107
+#: src/schema.c:114
 msgid "The program that plays it. Empty: the first one found."
 msgstr "O programa que toca o som. Vazio: o primeiro que for encontrado."
 
-#: src/schema.c:109
+#: src/schema.c:116
 msgid "Lock command"
 msgstr "Comando de bloqueio"
 
-#: src/schema.c:110
+#: src/schema.c:117
 msgid "Empty: loginctl lock-session."
 msgstr "Vazio: loginctl lock-session."
 
-#: src/schema.c:111
+#: src/schema.c:118
 msgid "Let the phone unlock"
 msgstr "Deixar o celular desbloquear"
 
-#: src/schema.c:112
+#: src/schema.c:119
 msgid ""
 "Off by default: anyone with the phone could otherwise unlock this computer."
 msgstr ""
 "Desligado por padrão: quem estivesse com o celular poderia desbloquear este "
 "computador."
 
-#: src/schema.c:113
+#: src/schema.c:120
 msgid "Unlock command"
 msgstr "Comando de desbloqueio"
 
-#: src/schema.c:114
+#: src/schema.c:121
 msgid "Empty: loginctl unlock-session. Needs the option above."
 msgstr "Vazio: loginctl unlock-session. Precisa da opção acima."
 
-#: src/schema.c:116
+#: src/schema.c:123
 msgid "Tray icon"
 msgstr "Ícone na bandeja"
 
-#: src/schema.c:117
+#: src/schema.c:124
 msgid ""
 "Show an icon in the notification area. Automatic: unless the desktop already "
 "has one for Kiremote (KiDesktop)."
@@ -1226,11 +1242,11 @@ msgstr ""
 "Mostra um ícone na área de notificação. Automático: a menos que o desktop já "
 "tenha um para o Kiremote (KiDesktop)."
 
-#: src/schema.c:122
+#: src/schema.c:129 src/schema.c:161
 msgid "Resolution"
 msgstr "Resolução"
 
-#: src/schema.c:123
+#: src/schema.c:130
 msgid ""
 "The longer side of the picture, in pixels. Default: the phone's own. Less is "
 "lighter for the phone."
@@ -1238,28 +1254,28 @@ msgstr ""
 "O lado maior da imagem, em pixels. Padrão: o do próprio celular. Menos pesa "
 "menos para o celular."
 
-#: src/schema.c:125
+#: src/schema.c:132
 msgid "Video quality"
 msgstr "Qualidade do vídeo"
 
-#: src/schema.c:126
+#: src/schema.c:133
 msgid "Bits per second the phone may spend on the picture. Default: 8M."
 msgstr "Bits por segundo que o celular pode gastar com a imagem. Padrão: 8M."
 
-#: src/schema.c:127
+#: src/schema.c:134
 msgid "Frames per second"
 msgstr "Quadros por segundo"
 
-#: src/schema.c:128
+#: src/schema.c:135
 msgid "The most frames the phone sends each second. Default: no limit."
 msgstr ""
 "O máximo de quadros que o celular envia por segundo. Padrão: sem limite."
 
-#: src/schema.c:129
+#: src/schema.c:136
 msgid "Video codec"
 msgstr "Codec de vídeo"
 
-#: src/schema.c:130
+#: src/schema.c:137
 msgid ""
 "H.264 works everywhere. H.265 and AV1 use less data but need a newer phone "
 "and a faster computer."
@@ -1267,60 +1283,60 @@ msgstr ""
 "O H.264 funciona em qualquer lugar. O H.265 e o AV1 usam menos dados, mas "
 "pedem um celular mais novo e um computador mais rápido."
 
-#: src/schema.c:132
+#: src/schema.c:139
 msgid "Play the phone's sound"
 msgstr "Tocar o som do celular"
 
-#: src/schema.c:133
+#: src/schema.c:140
 msgid "Needs Android 11 or newer."
 msgstr "Precisa do Android 11 ou mais novo."
 
-#: src/schema.c:134
+#: src/schema.c:141
 msgid "Mouse and keyboard"
 msgstr "Mouse e teclado"
 
-#: src/schema.c:135
+#: src/schema.c:142
 msgid ""
 "Let the mouse and keyboard act on the phone. Off: the screen is only shown."
 msgstr ""
 "Deixa o mouse e o teclado agirem no celular. Desligado: a tela só é mostrada."
 
-#: src/schema.c:136
+#: src/schema.c:143
 msgid "Share the clipboard"
 msgstr "Compartilhar a área de transferência"
 
-#: src/schema.c:137
+#: src/schema.c:144
 msgid "Copy and paste between the phone and this computer while mirroring."
 msgstr ""
 "Copiar e colar entre o celular e este computador durante o espelhamento."
 
-#: src/schema.c:138
+#: src/schema.c:145
 msgid "Turn the phone's screen off"
 msgstr "Apagar a tela do celular"
 
-#: src/schema.c:139
+#: src/schema.c:146
 msgid ""
 "Switch the phone's own screen off while mirroring. It stays on in the window."
 msgstr ""
 "Apaga a tela do próprio celular durante o espelhamento. Na janela ela "
 "continua ligada."
 
-#: src/schema.c:140
+#: src/schema.c:147
 msgid "Keep the phone awake"
 msgstr "Manter o celular acordado"
 
-#: src/schema.c:141
+#: src/schema.c:148
 msgid ""
 "Do not let the phone sleep while mirroring (only works while it is charging)."
 msgstr ""
 "Não deixa o celular dormir durante o espelhamento (só funciona enquanto ele "
 "estiver carregando)."
 
-#: src/schema.c:142
+#: src/schema.c:149
 msgid "Use Wi-Fi without a cable"
 msgstr "Usar o Wi-Fi sem cabo"
 
-#: src/schema.c:143
+#: src/schema.c:150
 msgid ""
 "When no cable is connected, try the phone over the network (its debugging "
 "over Wi-Fi must be on)."
@@ -1328,45 +1344,92 @@ msgstr ""
 "Sem cabo conectado, tenta o celular pela rede (a depuração por Wi-Fi dele "
 "precisa estar ligada)."
 
-#: src/schema.c:146
+#: src/schema.c:154
+msgid "Video device status"
+msgstr "Estado do dispositivo de vídeo"
+
+#: src/schema.c:155
+msgid "Whether the video device the camera goes to is ready."
+msgstr "Se o dispositivo de vídeo para onde vai a câmera está pronto."
+
+#: src/schema.c:156
+msgid "Video device"
+msgstr "Dispositivo de vídeo"
+
+#: src/schema.c:157
+msgid ""
+"The v4l2loopback device the camera goes to, such as /dev/video10. Empty: the "
+"only one there is."
+msgstr ""
+"O dispositivo v4l2loopback para onde vai a câmera, como /dev/video10. Vazio: "
+"o único que houver."
+
+#: src/schema.c:160
+msgid "Which of the phone's cameras to use."
+msgstr "Qual das câmeras do celular usar."
+
+#: src/schema.c:162
+msgid ""
+"The longer side of the picture, in pixels. The phone picks the best size up "
+"to this one."
+msgstr ""
+"O lado maior da imagem, em pixels. O celular escolhe o melhor tamanho até "
+"este."
+
+#: src/schema.c:163
+msgid "Flip left to right"
+msgstr "Inverter da esquerda para a direita"
+
+#: src/schema.c:164
+msgid ""
+"Like a mirror: the picture other people see is the one you see in the "
+"preview."
+msgstr ""
+"Como um espelho: a imagem que os outros veem é a que você vê na prévia."
+
+#: src/schema.c:166
 msgid "Commands the phone may run"
 msgstr "Comandos que o celular pode executar"
 
-#: src/schema.c:147
+#: src/schema.c:167
 msgid "Name and shell command. The phone only sees the names."
 msgstr "Nome e comando de shell. O celular só vê os nomes."
 
-#: src/schema.c:252 src/schema.c:296
+#: src/schema.c:272 src/schema.c:318
 msgid "too long"
 msgstr "comprido demais"
 
-#: src/schema.c:260
+#: src/schema.c:280
 msgid "invalid name"
 msgstr "nome inválido"
 
-#: src/schema.c:263
+#: src/schema.c:283
 msgid "must be a single line"
 msgstr "deve ter uma linha só"
 
-#: src/schema.c:270
+#: src/schema.c:290
 msgid "must be true or false"
 msgstr "deve ser verdadeiro ou falso"
 
-#: src/schema.c:276
+#: src/schema.c:296
 msgid "not one of the choices"
 msgstr "não é uma das opções"
 
-#: src/schema.c:279
+#: src/schema.c:299
 msgid "must be IPv4 addresses separated by commas"
 msgstr "devem ser endereços IPv4 separados por vírgula"
 
-#: src/schema.c:283
+#: src/schema.c:303
 msgid "must be an absolute path"
 msgstr "deve ser um caminho absoluto"
 
-#: src/schema.c:289
+#: src/schema.c:309
 msgid "not a usable name"
 msgstr "nome inválido para o protocolo"
+
+#: src/schema.c:313
+msgid "this is not a setting"
+msgstr "isto não é uma configuração"
 
 #: src/transfer.c:190
 msgid "no free file name"
@@ -1463,26 +1526,30 @@ msgid "Mirror the screen"
 msgstr "Espelhar a tela"
 
 #: ui/krmodel.c:439
+msgid "Use as webcam"
+msgstr "Usar como webcam"
+
+#: ui/krmodel.c:441
 msgid "Pair"
 msgstr "Parear"
 
-#: ui/krmodel.c:441
+#: ui/krmodel.c:443
 msgid "Accept"
 msgstr "Aceitar"
 
-#: ui/krmodel.c:443
+#: ui/krmodel.c:445
 msgid "Refuse"
 msgstr "Recusar"
 
-#: ui/krmodel.c:445
+#: ui/krmodel.c:447
 msgid "Cancel pairing"
 msgstr "Cancelar o pareamento"
 
-#: ui/krmodel.c:447
+#: ui/krmodel.c:449
 msgid "Unpair"
 msgstr "Desparear"
 
-#: ui/krmodel.c:449
+#: ui/krmodel.c:451
 msgid "Look for devices"
 msgstr "Procurar aparelhos"
 
@@ -1491,34 +1558,49 @@ msgstr "Procurar aparelhos"
 msgid "ignoring %s: not a certificate for that device"
 msgstr "ignorando %s: não é um certificado desse dispositivo"
 
-#: ui/gtk/kractions.c:23
+#: ui/gtk/kractions.c:24
 msgid "Send files"
 msgstr "Enviar arquivos"
 
-#: ui/gtk/kractions.c:24 ui/gtk/kractions.c:43
+#: ui/gtk/kractions.c:25 ui/gtk/kractions.c:44
 msgid "_Send"
 msgstr "_Enviar"
 
-#: ui/gtk/kractions.c:42
+#: ui/gtk/kractions.c:43
 msgid "Send text"
 msgstr "Enviar texto"
 
-#: ui/gtk/kractions.c:77 mirror/server.c:111
+#: ui/gtk/kractions.c:78 mirror/server.c:111
 #, c-format
 msgid "Could not run %s: %s"
 msgstr "Não foi possível executar %s: %s"
 
-#: ui/gtk/kractions.c:171
+#: ui/gtk/kractions.c:159
+#, c-format
+msgid "Stop using %s as a webcam?"
+msgstr "Parar de usar %s como webcam?"
+
+#: ui/gtk/kractions.c:166
+#, c-format
+msgid "%s is being used as a webcam. Stop that first."
+msgstr "%s está sendo usado como webcam. Pare isso primeiro."
+
+#: ui/gtk/kractions.c:167
+#, c-format
+msgid "The screen of %s is being mirrored. Close its window first."
+msgstr "A tela de %s está sendo espelhada. Feche a janela dela primeiro."
+
+#: ui/gtk/kractions.c:201
 #, c-format
 msgid "Refuse the pairing request from %s?"
 msgstr "Recusar o pedido de pareamento de %s?"
 
-#: ui/gtk/kractions.c:172
+#: ui/gtk/kractions.c:202
 #, c-format
 msgid "Unpair from %s?"
 msgstr "Desparear de %s?"
 
-#: ui/gtk/kractions.c:253
+#: ui/gtk/kractions.c:283
 msgid "Nothing to do"
 msgstr "Nada a fazer"
 
@@ -1527,7 +1609,7 @@ msgstr "Nada a fazer"
 msgid "Verification key: %s"
 msgstr "Chave de verificação: %s"
 
-#: ui/gtk/krdevices.c:281
+#: ui/gtk/krdevices.c:282
 msgid ""
 "Kiremote is not running.\n"
 "Start kiremoted and this list fills in by itself."
@@ -1535,7 +1617,7 @@ msgstr ""
 "O Kiremote não está rodando.\n"
 "Inicie o kiremoted e esta lista se preenche sozinha."
 
-#: ui/gtk/krdevices.c:285
+#: ui/gtk/krdevices.c:286
 msgid ""
 "No devices around.\n"
 "Open KDE Connect on the phone, on the same network as this computer."
@@ -1575,15 +1657,15 @@ msgstr "Escolher um arquivo"
 msgid "New command"
 msgstr "Novo comando"
 
-#: ui/gtk/krsettings.c:243 ui/gtk/krsettings.c:339
+#: ui/gtk/krsettings.c:243 ui/gtk/krsettings.c:353
 msgid "Command"
 msgstr "Comando"
 
-#: ui/gtk/krsettings.c:387
+#: ui/gtk/krsettings.c:401
 msgid "Browse..."
 msgstr "Procurar..."
 
-#: ui/gtk/krsettings.c:566
+#: ui/gtk/krsettings.c:603
 msgid ""
 "Kiremote is not running.\n"
 "Start kiremoted to change its settings."
@@ -1647,8 +1729,8 @@ msgid "Yes"
 msgstr "Sim"
 
 #: kidesktop/page.c:132 kidesktop/tab.c:20 mirror/stream.c:164
-#: mirror/screen.c:168 mirror/main.c:496 mirror/main.c:517 mirror/main.c:706
-#: mirror/audio.c:117 mirror/audio.c:124
+#: mirror/screen.c:168 mirror/main.c:417 mirror/main.c:546 mirror/main.c:610
+#: mirror/main.c:844 mirror/audio.c:125 mirror/audio.c:132 mirror/v4l2.c:27
 msgid "Out of memory"
 msgstr "Sem memória"
 
@@ -1717,46 +1799,46 @@ msgstr ""
 msgid "The server on the phone stopped"
 msgstr "O servidor no celular parou"
 
-#: mirror/server.c:194
+#: mirror/server.c:200
 msgid "Could not open the adb tunnel to the phone"
 msgstr "Não foi possível abrir o túnel do adb até o celular"
 
-#: mirror/server.c:215
+#: mirror/server.c:221
 #, c-format
 msgid "Could not open a local port: %s"
 msgstr "Não foi possível abrir uma porta local: %s"
 
-#: mirror/server.c:249
+#: mirror/server.c:255
 msgid "Could not copy the server to the phone"
 msgstr "Não foi possível copiar o servidor para o celular"
 
-#: mirror/server.c:287
+#: mirror/server.c:293
 #, c-format
 msgid "Could not connect to %s"
 msgstr "Não foi possível conectar a %s"
 
-#: mirror/server.c:307
+#: mirror/server.c:313
 msgid "That is not an address adb can connect to"
 msgstr "Esse não é um endereço ao qual o adb possa se conectar"
 
-#: mirror/server.c:320
+#: mirror/server.c:326
 msgid "Could not switch the phone to Wi-Fi debugging"
 msgstr "Não foi possível passar o celular para a depuração por Wi-Fi"
 
-#: mirror/server.c:336
+#: mirror/server.c:342
 msgid "The phone is not on Wi-Fi (no address found)"
 msgstr "O celular não está no Wi-Fi (nenhum endereço encontrado)"
 
-#: mirror/server.c:373
+#: mirror/server.c:379
 msgid "adb could not list the devices"
 msgstr "O adb não conseguiu listar os aparelhos"
 
-#: mirror/server.c:468
+#: mirror/server.c:474
 #, c-format
 msgid "Could not accept the server's connection: %s"
 msgstr "Não foi possível aceitar a conexão do servidor: %s"
 
-#: mirror/server.c:512 mirror/server.c:515
+#: mirror/server.c:518 mirror/server.c:521
 msgid "The server on the phone did not connect"
 msgstr "O servidor no celular não conectou"
 
@@ -1768,7 +1850,7 @@ msgstr "Não foi possível abrir a tela X"
 msgid "The X display needs 24-bit color for the mirror"
 msgstr "O espelhamento precisa de uma tela X com cor de 24 bits"
 
-#: mirror/main.c:34
+#: mirror/main.c:38
 #, c-format
 msgid ""
 "Usage: %s [OPTION]...\n"
@@ -1788,6 +1870,14 @@ msgid ""
 "      --wifi ADDR       like --connect, but only when no phone is on a "
 "cable\n"
 "      --tcpip           switch the phone on the cable to Wi-Fi and use that\n"
+"      --id ID           the KDE Connect id of the phone: one window per "
+"phone\n"
+"      --camera          the phone's camera as a webcam (v4l2loopback), no "
+"window\n"
+"      --camera-facing F back (default), front or external\n"
+"      --flip            flip the camera left to right, like a mirror\n"
+"      --v4l2 DEVICE     the video device for the camera (default: the only "
+"v4l2loopback)\n"
 "  -c, --config FILE     the settings file (default: ~/.config/kiremote/"
 "kiremote.ini)\n"
 "  -v, --verbose         debug messages (and the server's)\n"
@@ -1817,6 +1907,15 @@ msgstr ""
 "cabo\n"
 "      --tcpip           passa o celular que está no cabo para o Wi-Fi e usa "
 "assim\n"
+"      --id ID           o id do celular no KDE Connect: uma janela por "
+"celular\n"
+"      --camera          a câmera do celular como webcam (v4l2loopback), sem "
+"janela\n"
+"      --camera-facing F back (padrão), front ou external\n"
+"      --flip            inverte a câmera da esquerda para a direita, como um "
+"espelho\n"
+"      --v4l2 DISPOSITIVO  o dispositivo de vídeo da câmera (padrão: o único "
+"v4l2loopback)\n"
 "  -c, --config ARQUIVO  o arquivo de configurações\n"
 "                        (padrão: ~/.config/kiremote/kiremote.ini)\n"
 "  -v, --verbose         mensagens de depuração (e as do servidor)\n"
@@ -1827,60 +1926,193 @@ msgstr ""
 "s apps recentes, m menu, p ligar, Cima e Baixo volume, n notificações\n"
 "(Shift: fecha), r girar, o apaga a tela (Shift: acende); e f tela cheia.\n"
 
-#: mirror/main.c:305
+#: mirror/main.c:320
 msgid "The phone sent a message that could not be read"
 msgstr "O celular mandou uma mensagem que não deu para ler"
 
-#: mirror/main.c:309 mirror/main.c:543
+#: mirror/main.c:324 mirror/main.c:636
 msgid "The phone closed the connection"
 msgstr "O celular fechou a conexão"
 
-#: mirror/main.c:382
+#: mirror/main.c:397
 msgid ""
 "This computer cannot decode the phone's video (no decoder in libavcodec)"
 msgstr ""
 "Este computador não consegue decodificar o vídeo do celular (a libavcodec "
 "não tem o decodificador)"
 
-#: mirror/main.c:427
+#: mirror/main.c:419
+#, c-format
+msgid "The camera is %s now (%ux%u)"
+msgstr "A câmera agora é %s (%ux%u)"
+
+#: mirror/main.c:448
+msgid "The video device went away"
+msgstr "O dispositivo de vídeo sumiu"
+
+#: mirror/main.c:460
 msgid "The video could not be decoded"
 msgstr "Não foi possível decodificar o vídeo"
 
-#: mirror/main.c:450
+#: mirror/main.c:484
 msgid "The phone sent sound in a format this program does not play"
 msgstr "O celular mandou som num formato que este programa não toca"
 
-#: mirror/main.c:474
+#: mirror/main.c:524
 msgid "The phone cannot share its sound (Android 11 or newer is needed)"
 msgstr ""
 "O celular não consegue compartilhar o som (precisa do Android 11 ou mais "
 "novo)"
 
-#: mirror/main.c:508
+#: mirror/main.c:574
+msgid "Already open for this phone"
+msgstr "Já está aberto para este celular"
+
+#: mirror/main.c:577
+msgid "This phone is being used as a webcam: stop that first"
+msgstr "Este celular está sendo usado como webcam: pare isso primeiro"
+
+#: mirror/main.c:579
+msgid "This phone's screen is already being mirrored: close that window first"
+msgstr ""
+"A tela deste celular já está sendo espelhada: feche aquela janela primeiro"
+
+#: mirror/main.c:601
+#, c-format
+msgid "Using the camera of %s"
+msgstr "Usando a câmera de %s"
+
+#: mirror/main.c:601
 #, c-format
 msgid "Mirroring %s"
 msgstr "Espelhando %s"
 
-#: mirror/main.c:689
+#: mirror/main.c:825
 #, c-format
 msgid ""
 "scrcpy-server %s not found (scripts/fetch-scrcpy-server.sh downloads it)"
 msgstr ""
 "scrcpy-server %s não encontrado (o scripts/fetch-scrcpy-server.sh baixa)"
 
-#: mirror/main.c:766
+#: mirror/main.c:909
 msgid "The sound stopped"
 msgstr "O som parou"
 
 #: mirror/conf.c:46
 #, c-format
-msgid "kiremote.ini: [mirror] %s = %s is not valid, using the default"
-msgstr "kiremote.ini: [mirror] %s = %s não vale, usando o padrão"
+msgid "kiremote.ini: [%s] %s = %s is not valid, using the default"
+msgstr "kiremote.ini: [%s] %s = %s não vale, usando o padrão"
 
-#: mirror/audio.c:41 mirror/audio.c:55 mirror/audio.c:88 mirror/audio.c:102
+#: mirror/audio.c:41 mirror/audio.c:55 mirror/audio.c:96 mirror/audio.c:110
 #, c-format
 msgid "Sound: %s"
 msgstr "Som: %s"
+
+#: mirror/v4linfo.c:110 mirror/v4linfo.c:129
+msgid "This user cannot write to the video device (join the group \"video\")"
+msgstr ""
+"Este usuário não pode escrever no dispositivo de vídeo (entre no grupo "
+"\"video\")"
+
+#: mirror/v4linfo.c:111
+msgid "The video device does not exist (is the v4l2loopback module loaded?)"
+msgstr ""
+"O dispositivo de vídeo não existe (o módulo v4l2loopback está carregado?)"
+
+#: mirror/v4linfo.c:117
+msgid "The v4l2loopback module is not loaded (see Camera in the settings)"
+msgstr ""
+"O módulo v4l2loopback não está carregado (veja Câmera nas configurações)"
+
+#: mirror/v4linfo.c:121
+msgid ""
+"The v4l2loopback module has no device (load it with video_nr=10, see Camera "
+"in the settings)"
+msgstr ""
+"O módulo v4l2loopback não tem nenhum dispositivo (carregue com video_nr=10, "
+"veja Câmera nas configurações)"
+
+#: mirror/v4linfo.c:125
+msgid "There is more than one video device: choose one in the Camera settings"
+msgstr ""
+"Há mais de um dispositivo de vídeo: escolha um nas configurações da Câmera"
+
+#: mirror/v4linfo.c:157 mirror/v4linfo.c:177
+#, c-format
+msgid "Ready: the camera will appear as %s."
+msgstr "Pronto: a câmera vai aparecer como %s."
+
+#: mirror/v4linfo.c:158
+#, c-format
+msgid "Cannot use %s: %s."
+msgstr "Não dá para usar %s: %s."
+
+#: mirror/v4linfo.c:162
+msgid ""
+"The v4l2loopback module is not loaded. The one that is, v4l2loopback_dc, is "
+"DroidCam's and cannot be used here.\n"
+"Load it once per boot, as root (it asks for your password):\n"
+"  sudo modprobe v4l2loopback video_nr=10 card_label=Kiremote "
+"exclusive_caps=1\n"
+"To have it at every boot, put \"v4l2loopback\" in /etc/modules-load.d/"
+"v4l2loopback.conf and \"options v4l2loopback video_nr=10 card_label=Kiremote "
+"exclusive_caps=1\" in /etc/modprobe.d/v4l2loopback.conf. The package is "
+"v4l2loopback-dkms."
+msgstr ""
+"O módulo v4l2loopback não está carregado. O que está, v4l2loopback_dc, é o "
+"do DroidCam e não serve aqui.\n"
+"Carregue uma vez por boot, como root (pede a sua senha):\n"
+"  sudo modprobe v4l2loopback video_nr=10 card_label=Kiremote "
+"exclusive_caps=1\n"
+"Para carregar em todo boot, ponha \"v4l2loopback\" em /etc/modules-load.d/"
+"v4l2loopback.conf e \"options v4l2loopback video_nr=10 card_label=Kiremote "
+"exclusive_caps=1\" em /etc/modprobe.d/v4l2loopback.conf. O pacote é o "
+"v4l2loopback-dkms."
+
+#: mirror/v4linfo.c:169
+msgid ""
+"The v4l2loopback module is not loaded.\n"
+"Load it once per boot, as root (it asks for your password):\n"
+"  sudo modprobe v4l2loopback video_nr=10 card_label=Kiremote "
+"exclusive_caps=1\n"
+"To have it at every boot, put \"v4l2loopback\" in /etc/modules-load.d/"
+"v4l2loopback.conf and \"options v4l2loopback video_nr=10 card_label=Kiremote "
+"exclusive_caps=1\" in /etc/modprobe.d/v4l2loopback.conf. The package is "
+"v4l2loopback-dkms."
+msgstr ""
+"O módulo v4l2loopback não está carregado.\n"
+"Carregue uma vez por boot, como root (pede a sua senha):\n"
+"  sudo modprobe v4l2loopback video_nr=10 card_label=Kiremote "
+"exclusive_caps=1\n"
+"Para carregar em todo boot, ponha \"v4l2loopback\" em /etc/modules-load.d/"
+"v4l2loopback.conf e \"options v4l2loopback video_nr=10 card_label=Kiremote "
+"exclusive_caps=1\" em /etc/modprobe.d/v4l2loopback.conf. O pacote é o "
+"v4l2loopback-dkms."
+
+#: mirror/v4linfo.c:178
+#, c-format
+msgid "The v4l2loopback module is loaded, but: %s."
+msgstr "O módulo v4l2loopback está carregado, mas: %s."
+
+#: mirror/v4l2.c:42
+#, c-format
+msgid "Could not open %s: %s"
+msgstr "Não foi possível abrir %s: %s"
+
+#: mirror/v4l2.c:49
+#, c-format
+msgid "%s is not a video device"
+msgstr "%s não é um dispositivo de vídeo"
+
+#: mirror/v4l2.c:56
+#, c-format
+msgid "%s is not a v4l2loopback device (its driver is \"%s\")"
+msgstr "%s não é um dispositivo v4l2loopback (o driver dele é \"%s\")"
+
+#: mirror/v4l2.c:73
+#, c-format
+msgid "%s does not take %ux%u video: %s"
+msgstr "%s não aceita vídeo %ux%u: %s"
 
 #~ msgid "More actions"
 #~ msgstr "Mais ações"

@@ -2,7 +2,10 @@
 /* libkrui's widgets against a scripted daemon, in a private X server
  * (tests/ui/run.sh). The daemon is in this process: the real control socket
  * code, the real settings schema and config, and canned devices. */
+#include <fcntl.h>
 #include <poll.h>
+#include <signal.h>
+#include <sys/wait.h>
 #include <gio/gio.h>
 #include <gio/gunixsocketaddress.h>
 #include <sys/socket.h>
@@ -17,6 +20,7 @@
 #include "instance.h"
 #include "krui.h"
 #include "schema.h"
+#include "session.h"
 #include "util.h"
 
 /* ---- the scripted daemon ---------------------------------------------------- */
@@ -517,10 +521,125 @@ TEST(actions_send_their_requests)
     /* Mirroring runs the program, it is not a request. */
     gtk_menu_item_activate(GTK_MENU_ITEM(menu_item(m, "Mirror the screen")));
     CHECK_STR_EQ(ask.spawned, "/bin/true");
-    CHECK_STR_EQ(ask.spawned_args, "--wifi 192.168.1.9"); /* where to try if no cable */
+    CHECK_STR_EQ(ask.spawned_args, "--id b-phone --wifi 192.168.1.9"); /* where to try if no cable */
+    ask.spawned[0] = 0;
+    gtk_menu_item_activate(GTK_MENU_ITEM(menu_item(m, "Use as webcam")));
+    CHECK_STR_EQ(ask.spawned, "/bin/true");
+    CHECK_STR_EQ(ask.spawned_args, "--camera --id b-phone --wifi 192.168.1.9");
     gtk_widget_destroy(m);
     g_object_unref(m);
     kr_ui_free(ui);
+}
+
+/* A process that holds the phone as kiremote-mirror does (session.h), and
+ * leaves a file in dir for each thing it is told. */
+static char holder_raised[300], holder_quit[300];
+
+static void holder_on_raise(void *ud)
+{
+    (void)ud;
+    close(open(holder_raised, O_CREAT | O_WRONLY, 0600));
+}
+
+static void holder_on_quit(void *ud)
+{
+    (void)ud;
+    close(open(holder_quit, O_CREAT | O_WRONLY, 0600));
+}
+
+static pid_t hold_phone(const char *dir, const char *mode)
+{
+    pid_t pid = fork();
+    if (pid != 0)
+        return pid;
+    snprintf(holder_raised, sizeof holder_raised, "%s/raised", dir);
+    snprintf(holder_quit, sizeof holder_quit, "%s/quit", dir);
+    static const kr_inst_cbs cbs = {holder_on_raise, holder_on_quit};
+    char other[16];
+    kr_inst *i = kr_inst_claim("b-phone", mode, &cbs, NULL, other, sizeof other);
+    if (!i)
+        _exit(1);
+    for (;;) {
+        struct pollfd fds[8];
+        int n = kr_inst_pollfds(i, fds, 8);
+        poll(fds, (nfds_t)n, 100);
+        kr_inst_dispatch(i, fds, n);
+    }
+}
+
+/* Waits (pumping GTK) until the phone answers as mode. */
+static gboolean phone_is(const char *mode)
+{
+    double end = kr_now() + 3;
+    char got[16];
+    while (kr_now() < end) {
+        if (kr_inst_query("b-phone", got, sizeof got) && strcmp(got, mode) == 0)
+            return TRUE;
+        pump();
+    }
+    return FALSE;
+}
+
+TEST(a_phone_is_mirrored_or_a_camera_not_both_and_not_twice)
+{
+    char dir[] = "/tmp/kiremote-busy-XXXXXX";
+    CHECK(mkdtemp(dir));
+    char *old = g_strdup(g_getenv("XDG_RUNTIME_DIR"));
+    g_setenv("XDG_RUNTIME_DIR", dir, TRUE);
+    kr_ui *ui = connected_ui();
+    char flag[300];
+
+    /* Mirrored already: the same button brings that window forward. */
+    pid_t holder = hold_phone(dir, "mirror");
+    CHECK(phone_is("mirror"));
+    ask.spawned[0] = 0;
+    kr_ui_run_action(ui, NULL, KR_ACT_MIRROR, "b-phone");
+    snprintf(flag, sizeof flag, "%s/raised", dir);
+    CHECK(access(flag, F_OK) == 0);
+    CHECK_STR_EQ(ask.spawned, "");
+    CHECK_INT_EQ(ask.errors->len, 0);
+    /* ...and it cannot also be a camera. */
+    kr_ui_run_action(ui, NULL, KR_ACT_CAMERA, "b-phone");
+    CHECK_STR_EQ(ask.spawned, "");
+    CHECK_INT_EQ(ask.errors->len, 1);
+    CHECK_STR_HAS(g_ptr_array_index(ask.errors, 0), "is being mirrored");
+    kill(holder, SIGTERM);
+    waitpid(holder, NULL, 0);
+    unlink(flag);
+    kr_ui_run_action(ui, NULL, KR_ACT_MIRROR, "b-phone"); /* a socket left by the dead one: free again */
+    CHECK_STR_EQ(ask.spawned, "/bin/true");
+
+    /* A camera: no second one, no mirror; the same button stops it, asking first. */
+    g_ptr_array_set_size(ask.errors, 0);
+    ask.spawned[0] = 0;
+    holder = hold_phone(dir, "camera");
+    CHECK(phone_is("camera"));
+    kr_ui_run_action(ui, NULL, KR_ACT_MIRROR, "b-phone");
+    CHECK_STR_EQ(ask.spawned, "");
+    CHECK_INT_EQ(ask.errors->len, 1);
+    CHECK_STR_HAS(g_ptr_array_index(ask.errors, 0), "is being used as a webcam");
+    snprintf(flag, sizeof flag, "%s/quit", dir);
+    ask.confirm_answer = FALSE;
+    kr_ui_run_action(ui, NULL, KR_ACT_CAMERA, "b-phone");
+    CHECK_INT_EQ(ask.confirms, 1);
+    CHECK(access(flag, F_OK) != 0); /* "no" leaves it */
+    ask.confirm_answer = TRUE;
+    kr_ui_run_action(ui, NULL, KR_ACT_CAMERA, "b-phone");
+    CHECK_INT_EQ(ask.confirms, 2);
+    CHECK(access(flag, F_OK) == 0);
+    CHECK_STR_EQ(ask.spawned, "");
+    kill(holder, SIGTERM);
+    waitpid(holder, NULL, 0);
+
+    kr_ui_free(ui);
+    if (old)
+        g_setenv("XDG_RUNTIME_DIR", old, TRUE);
+    else
+        g_unsetenv("XDG_RUNTIME_DIR");
+    g_free(old);
+    char cmd[400];
+    snprintf(cmd, sizeof cmd, "rm -rf %s", dir);
+    CHECK(system(cmd) == 0);
 }
 
 TEST(unpairing_asks_first)
@@ -827,6 +946,21 @@ TEST(text_fields_save_on_enter_and_say_when_it_needs_a_restart)
     kr_ui_free(ui);
 }
 
+TEST(the_camera_tab_says_how_the_video_device_stands)
+{
+    kr_ui *ui = connected_ui();
+    kr_config_set(F.cfg, "camera", "device", "/nonexistent/video9");
+    GtkWidget *w = settings_page(ui);
+    /* The daemon looks at /sys and the device now, not when the window opened. */
+    CHECK(wait_label(w, "Cannot use /nonexistent/video9", 3));
+    CHECK(find(w, m_tooltip_starts, "Which of the phone's cameras"));
+    kr_config_unset(F.cfg, "camera", "device");
+    CHECK(wait_label(w, "v4l2loopback", 8)); /* whichever way this machine is: not loaded, or loaded, either names it */
+    gtk_widget_destroy(w);
+    g_object_unref(w);
+    kr_ui_free(ui);
+}
+
 TEST(a_refused_value_shows_why_and_goes_back)
 {
     kr_ui *ui = connected_ui();
@@ -1095,6 +1229,7 @@ int main(int argc, char **argv)
     RUN(clicking_a_row_opens_its_actions_under_it);
     RUN(the_menu_offers_what_the_model_allows);
     RUN(actions_send_their_requests);
+    RUN(a_phone_is_mirrored_or_a_camera_not_both_and_not_twice);
     RUN(unpairing_asks_first);
     RUN(a_failed_request_shows_the_daemons_reason);
     RUN(a_request_without_a_daemon_says_so_once);
@@ -1110,6 +1245,7 @@ int main(int argc, char **argv)
     RUN(a_change_made_elsewhere_shows_up);
     RUN(what_belongs_to_a_plugin_that_is_off_is_dimmed);
     RUN(text_fields_save_on_enter_and_say_when_it_needs_a_restart);
+    RUN(the_camera_tab_says_how_the_video_device_stands);
     RUN(a_refused_value_shows_why_and_goes_back);
     RUN(a_choice_is_saved);
     RUN(commands_are_edited_in_the_list);

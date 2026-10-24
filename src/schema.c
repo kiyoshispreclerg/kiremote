@@ -9,6 +9,7 @@
 
 #include "i18n.h"
 #include "packet.h"
+#include "v4linfo.h"
 #include "util.h"
 
 #define MAX_TEXT 1024
@@ -21,6 +22,8 @@ static const char *const mirror_sizes[] = {"", "800", "1024", "1280", "1600", "1
 static const char *const mirror_rates[] = {"", "2M", "4M", "8M", "16M", "32M", NULL};
 static const char *const mirror_fps[] = {"", "15", "24", "30", "60", NULL};
 static const char *const mirror_codecs[] = {"h264", "h265", "av1", NULL};
+static const char *const camera_facings[] = {"back", "front", "external", NULL};
+static const char *const camera_sizes[] = {"640", "960", "1280", "1920", NULL};
 
 /* How a choice is shown (msgids); a choice not listed is shown as it is. */
 static const struct {
@@ -35,6 +38,9 @@ static const struct {
     {"phone", N_("Phone")},
     {"tablet", N_("Tablet")},
     {"tv", N_("TV")},
+    {"back", N_("Back")},
+    {"front", N_("Front (selfie)")},
+    {"external", N_("External (USB)")},
 };
 
 static const kr_setting_group groups[] = {
@@ -48,6 +54,7 @@ static const kr_setting_group groups[] = {
     {"lock", N_("Screen lock")},
     {"commands", N_("Commands")},
     {"mirror", N_("Mirroring")},
+    {"camera", N_("Camera")},
     {"interface", N_("Interface")},
     {"advanced", N_("Advanced")},
 };
@@ -142,6 +149,19 @@ static const kr_setting settings[] = {
     {"mirror", "wifi", KR_S_BOOL, "true", NULL, "mirror", N_("Use Wi-Fi without a cable"),
      N_("When no cable is connected, try the phone over the network (its debugging over Wi-Fi must be on)."),
      NULL, false},
+
+    /* The phone's camera as a webcam (kiremote-mirror --camera). */
+    {"camera", "status", KR_S_NOTE, "", NULL, "camera", N_("Video device status"),
+     N_("Whether the video device the camera goes to is ready."), NULL, false},
+    {"camera", "device", KR_S_PATH, "", NULL, "camera", N_("Video device"),
+     N_("The v4l2loopback device the camera goes to, such as /dev/video10. Empty: the only one there is."), NULL,
+     false},
+    {"camera", "facing", KR_S_ENUM, "back", camera_facings, "camera", N_("Camera"),
+     N_("Which of the phone's cameras to use."), NULL, false},
+    {"camera", "max_size", KR_S_ENUM, "1280", camera_sizes, "camera", N_("Resolution"),
+     N_("The longer side of the picture, in pixels. The phone picks the best size up to this one."), NULL, false},
+    {"camera", "mirror", KR_S_BOOL, "false", NULL, "camera", N_("Flip left to right"),
+     N_("Like a mirror: the picture other people see is the one you see in the preview."), NULL, false},
 
     {"runcommand", NULL, KR_S_MAP, "", NULL, "commands", N_("Commands the phone may run"),
      N_("Name and shell command. The phone only sees the names."), "runcommand", false},
@@ -289,6 +309,8 @@ bool kr_schema_check(const kr_setting *s, const char *name, const char *value, c
             return fail(err, err_size, _("not a usable name"));
         break;
     }
+    case KR_S_NOTE:
+        return fail(err, err_size, _("this is not a setting"));
     case KR_S_STRING:
     case KR_S_MAP:
         break;
@@ -300,7 +322,7 @@ bool kr_schema_check(const kr_setting *s, const char *name, const char *value, c
 
 static const char *type_name(kr_setting_type t)
 {
-    static const char *const names[] = {"bool", "string", "name", "path", "enum", "addresses", "map"};
+    static const char *const names[] = {"bool", "string", "name", "path", "enum", "addresses", "map", "note"};
     return names[t];
 }
 
@@ -353,6 +375,15 @@ static void add_value(const kr_config *cfg, const kr_setting *s, cJSON *values, 
     char key[96];
     snprintf(key, sizeof key, "%s.%s", s->section, s->key);
     const char *raw = kr_config_get(cfg, s->section, s->key);
+    if (s->type == KR_S_NOTE) { /* how things stand, now: the setting's value is a paragraph */
+        kr_v4l v4l;
+        kr_v4l_scan(&v4l);
+        const char *dev = kr_config_get(cfg, "camera", "device");
+        char *note = kr_v4l_note(&v4l, dev);
+        cJSON_AddStringToObject(values, key, note ? note : "");
+        free(note);
+        return;
+    }
     bool is_set = raw && *raw;
     char text[KR_PATH_MAX];
     const char *shown = is_set ? raw : s->def;

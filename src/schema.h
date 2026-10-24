@@ -26,7 +26,8 @@ typedef enum {
     KR_S_PATH,   /* absolute, or starting with "~/" */
     KR_S_ENUM,   /* one of choices */
     KR_S_ADDRS,  /* IPv4 addresses, separated by commas */
-    KR_S_MAP     /* a whole section of "name = value" lines ([runcommand]) */
+    KR_S_MAP,    /* a whole section of "name = value" lines ([runcommand]) */
+    KR_S_NOTE    /* not a setting: a paragraph the daemon writes, from how things stand (camera.status) */
 } kr_setting_type;
 
 typedef struct {

@@ -318,6 +318,20 @@ static int add_field(settings *s, GtkWidget *table, int row, const cJSON *def)
         return row + 1;
     }
 
+    if (strcmp(f->type, "note") == 0) { /* a paragraph the daemon writes: not an input */
+        f->input = gtk_label_new("");
+        gtk_label_set_line_wrap(GTK_LABEL(f->input), TRUE);
+        gtk_label_set_selectable(GTK_LABEL(f->input), TRUE); /* the commands can be copied */
+        gtk_misc_set_alignment(GTK_MISC(f->input), 0, 0);
+        gtk_widget_set_size_request(f->input, 400, -1);
+        GtkWidget *frame = gtk_frame_new(NULL);
+        gtk_misc_set_padding(GTK_MISC(f->input), 8, 8);
+        gtk_container_add(GTK_CONTAINER(frame), f->input);
+        gtk_table_attach(GTK_TABLE(table), frame, 0, 3, (guint)row, (guint)row + 1, GTK_FILL | GTK_EXPAND, 0, 0, 6);
+        f->shown_row[0] = frame;
+        return row + 1;
+    }
+
     if (strcmp(f->type, "map") == 0) {
         g_snprintf(f->map_prefix, sizeof f->map_prefix, "%.*s.", (int)(strchr(f->key, '.') - f->key), f->key);
         GtkWidget *head = gtk_label_new(NULL);
@@ -423,6 +437,11 @@ static void apply_values(settings *s)
             continue;
         }
         const char *val = value_of(s, f->key);
+        if (strcmp(f->type, "note") == 0) {
+            if (strcmp(gtk_label_get_text(GTK_LABEL(f->input)), val) != 0) /* keeps a selection */
+                gtk_label_set_text(GTK_LABEL(f->input), val);
+            continue;
+        }
         if (strcmp(f->type, "bool") == 0) {
             gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(f->input), strcmp(val, "true") == 0);
         } else if (strcmp(f->type, "enum") == 0) {
@@ -518,6 +537,24 @@ static void reload(settings *s)
     load_values(s);
 }
 
+/* The notes say how things stand (is the module loaded?), which changes
+ * outside the settings: ask again now and then while the window is there. */
+static gboolean refresh_notes(gpointer data)
+{
+    settings *s = data;
+    if (s->dead) {
+        settings_unref(s);
+        return FALSE;
+    }
+    if (s->tabs && GTK_WIDGET_MAPPED(s->root))
+        for (guint i = 0; i < s->fields->len; i++)
+            if (strcmp(((field *)g_ptr_array_index(s->fields, i))->type, "note") == 0) {
+                load_values(s);
+                break;
+            }
+    return TRUE;
+}
+
 static void on_change(void *ud, kr_change what, const char *id)
 {
     settings *s = ud;
@@ -575,6 +612,8 @@ GtkWidget *kr_ui_settings_new(kr_ui *ui)
     gtk_box_pack_start(GTK_BOX(s->root), s->message, FALSE, FALSE, 4);
 
     s->listener = kr_ui_listen(ui, on_change, s);
+    s->refs++;
+    g_timeout_add_seconds(3, refresh_notes, s);
     g_signal_connect(s->root, "destroy", G_CALLBACK(root_destroyed), s);
     gtk_widget_show_all(s->root);
     gtk_widget_hide(s->message);

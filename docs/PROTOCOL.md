@@ -574,6 +574,14 @@ navegação também (Enter 66, Backspace 67, Tab 61, Esc 111, Delete 112,
 setas 19–22, Home 122, End 123, PgUp 92, PgDn 93); o resto do que se digita
 vai como texto.
 
+**Câmera** (`video_source=camera`; `Options.java`, `CameraCapture.java`): o
+mesmo fluxo de vídeo, vindo da câmera. Chaves que usamos: `camera_facing`
+(`back`, `front`, `external`) e `max_size` (sem ele o servidor escolhe o maior
+tamanho do sensor; usamos 1280 por padrão); sem `camera_size`, o servidor
+escolhe o melhor até `max_size` (no teste, 1024×768). Não há controle
+(`control=false`) nem áudio. A imagem vem na orientação do sensor, como no
+scrcpy; o cliente não gira. Precisa do Android 12.
+
 **Áudio** (`audio=true`, `audio_codec=raw`; `AudioRawRecorder` e `Streamer`
 do servidor): o segundo socket, depois do vídeo. Sem o nome (só o primeiro
 socket o tem): 4 bytes de codec (`raw`) e depois pacotes de 12 bytes de
