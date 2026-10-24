@@ -459,8 +459,19 @@ static void on_audio_packet(void *ud, const uint8_t *data, size_t len, int64_t p
     static size_t total;
     static int n;
     total += len;
-    if (n++ % 100 == 0)
-        kr_log_debug("audio: %d packets, %zu bytes, queued %zu", n, total, m->audio ? kr_audio_queued(m->audio) : 0);
+    static int peak;
+    for (size_t i = 0; i + 1 < len; i += 2) {
+        int v = (int16_t)(data[i] | data[i + 1] << 8);
+        if (v < 0)
+            v = -v;
+        if (v > peak)
+            peak = v;
+    }
+    if (n++ % 25 == 0) {
+        kr_log_debug("audio: %d packets, %zu bytes, queued %zu, peak %d", n, total,
+                     m->audio ? kr_audio_queued(m->audio) : 0, peak);
+        peak = 0;
+    }
     if (m->audio)
         kr_audio_play(m->audio, data, len);
 }

@@ -55,6 +55,9 @@ static void stream_state(pa_stream *s, void *ud)
             kr_log_warn(_("Sound: %s"), pa_strerror(pa_context_errno(a->ctx)));
         a->failed = true;
     } else if (st == PA_STREAM_READY) {
+        const pa_buffer_attr *b = pa_stream_get_buffer_attr(s);
+        kr_log_debug("sound: stream ready on %s, tlength %u minreq %u maxlength %u", pa_stream_get_device_name(s),
+                     b->tlength, b->minreq, b->maxlength);
         drain(a);
     }
 }
@@ -84,15 +87,12 @@ static void start_stream(kr_audio *a)
     pa_stream_set_state_callback(a->st, stream_state, a);
     pa_stream_set_write_callback(a->st, stream_write, a);
     pa_stream_set_underflow_callback(a->st, stream_underflow, a);
-    /* About 80 ms ahead in the server: enough to ride out a late packet,
-     * little enough to stay in step with the picture. */
-    pa_buffer_attr ba = {.maxlength = (uint32_t)-1,
-                         .tlength = (uint32_t)pa_usec_to_bytes(80 * PA_USEC_PER_MSEC, &ss),
-                         .prebuf = 0, /* start at once; a late packet is a short gap, not a wait */
-                         .minreq = (uint32_t)-1,
-                         .fragsize = (uint32_t)-1};
-    if (pa_stream_connect_playback(a->st, NULL, &ba, PA_STREAM_ADJUST_LATENCY | PA_STREAM_INTERPOLATE_TIMING,
-                                   NULL, NULL) < 0) {
+    /* The server's own buffer sizes (with ADJUST_LATENCY it picks them for
+     * the device): a small tlength of ours played only silence on a real
+     * ALSA sink (the stream reached the server, the data never played)
+     * though a null sink took it. Our queue is what keeps the delay short. */
+    if (pa_stream_connect_playback(a->st, NULL, NULL, PA_STREAM_ADJUST_LATENCY | PA_STREAM_INTERPOLATE_TIMING, NULL,
+                                   NULL) < 0) {
         kr_log_warn(_("Sound: %s"), pa_strerror(pa_context_errno(a->ctx)));
         a->failed = true;
     }
