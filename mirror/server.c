@@ -151,7 +151,7 @@ static void start_shell(kr_server *s)
     snprintf(scid, sizeof scid, "scid=%s", s->socket_name + strlen("scrcpy_"));
     snprintf(cp, sizeof cp, "CLASSPATH=%s", DEVICE_JAR);
     snprintf(codec, sizeof codec, "video_codec=%s", s->codec);
-    const char *args[28] = {"shell", cp, "app_process", "/", "com.genymobile.scrcpy.Server", KR_SCRCPY_VERSION,
+    const char *args[32] = {"shell", cp, "app_process", "/", "com.genymobile.scrcpy.Server", KR_SCRCPY_VERSION,
                             scid,    kr_log_verbose() ? "log_level=debug" : "log_level=info",
                             s->o.audio ? "audio=true" : "audio=false", codec};
     int n = 10;
@@ -159,6 +159,12 @@ static void start_shell(kr_server *s)
         args[n++] = "audio_codec=raw"; /* PCM: nothing to decode, and USB or Wi-Fi carry 1.5 Mbit/s */
     if (s->o.stay_awake)
         args[n++] = "stay_awake=true";
+    char facing[32];
+    if (s->o.camera) {
+        args[n++] = "video_source=camera";
+        snprintf(facing, sizeof facing, "camera_facing=%s", s->o.camera_facing && *s->o.camera_facing ? s->o.camera_facing : "back");
+        args[n++] = facing;
+    }
     if (s->o.view_only)
         args[n++] = "control=false";
     if (s->o.max_size) {

@@ -45,6 +45,9 @@ typedef struct {
 
 void kr_screen_set_input(kr_screen *s, const kr_screen_input *cbs, void *ud);
 
+/* Brings the window forward (the window manager's say; it may only blink). */
+void kr_screen_raise(kr_screen *s);
+
 /* Fullscreen on and off (the window manager's, _NET_WM_STATE). */
 void kr_screen_toggle_fullscreen(kr_screen *s);
 

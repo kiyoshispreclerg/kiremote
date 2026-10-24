@@ -16,6 +16,7 @@
 #include <unistd.h>
 
 #include "audio.h"
+#include "camera.h"
 #include "conf.h"
 #include "config.h"
 #include "ctlmsg.h"
@@ -26,8 +27,11 @@
 #include "proc.h"
 #include "screen.h"
 #include "server.h"
+#include "session.h"
 #include "stream.h"
 #include "util.h"
+#include "v4l2.h"
+#include "v4linfo.h"
 
 static void usage(FILE *out)
 {
@@ -45,6 +49,11 @@ static void usage(FILE *out)
                    "      --connect ADDR    use the phone at ADDR[:PORT] over Wi-Fi (adb connect)\n"
                    "      --wifi ADDR       like --connect, but only when no phone is on a cable\n"
                    "      --tcpip           switch the phone on the cable to Wi-Fi and use that\n"
+                   "      --id ID           the KDE Connect id of the phone: one window per phone\n"
+                   "      --camera          the phone's camera as a webcam (v4l2loopback), no window\n"
+                   "      --camera-facing F back (default), front or external\n"
+                   "      --flip            flip the camera left to right, like a mirror\n"
+                   "      --v4l2 DEVICE     the video device for the camera (default: the only v4l2loopback)\n"
                    "  -c, --config FILE     the settings file (default: ~/.config/kiremote/kiremote.ini)\n"
                    "  -v, --verbose         debug messages (and the server's)\n"
                    "  -V, --version         show the version and exit\n"
@@ -77,6 +86,12 @@ typedef struct {
     kr_audio *audio;
     kr_decoder *dec;
     kr_screen *screen;
+    kr_inst *inst;
+    bool camera; /* the camera to a video device, not the screen to a window */
+    bool flip;
+    const char *v4l_path;
+    kr_camera *cam;
+    const char *mode; /* "mirror" */
     char name[KR_STREAM_NAME_SIZE];
     char model[64];
     unsigned vid_w, vid_h;
@@ -389,6 +404,22 @@ static void on_session(void *ud, uint32_t w, uint32_t h, bool resized)
     kr_log_debug("video: %ux%u", w, h);
     m->vid_w = w;
     m->vid_h = h;
+    if (m->camera) {
+        if (m->cam)
+            return; /* the device keeps its size; frames are scaled to it */
+        const char *why = NULL;
+        unsigned cw = w & ~1u, ch = h & ~1u; /* YU12 needs even sides */
+        kr_v4l2 *out = kr_v4l2_open(m->v4l_path, cw, ch, &why);
+        m->cam = out ? kr_camera_new(out, cw, ch, m->flip) : NULL;
+        if (!m->cam) {
+            if (out)
+                kr_v4l2_close(out);
+            stop(m, 1, why ? why : _("Out of memory"));
+        } else {
+            kr_log_info(_("The camera is %s now (%ux%u)"), m->v4l_path[0] ? m->v4l_path : "(a file)", cw, ch);
+        }
+        return;
+    }
     if (m->screen) {
         kr_screen_video_size(m->screen, w, h);
         return;
@@ -413,6 +444,8 @@ static void on_session(void *ud, uint32_t w, uint32_t h, bool resized)
 static void on_frame(void *ud, const AVFrame *f)
 {
     mirror *m = ud;
+    if (m->cam && !kr_camera_frame(m->cam, f))
+        stop(m, 1, _("The video device went away"));
     if (m->screen)
         kr_screen_frame(m->screen, f);
 }
@@ -513,16 +546,59 @@ static void start_audio(mirror *m, int fd)
         drop_audio(m, why ? why : _("Out of memory"));
 }
 
+/* ---- one per phone ---------------------------------------------------------- */
+
+static void on_raise(void *ud)
+{
+    mirror *m = ud;
+    if (m->screen)
+        kr_screen_raise(m->screen);
+}
+
+static void on_quit(void *ud)
+{
+    stop(ud, 0, NULL);
+}
+
+/* Takes the phone (session.h). false if another process has it: it is told to
+ * come forward, or the user is told what it is busy with. */
+static bool claim_phone(mirror *m, const char *key)
+{
+    static const kr_inst_cbs cbs = {on_raise, on_quit};
+    char other[16];
+    m->inst = kr_inst_claim(key, m->mode, &cbs, m, other, sizeof other);
+    if (m->inst || !other[0])
+        return true; /* ours, or no way to tell: go on */
+    if (!strcmp(other, m->mode)) {
+        kr_inst_send(key, "raise");
+        kr_log_info(_("Already open for this phone"));
+        stop(m, 0, NULL);
+    } else if (!strcmp(other, "camera")) {
+        stop(m, 1, _("This phone is being used as a webcam: stop that first"));
+    } else {
+        stop(m, 1, _("This phone's screen is already being mirrored: close that window first"));
+    }
+    return false;
+}
+
 static void server_ready(void *ud, int fd, int audio_fd, int control_fd, const char *serial, const char *model)
 {
     mirror *m = ud;
+    if (!m->inst && !m->done && !claim_phone(m, serial)) {
+        close(fd);
+        if (audio_fd >= 0)
+            close(audio_fd);
+        if (control_fd >= 0)
+            close(control_fd);
+        return;
+    }
     if (control_fd >= 0) {
         fcntl(control_fd, F_SETFL, fcntl(control_fd, F_GETFL) | O_NONBLOCK);
         m->control_fd = control_fd;
         static const kr_devmsg_cbs dcbs = {on_phone_clipboard, NULL};
         m->devmsg = kr_devmsg_new(&dcbs, m);
     }
-    kr_log_info(_("Mirroring %s"), model && *model ? model : serial);
+    kr_log_info(m->camera ? _("Using the camera of %s") : _("Mirroring %s"), model && *model ? model : serial);
     snprintf(m->model, sizeof m->model, "%s", model ? model : "");
     fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) | O_NONBLOCK);
     m->video_fd = fd;
@@ -593,7 +669,7 @@ int main(int argc, char **argv)
     kr_i18n_init();
     kr_log_init("kiremote-mirror");
 
-    enum { OPT_MAX_FPS = 256, OPT_CODEC, OPT_NO_AUDIO, OPT_NO_CLIPBOARD, OPT_CONNECT, OPT_WIFI, OPT_TCPIP };
+    enum { OPT_MAX_FPS = 256, OPT_CODEC, OPT_NO_AUDIO, OPT_NO_CLIPBOARD, OPT_CONNECT, OPT_WIFI, OPT_TCPIP, OPT_ID, OPT_CAMERA, OPT_FACING, OPT_FLIP, OPT_V4L2 };
     static const struct option longopts[] = {
         {"serial", required_argument, NULL, 's'},
         {"max-size", required_argument, NULL, 'm'},
@@ -606,6 +682,11 @@ int main(int argc, char **argv)
         {"connect", required_argument, NULL, OPT_CONNECT},
         {"wifi", required_argument, NULL, OPT_WIFI},
         {"tcpip", no_argument, NULL, OPT_TCPIP},
+        {"id", required_argument, NULL, OPT_ID},
+        {"camera", no_argument, NULL, OPT_CAMERA},
+        {"camera-facing", required_argument, NULL, OPT_FACING},
+        {"flip", no_argument, NULL, OPT_FLIP},
+        {"v4l2", required_argument, NULL, OPT_V4L2},
         {"config", required_argument, NULL, 'c'},
         {"verbose", no_argument, NULL, 'v'},
         {"version", no_argument, NULL, 'V'},
@@ -627,6 +708,8 @@ int main(int argc, char **argv)
     kr_config_free(cfg);
 
     kr_server_opts opts = {0};
+    const char *id = NULL;
+    bool camera = false;
     while ((c = getopt_long(argc, argv, "s:m:b:nvVhc:", longopts, NULL)) != -1) {
         bool ok = true;
         switch (c) {
@@ -669,6 +752,25 @@ int main(int argc, char **argv)
         case OPT_TCPIP:
             opts.tcpip = true;
             break;
+        case OPT_ID:
+            id = optarg;
+            break;
+        case OPT_CAMERA:
+            camera = true;
+            break;
+        case OPT_FACING:
+            ok = !strcmp(optarg, "back") || !strcmp(optarg, "front") || !strcmp(optarg, "external");
+            if (ok)
+                snprintf(conf.camera_facing, sizeof conf.camera_facing, "%s", optarg);
+            break;
+        case OPT_FLIP:
+            conf.camera_flip = true;
+            break;
+        case OPT_V4L2:
+            ok = optarg[0] == '/' && strlen(optarg) < sizeof conf.camera_device;
+            if (ok)
+                snprintf(conf.camera_device, sizeof conf.camera_device, "%s", optarg);
+            break;
         case 'c':
             break; /* read above */
         case 'v':
@@ -700,6 +802,23 @@ int main(int argc, char **argv)
         usage(stderr);
         return 2;
     }
+    char v4l_path[96] = "";
+    if (camera) { /* no window, no control, no sound: only the picture, to the video device */
+        const char *why = NULL;
+        kr_v4l v4l;
+        kr_v4l_scan(&v4l);
+        if (!kr_v4l_pick(&v4l, conf.camera_device, v4l_path, sizeof v4l_path, &why) && !getenv("KIREMOTE_V4L2_FILE")) {
+            kr_log_error("%s", why);
+            return 1;
+        }
+        opts.camera = true;
+        opts.camera_facing = conf.camera_facing;
+        if (!opts.max_size)
+            opts.max_size = conf.camera_max_size;
+        opts.view_only = true;
+        opts.audio = false;
+        opts.stay_awake = false;
+    }
 
     char jar[KR_PATH_MAX];
     if (!kr_server_find_jar(jar, sizeof jar)) {
@@ -714,12 +833,14 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    mirror m = {.video_fd = -1, .audio_fd = -1, .control_fd = -1, .clipboard = conf.clipboard, .screen_off = conf.screen_off};
+    mirror m = {.v4l_path = v4l_path, .mode = camera ? "camera" : "mirror", .camera = camera, .flip = conf.camera_flip, .video_fd = -1, .audio_fd = -1, .control_fd = -1, .clipboard = conf.clipboard, .screen_off = conf.screen_off};
+    if (id && *id)
+        claim_phone(&m, id); /* before anything is copied to the phone */
     m.procs = kr_procs_new();
     static const kr_server_cb scb = {server_ready, server_error, server_log};
-    if (m.procs)
+    if (m.procs && !m.done)
         m.server = kr_server_start(m.procs, &opts, &scb, &m);
-    if (!m.server)
+    if (!m.server && !m.done)
         stop(&m, 1, _("Out of memory"));
 
     enum { MAX_FDS = 80 };
@@ -736,6 +857,9 @@ int main(int argc, char **argv)
             v_at = n;
             fds[n++] = (struct pollfd){.fd = m.video_fd, .events = POLLIN};
         }
+        int i_at = n, i_n = 0;
+        if (m.inst)
+            n += i_n = kr_inst_pollfds(m.inst, fds + n, 8);
         int a_at = -1;
         if (m.audio_fd >= 0) {
             a_at = n;
@@ -777,6 +901,8 @@ int main(int argc, char **argv)
         }
         if (v_at >= 0 && fds[v_at].revents)
             read_video(&m);
+        if (m.inst)
+            kr_inst_dispatch(m.inst, fds + i_at, i_n);
         if (a_at >= 0 && fds[a_at].revents)
             read_audio(&m);
         if (m.audio && !kr_audio_ok(m.audio))
@@ -797,6 +923,7 @@ int main(int argc, char **argv)
     if (m.control_fd >= 0)
         close(m.control_fd);
     drop_audio(&m, NULL);
+    kr_inst_free(m.inst);
     kr_devmsg_free(m.devmsg);
     free(m.clip_last);
     free(m.out);
@@ -804,6 +931,7 @@ int main(int argc, char **argv)
     kr_stream_free(m.stream);
     kr_decoder_free(m.dec);
     kr_screen_free(m.screen);
+    kr_camera_free(m.cam);
     kr_procs_free(m.procs);
     close(sfd);
     return m.status;

@@ -53,6 +53,8 @@ LIB_SRC = src/log.c \
       mirror/server.c \
       mirror/ctlmsg.c \
       mirror/conf.c \
+      mirror/session.c \
+      mirror/v4linfo.c \
       mirror/keys.c
 VENDOR_SRC = vendor/cjson/cJSON.c
 LIBKR = $(BUILD)/libkr.a
@@ -113,7 +115,7 @@ HAVE_MIRROR := $(shell $(PKG_CONFIG) --exists $(MIRROR_PKGS) && echo 1)
 ifeq ($(HAVE_MIRROR),1)
 MIRROR_CFLAGS = $(shell $(PKG_CONFIG) --cflags $(MIRROR_PKGS) | sed 's/-I/-isystem /g')
 MIRROR_LIBS = $(shell $(PKG_CONFIG) --libs $(MIRROR_PKGS))
-MIRROR_SRC = mirror/main.c mirror/decode.c mirror/screen.c mirror/audio.c
+MIRROR_SRC = mirror/main.c mirror/decode.c mirror/screen.c mirror/audio.c mirror/camera.c mirror/v4l2.c
 MIRROR_TARGETS = $(BUILD)/kiremote-mirror
 MIRROR_TESTS = $(BUILD)/tests/test_audio $(BUILD)/tests/test_screen
 endif
@@ -272,7 +274,7 @@ test: all $(UNIT_TESTS) $(MIRROR_TESTS) $(GTK_TESTS) $(KD_TESTS) $(FUZZ_RUNNERS)
 	@fail=0; for t in $(UNIT_TESTS); do \
 		$$t || fail=1; \
 	done; \
-	$(if $(MIRROR_TESTS),$(BUILD)/tests/test_audio || fail=1; tests/mirror/run.sh $(BUILD) || fail=1;) \
+	$(if $(MIRROR_TESTS),$(BUILD)/tests/test_audio || fail=1; tests/mirror/run.sh $(BUILD) || fail=1; tests/mirror/camera.sh $(BUILD) || fail=1;) \
 	for f in $(FUZZ_TARGETS); do \
 		$(BUILD)/tests/fuzz-run-$$f tests/fuzz/corpus/$$f || fail=1; \
 	done; \

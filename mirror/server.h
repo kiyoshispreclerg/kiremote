@@ -28,6 +28,8 @@ typedef struct {
     bool view_only;       /* no control socket: the phone is only shown */
     bool audio;           /* raw PCM from the phone (Android 11 or newer) */
     bool stay_awake;      /* the phone does not sleep while it is charging */
+    bool camera;          /* the phone's camera instead of its screen (Android 12 or newer) */
+    const char *camera_facing; /* "back" (default), "front" or "external" */
     /* Over the network (no cable): */
     const char *connect;  /* HOST or HOST:PORT (port 5555 if none): `adb connect` it */
     bool connect_fallback; /* ...only when adb lists no phone (a cable wins) */

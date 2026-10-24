@@ -41,29 +41,30 @@ static bool parse_count(const char *s, unsigned max, unsigned *out)
     return true;
 }
 
-static void bad(const char *key, const char *value)
+static void bad(const char *section, const char *key, const char *value)
 {
-    kr_log_warn(_("kiremote.ini: [mirror] %s = %s is not valid, using the default"), key, value);
+    kr_log_warn(_("kiremote.ini: [%s] %s = %s is not valid, using the default"), section, key, value);
 }
 
 void kr_mirror_conf_load(kr_mirror_conf *c, const kr_config *cfg)
 {
-    *c = (kr_mirror_conf){.audio = true, .control = true, .clipboard = true, .wifi = true};
+    *c = (kr_mirror_conf){.audio = true, .control = true, .clipboard = true, .wifi = true, .camera_max_size = 1280};
     snprintf(c->codec, sizeof c->codec, "h264");
+    snprintf(c->camera_facing, sizeof c->camera_facing, "back");
     if (!cfg)
         return;
     const char *v;
     if ((v = kr_config_get(cfg, "mirror", "max_size")) && *v && !parse_count(v, KR_STREAM_MAX_SIDE, &c->max_size))
-        bad("max_size", v);
+        bad("mirror", "max_size", v);
     if ((v = kr_config_get(cfg, "mirror", "bit_rate")) && *v && !kr_parse_bit_rate(v, &c->bit_rate))
-        bad("bit_rate", v);
+        bad("mirror", "bit_rate", v);
     if ((v = kr_config_get(cfg, "mirror", "max_fps")) && *v && !parse_count(v, 1000, &c->max_fps))
-        bad("max_fps", v);
+        bad("mirror", "max_fps", v);
     if ((v = kr_config_get(cfg, "mirror", "codec")) && *v) {
         if (!strcmp(v, "h264") || !strcmp(v, "h265") || !strcmp(v, "av1"))
             snprintf(c->codec, sizeof c->codec, "%s", v);
         else
-            bad("codec", v);
+            bad("mirror", "codec", v);
     }
     c->audio = kr_config_get_bool(cfg, "mirror", "audio", c->audio);
     c->control = kr_config_get_bool(cfg, "mirror", "control", c->control);
@@ -71,4 +72,20 @@ void kr_mirror_conf_load(kr_mirror_conf *c, const kr_config *cfg)
     c->screen_off = kr_config_get_bool(cfg, "mirror", "screen_off", c->screen_off);
     c->stay_awake = kr_config_get_bool(cfg, "mirror", "stay_awake", c->stay_awake);
     c->wifi = kr_config_get_bool(cfg, "mirror", "wifi", c->wifi);
+
+    if ((v = kr_config_get(cfg, "camera", "device")) && *v) {
+        if (v[0] == '/' && strlen(v) < sizeof c->camera_device)
+            snprintf(c->camera_device, sizeof c->camera_device, "%s", v);
+        else
+            bad("camera", "device", v);
+    }
+    if ((v = kr_config_get(cfg, "camera", "facing")) && *v) {
+        if (!strcmp(v, "back") || !strcmp(v, "front") || !strcmp(v, "external"))
+            snprintf(c->camera_facing, sizeof c->camera_facing, "%s", v);
+        else
+            bad("camera", "facing", v);
+    }
+    if ((v = kr_config_get(cfg, "camera", "max_size")) && *v && !parse_count(v, KR_STREAM_MAX_SIDE, &c->camera_max_size))
+        bad("camera", "max_size", v);
+    c->camera_flip = kr_config_get_bool(cfg, "camera", "mirror", c->camera_flip);
 }

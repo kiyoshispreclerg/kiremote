@@ -272,6 +272,18 @@ void kr_screen_set_input(kr_screen *s, const kr_screen_input *cbs, void *ud)
     s->in_ud = ud;
 }
 
+void kr_screen_raise(kr_screen *s)
+{
+    XMapRaised(s->dpy, s->win);
+    XEvent ev = {.xclient = {.type = ClientMessage,
+                             .window = s->win,
+                             .message_type = XInternAtom(s->dpy, "_NET_ACTIVE_WINDOW", False),
+                             .format = 32,
+                             .data.l = {1 /* from an application */, CurrentTime, 0, 0, 0}}};
+    XSendEvent(s->dpy, DefaultRootWindow(s->dpy), False, SubstructureRedirectMask | SubstructureNotifyMask, &ev);
+    XFlush(s->dpy);
+}
+
 void kr_screen_toggle_fullscreen(kr_screen *s)
 {
     Atom state = XInternAtom(s->dpy, "_NET_WM_STATE", False);
