@@ -37,3 +37,5 @@ mirror/adb.c
 mirror/server.c
 mirror/screen.c
 mirror/main.c
+mirror/conf.c
+mirror/audio.c

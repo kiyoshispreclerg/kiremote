@@ -52,6 +52,7 @@ LIB_SRC = src/log.c \
       mirror/adb.c \
       mirror/server.c \
       mirror/ctlmsg.c \
+      mirror/conf.c \
       mirror/keys.c
 VENDOR_SRC = vendor/cjson/cJSON.c
 LIBKR = $(BUILD)/libkr.a
@@ -105,15 +106,16 @@ KD_TESTS += $(BUILD)/tests/test_widget
 endif
 
 # kiremote-mirror (the phone's screen in a window): needs libavcodec,
-# libswscale and Xext; without them it is skipped. Its protocol parts
+# libswscale, Xext and libpulse; without them it is skipped. Its protocol parts
 # (stream, adb, server) are in libkr, so the tests do not need libav.
-MIRROR_PKGS = libavcodec libavutil libswscale x11 xext
+MIRROR_PKGS = libavcodec libavutil libswscale x11 xext xfixes libpulse
 HAVE_MIRROR := $(shell $(PKG_CONFIG) --exists $(MIRROR_PKGS) && echo 1)
 ifeq ($(HAVE_MIRROR),1)
 MIRROR_CFLAGS = $(shell $(PKG_CONFIG) --cflags $(MIRROR_PKGS) | sed 's/-I/-isystem /g')
 MIRROR_LIBS = $(shell $(PKG_CONFIG) --libs $(MIRROR_PKGS))
-MIRROR_SRC = mirror/main.c mirror/decode.c mirror/screen.c
+MIRROR_SRC = mirror/main.c mirror/decode.c mirror/screen.c mirror/audio.c
 MIRROR_TARGETS = $(BUILD)/kiremote-mirror
+MIRROR_TESTS = $(BUILD)/tests/test_audio $(BUILD)/tests/test_screen
 endif
 
 # Translations (po/LINGUAS lists the languages), built into $(BUILD)/locale,
@@ -215,6 +217,19 @@ $(BUILD)/mirror/%.o: mirror/%.c
 	@mkdir -p $(@D)
 	$(CC) $(CPPFLAGS) $(ALL_CFLAGS) $(MIRROR_CFLAGS) $(WARNFLAGS) -MMD -MP -c -o $@ $<
 
+# The sound test needs libpulse and a pulseaudio to start (it skips itself
+# without one).
+$(BUILD)/tests/test_audio: tests/mirror/test_audio.c tests/harness.h mirror/audio.c mirror/audio.h $(LIBKR)
+	@mkdir -p $(@D)
+	$(CC) $(CPPFLAGS) $(TEST_CPPFLAGS) $(ALL_CFLAGS) $(MIRROR_CFLAGS) $(WARNFLAGS) -MMD -MP $(ALL_LDFLAGS) -o $@ \
+		tests/mirror/test_audio.c mirror/audio.c $(LIBKR) $(MIRROR_LIBS) $(LDLIBS)
+
+# The window test needs a private X server (tests/mirror/run.sh).
+$(BUILD)/tests/test_screen: tests/mirror/test_screen.c tests/harness.h mirror/screen.c mirror/screen.h $(LIBKR)
+	@mkdir -p $(@D)
+	$(CC) $(CPPFLAGS) $(TEST_CPPFLAGS) $(ALL_CFLAGS) $(MIRROR_CFLAGS) $(WARNFLAGS) -MMD -MP $(ALL_LDFLAGS) -o $@ \
+		tests/mirror/test_screen.c mirror/screen.c $(LIBKR) $(MIRROR_LIBS) $(LDLIBS)
+
 $(BUILD)/kiremote-mirror: $(patsubst %.c,$(BUILD)/%.o,$(MIRROR_SRC)) $(LIBKR)
 	$(CC) $(ALL_LDFLAGS) -o $@ $^ $(MIRROR_LIBS) $(LDLIBS)
 
@@ -253,10 +268,11 @@ $(BUILD)/tests/xtool: tests/tools/xtool.c
 	@mkdir -p $(@D)
 	$(CC) $(CPPFLAGS) $(ALL_CFLAGS) $(WARNFLAGS) $(ALL_LDFLAGS) -o $@ $< $(LDLIBS)
 
-test: all $(UNIT_TESTS) $(GTK_TESTS) $(KD_TESTS) $(FUZZ_RUNNERS) $(BUILD)/tests/fakephone $(BUILD)/tests/xtool
+test: all $(UNIT_TESTS) $(MIRROR_TESTS) $(GTK_TESTS) $(KD_TESTS) $(FUZZ_RUNNERS) $(BUILD)/tests/fakephone $(BUILD)/tests/xtool
 	@fail=0; for t in $(UNIT_TESTS); do \
 		$$t || fail=1; \
 	done; \
+	$(if $(MIRROR_TESTS),$(BUILD)/tests/test_audio || fail=1; tests/mirror/run.sh $(BUILD) || fail=1;) \
 	for f in $(FUZZ_TARGETS); do \
 		$(BUILD)/tests/fuzz-run-$$f tests/fuzz/corpus/$$f || fail=1; \
 	done; \

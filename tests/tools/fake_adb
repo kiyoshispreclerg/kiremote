@@ -4,7 +4,7 @@
 
 Every call is appended to $FAKEADB_LOG (one line, the arguments joined by
 spaces). The port of the last `reverse` is kept in $FAKEADB_LOG.port; `shell`
-then plays the phone's server: connects there (twice: video, then control unless
+then plays the phone's server: connects there (video, then audio if audio=true, then control unless
 control=false) and sends $FAKEADB_STREAM (a capture) on the first; the second
 echoes what it gets. Then it waits until the client closes. $FAKEADB_MODE changes it:
 
@@ -12,6 +12,13 @@ echoes what it gets. Then it waits until the client closes. $FAKEADB_MODE change
   push-fails     `push` fails as adb does
   dies           the server prints an error and exits without connecting
   silent         the server never connects (the client times out)
+  nousb          no phone on USB (`devices -l` lists only what `connect` made)
+  usb+tcpip      the phone is on USB; `tcpip` makes `connect` work from then on
+  nowifi         `shell ip route` shows no Wi-Fi
+  refused        `connect` always fails (adb prints that and still exits 0)
+
+`connect HOST:PORT` adds a phone with that serial to `devices -l`. The Wi-Fi
+address of the phone is 192.168.1.42.
 """
 import os, socket, sys, time
 
@@ -22,11 +29,40 @@ with open(log, 'a') as f:
     f.write(' '.join(args) + '\n')
 if len(args) >= 2 and args[0] == '-s':
     args = args[2:]
+connected = log + '.connected'
+tcpip_on = log + '.tcpip'
+
+def usb_line():
+    return 'FAKE123                device usb:1-1 product:fake model:Fake_Phone device:fake transport_id:7'
 
 if args[:2] == ['devices', '-l']:
     state = 'unauthorized' if mode == 'unauthorized' else 'device'
     print('List of devices attached')
-    print(f'FAKE123                {state} usb:1-1 product:fake model:Fake_Phone device:fake transport_id:7')
+    if mode not in ('nousb',):
+        print(f'FAKE123                {state} usb:1-1 product:fake model:Fake_Phone device:fake transport_id:7')
+    if os.path.exists(connected):
+        print(f'{open(connected).read().strip():22} device product:fake model:Fake_Phone device:fake transport_id:8')
+    sys.exit(0)
+if args[:3] == ['shell', 'ip', 'route']:
+    print('10.12.0.0/16 dev rmnet_data1 proto kernel scope link src 10.12.4.9\r')
+    if mode != 'nowifi':
+        print('192.168.1.0/24 dev wlan0  proto kernel  scope link  src 192.168.1.42\r')
+    sys.exit(0)
+if args[:1] == ['tcpip']:
+    open(tcpip_on, 'w').write(args[1])
+    print('restarting in TCP mode port: ' + args[1])
+    sys.exit(0)
+if args[:1] == ['connect']:
+    # Like adb: failure is on stdout, with exit code 0. With usb+tcpip it
+    # only works once `tcpip` ran, and not on the first try (adbd restarting).
+    count = log + '.connects'
+    n = int(open(count).read()) + 1 if os.path.exists(count) else 1
+    open(count, 'w').write(str(n))
+    if mode == 'refused' or (mode == 'usb+tcpip' and (not os.path.exists(tcpip_on) or n < 3)):
+        print(f"failed to connect to '{args[1]}': Connection refused")
+        sys.exit(0)
+    open(connected, 'w').write(args[1])
+    print(f'connected to {args[1]}')
     sys.exit(0)
 if args[:1] == ['push']:
     if mode == 'push-fails':
@@ -51,7 +87,9 @@ if args[:1] == ['shell']:
         sys.exit(0)
     port = int(open(log + '.port').read())
     s = socket.create_connection(('127.0.0.1', port))
-    # The control socket, unless turned off: it echoes what it gets.
+    # The audio socket (opus-less: the test only looks at the fd), then the
+    # control socket, unless turned off: it echoes what it gets.
+    a = socket.create_connection(('127.0.0.1', port)) if 'audio=true' in args else None
     c = None if 'control=false' in args else socket.create_connection(('127.0.0.1', port))
     s.sendall(open(os.environ['FAKEADB_STREAM'], 'rb').read())
     if c:

@@ -12,9 +12,9 @@ com `sshfs` falso). Fase 3 (interfaces `kiremote-gtk` e
 daemon), 3b (`krclient`/`krmodel`), 3c (`libkrui` e o `kiremote`, uma janela por
 sessão) 3d (módulos do KiDesktop) e 3e (`debian/`, scripts e CI) feitas. Versão 0.1.0.
 Fase 4 (SMS e contatos) adiada: o KiDesktop não tem onde guardar contatos.
-Fase 5 (espelhamento) em andamento: vídeo pelo USB funciona (`kiremote-mirror`);
-com mouse e teclado, e a ação "Espelhar a tela" nas interfaces; faltam
-clipboard, Xv, áudio e Wi-Fi. Veja o `PLANO.md`.
+Fase 5 (espelhamento) feita: `kiremote-mirror` com vídeo, som, mouse, teclado,
+clipboard, atalhos, Wi-Fi, a aba Mirroring nas configurações e o 4º `.deb`; o que
+fica para depois (Xv etc.) está no `PLANO.md`.
 
 O usuário escreve em português (pt-BR) e quer as respostas em português.
 Comentários e identificadores no código, em inglês. Todo texto que o usuário
@@ -43,7 +43,8 @@ make test       # testes de unidade (tests/unit/test_*.c, tests/harness.h)
 make asan       # os testes com ASan/UBSan
 make test-net   # só tests/net/pair.sh: dois daemons em network namespaces
 make test-ui    # só tests/ui/run.sh (precisa de GTK2 e Xvfb)
-./scripts/build-deb.sh   # os 3 .deb em dist/ (KIREMOTE_SKIP_DEPS_CHECK=1 se o kidesktop-core veio do fonte)
+tests/mirror/run.sh build   # a janela e o clipboard do mirror num Xvfb privado (precisa de xsel)
+./scripts/build-deb.sh   # os 4 .deb em dist/ (KIREMOTE_SKIP_DEPS_CHECK=1 e KD_INCDIR=/usr/local/include se o kidesktop-core veio do fonte; SCRCPY_SERVER=arquivo evita baixar o jar)
 make fuzz       # libFuzzer (clang): build/fuzz/fuzz_packet tests/fuzz/corpus/packet
 make lint       # cppcheck + funções proibidas (strcpy, strcat, sprintf, vsprintf, gets)
 make pot        # recria po/kiremote.pot e mescla nos .po
@@ -76,6 +77,11 @@ LANGUAGE=en build/kiremoted --help   # o catálogo vem de build/locale
   mesmo iniciou. O display do seu shell (`$DISPLAY`) pode ser uma sessão
   aninhada do usuário: não desenhe nele nem o herde. `KR_TEST_XEPHYR=1`
   mostra o X do teste numa janela, só se o usuário pedir.
+- O `kiremote-mirror` na mão (celular de verdade, USB, `:0` permitido): o
+  autosync do clipboard manda para o celular o que o usuário copia, e o
+  clipboard dele pode ter senha ou token; não imprima nem guarde
+  (`xsel -o`) e não ponha nada seu no clipboard dele. `--tcpip` muda o adbd do
+  celular: depois `adb disconnect IP:5555` e `adb -s SERIAL usb`.
 - Testes que gravam arquivos: `-c` e `XDG_CONFIG_HOME` apontando para um
   diretório temporário, nunca o `~/.config/kiremote` do usuário. Não leia o
   `~/.config/kdeconnect/privateKey.pem`.
@@ -125,7 +131,8 @@ LANGUAGE=en build/kiremoted --help   # o catálogo vem de build/locale
 | `tests/net/plugins.sh`, `tests/net/desktop.sh`, `tests/tools/` | integração dos plugins: celular falso (`fakephone.c`, serve payloads), D-Bus de sessão e de sistema privados com serviços falsos (Python), Xvfb, `xtool.c`, `pactl`/`paplay`/`xdg-*` falsos |
 | `tests/fuzz/` | alvos de fuzz, `driver.c` (sem libFuzzer) e corpus |
 | `mirror/stream.c`, `mirror/adb.c`, `mirror/server.c`, `mirror/ctlmsg.c`, `mirror/keys.c` | espelhamento sem libav (na `libkr`): fluxo do scrcpy-server e respostas do controle (alvos de fuzz), `adb devices -l`, subir o servidor pelo adb no `poll()`, mensagens de controle, teclas X → Android |
-| `mirror/main.c`, `decode.c`, `screen.c` | o `kiremote-mirror`: libavcodec, janela Xlib (libswscale + XShm); só compila com libavcodec/libswscale/xext |
+| `mirror/conf.c` | `[mirror]` do .ini → opções do `kiremote-mirror` (a linha de comando vale mais; as chaves estão no `src/schema.c`) |
+| `mirror/main.c`, `decode.c`, `screen.c`, `audio.c` | o `kiremote-mirror`: libavcodec, janela Xlib (libswscale + XShm, clipboard com XFixes), som pelo libpulse dentro do `poll()` (`kr_audio_poll`); só compila com libavcodec/libswscale/xext/xfixes/libpulse |
 | `docs/PROTOCOL.md` | o protocolo, conferido no upstream |
 | `docs/UPSTREAM.md` | versões dos submódulos e divergências |
 | `upstream/` | submódulos: kdeconnect-kde, kdeconnect-android, scrcpy |

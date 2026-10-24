@@ -8,6 +8,7 @@
  * when a frame arrives or X asks (Expose), from the last frame kept. */
 
 #include <stdbool.h>
+#include <stddef.h>
 
 struct AVFrame;
 
@@ -43,5 +44,32 @@ typedef struct {
 } kr_screen_input;
 
 void kr_screen_set_input(kr_screen *s, const kr_screen_input *cbs, void *ud);
+
+/* Fullscreen on and off (the window manager's, _NET_WM_STATE). */
+void kr_screen_toggle_fullscreen(kr_screen *s);
+
+/* ---- the computer's clipboard (the CLIPBOARD selection, text only) ---------- */
+
+/* The most text taken from X; the phone takes less. */
+#define KR_CLIP_MAX (256 * 1024)
+
+/* on_changed: somebody else now holds the clipboard (they copied). It does
+ * not say what the text is: kr_screen_clipboard_get does. Only a copy sends
+ * anything: what was in the clipboard before the window opened, or when it
+ * gets the keyboard, stays where it is (it may be a password). */
+void kr_screen_clipboard_watch(kr_screen *s, void (*on_changed)(void *ud), void *ud);
+
+/* Asks the holder for the text, UTF-8: cb comes later, once, with text NULL
+ * if there is none (or it is a kind we don't take, like an INCR transfer of
+ * something huge). A newer request replaces an older one. */
+typedef void (*kr_clip_cb)(void *ud, const char *text, size_t len);
+void kr_screen_clipboard_get(kr_screen *s, kr_clip_cb cb, void *ud);
+
+/* Makes the window the holder of text (copied). It answers the others
+ * until someone else copies. Text bigger than X takes in one property is
+ * not offered. */
+void kr_screen_clipboard_set(kr_screen *s, const char *text, size_t len);
+/* The window holds the clipboard now. */
+bool kr_screen_clipboard_mine(const kr_screen *s);
 
 #endif

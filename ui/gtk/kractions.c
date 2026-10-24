@@ -146,11 +146,13 @@ void kr_ui_run_action(kr_ui *ui, GtkWindow *parent, kr_action action, const char
     char *id = g_strdup(device_id); /* the hooks may run a nested loop that updates the model */
 
     if (action == KR_ACT_MIRROR) {
-        /* Its own process and window; it finds the phone through adb. */
+        /* Its own process and window; it finds the phone through adb: on a
+         * cable, or else over Wi-Fi at the address we know it by. */
         const char *prog = kr_ui_mirror_program();
         if (prog) {
-            const char *argv[] = {prog, NULL};
-            h->spawn(parent, argv);
+            const char *with_wifi[] = {prog, "--wifi", d ? d->address : "", NULL};
+            const char *plain[] = {prog, NULL};
+            h->spawn(parent, d && d->address[0] ? with_wifi : plain);
         }
     } else if (action == KR_ACT_SEND_FILES) {
         char **paths = h->choose_files(parent);

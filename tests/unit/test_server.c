@@ -16,17 +16,18 @@
 
 typedef struct {
     bool ready, failed;
-    int fd, control_fd;
+    int fd, audio_fd, control_fd;
     char serial[64], model[64];
     char error[512];
     int log_lines;
 } result;
 
-static void on_ready(void *ud, int fd, int control_fd, const char *serial, const char *model)
+static void on_ready(void *ud, int fd, int audio_fd, int control_fd, const char *serial, const char *model)
 {
     result *r = ud;
     r->ready = true;
     r->fd = fd;
+    r->audio_fd = audio_fd;
     r->control_fd = control_fd;
     snprintf(r->serial, sizeof r->serial, "%s", serial);
     snprintf(r->model, sizeof r->model, "%s", model);
@@ -62,8 +63,11 @@ static void setup(const char *mode)
 static void teardown(void)
 {
     char p[160];
-    snprintf(p, sizeof p, "%s/adb.log.port", dir);
-    unlink(p);
+    static const char *const extras[] = {"port", "connected", "tcpip", "connects"};
+    for (size_t i = 0; i < sizeof extras / sizeof *extras; i++) {
+        snprintf(p, sizeof p, "%s/adb.log.%s", dir, extras[i]);
+        unlink(p);
+    }
     unlink(log_path);
     rmdir(dir);
 }
@@ -191,6 +195,130 @@ static void expect_failure(const char *mode, double timeout, const char *needle1
         CHECK_STR_HAS(r.error, needle2);
 }
 
+TEST(audio_is_a_socket_between_video_and_control)
+{
+    setup("");
+    kr_procs *ps = kr_procs_new();
+    result r = {.fd = -1};
+    kr_server_opts o = {.jar = KR_FIXTURES_DIR "/scrcpy-video.bin", .audio = true, .stay_awake = true};
+    static const kr_server_cb cb = {on_ready, on_error, on_log};
+    kr_server *s = kr_server_start(ps, &o, &cb, &r);
+    run(ps, s, &r);
+    CHECK_MSG(r.ready, "not ready: %s", r.error);
+    CHECK(r.fd >= 0 && r.audio_fd >= 0 && r.control_fd >= 0);
+    CHECK(r.fd != r.audio_fd && r.audio_fd != r.control_fd);
+    /* The echo comes from the control socket, the last one. */
+    CHECK(write(r.control_fd, "\x04\x00", 2) == 2);
+    char echo[2];
+    CHECK(read(r.control_fd, echo, 2) == 2 && echo[0] == 4);
+    close(r.control_fd);
+    close(r.audio_fd);
+    close(r.fd);
+    kr_server_free(s);
+    kr_procs_free(ps);
+    size_t len;
+    char *log = kr_read_file(log_path, &len);
+    CHECK(log);
+    CHECK_STR_HAS(log, "audio=true video_codec=h264");
+    CHECK_STR_HAS(log, "audio_codec=raw");
+    CHECK_STR_HAS(log, "stay_awake=true");
+    free(log);
+    teardown();
+}
+
+/* Runs a server with opts to the end; the adb log is in *log (caller frees). */
+static result over_the_network(const char *mode, kr_server_opts o, char **log)
+{
+    setup(mode);
+    kr_procs *ps = kr_procs_new();
+    result r = {.fd = -1, .audio_fd = -1, .control_fd = -1};
+    o.jar = KR_FIXTURES_DIR "/scrcpy-video.bin";
+    o.view_only = true;
+    o.timeout = 5;
+    static const kr_server_cb cb = {on_ready, on_error, on_log};
+    kr_server *s = kr_server_start(ps, &o, &cb, &r);
+    run(ps, s, &r);
+    if (r.fd >= 0)
+        close(r.fd);
+    kr_server_free(s);
+    kr_procs_free(ps);
+    size_t len;
+    *log = kr_read_file(log_path, &len);
+    teardown();
+    return r;
+}
+
+TEST(a_phone_is_connected_by_address)
+{
+    char *log;
+    kr_server_opts o = {.connect = "192.168.1.42"};
+    result r = over_the_network("nousb", o, &log);
+    CHECK_MSG(r.ready, "not ready: %s", r.error);
+    CHECK_STR_EQ(r.serial, "192.168.1.42:5555");
+    CHECK(log);
+    CHECK_STR_HAS(log, "connect 192.168.1.42:5555\n");
+    CHECK_STR_HAS(log, "-s 192.168.1.42:5555 push ");
+    free(log);
+}
+
+TEST(a_cable_beats_the_network_when_asked_to)
+{
+    char *log;
+    kr_server_opts o = {.connect = "192.168.1.42", .connect_fallback = true};
+    result r = over_the_network("", o, &log);
+    CHECK_MSG(r.ready, "not ready: %s", r.error);
+    CHECK_STR_EQ(r.serial, "FAKE123");
+    CHECK(log && !strstr(log, "connect"));
+    free(log);
+
+    o.serial = NULL;
+    r = over_the_network("nousb", o, &log);
+    CHECK_MSG(r.ready, "not ready: %s", r.error);
+    CHECK_STR_EQ(r.serial, "192.168.1.42:5555");
+    CHECK_STR_HAS(log, "connect 192.168.1.42:5555\n");
+    free(log);
+}
+
+TEST(a_phone_on_usb_is_switched_to_wifi)
+{
+    char *log;
+    kr_server_opts o = {.tcpip = true};
+    result r = over_the_network("usb+tcpip", o, &log);
+    CHECK_MSG(r.ready, "not ready: %s", r.error);
+    CHECK_STR_EQ(r.serial, "192.168.1.42:5555"); /* not the cable's */
+    CHECK(log);
+    CHECK_STR_HAS(log, "-s FAKE123 shell ip route\n");
+    CHECK_STR_HAS(log, "-s FAKE123 tcpip 5555\n");
+    /* adbd was not listening at once: it was tried again. */
+    char *first = strstr(log, "connect 192.168.1.42:5555\n");
+    CHECK(first && strstr(first + 1, "connect 192.168.1.42:5555\n"));
+    CHECK_STR_HAS(log, "-s 192.168.1.42:5555 push ");
+    free(log);
+}
+
+TEST(wifi_failures_are_explained)
+{
+    char *log;
+    kr_server_opts o = {.tcpip = true};
+    result r = over_the_network("nowifi", o, &log);
+    CHECK(!r.ready && r.failed);
+    CHECK_STR_HAS(r.error, "not on Wi-Fi");
+    free(log);
+
+    o = (kr_server_opts){.connect = "192.168.1.42"};
+    r = over_the_network("refused", o, &log);
+    CHECK(!r.ready && r.failed);
+    CHECK_STR_HAS(r.error, "Could not connect to 192.168.1.42:5555");
+    CHECK_STR_HAS(r.error, "Connection refused");
+    free(log);
+
+    o = (kr_server_opts){.connect = ""};
+    o.connect = "not an address\n";
+    r = over_the_network("refused", o, &log); /* adb is asked and says no */
+    CHECK(!r.ready && r.failed);
+    free(log);
+}
+
 TEST(an_unauthorized_phone_is_explained)
 {
     expect_failure("unauthorized", 0, "USB debugging prompt", NULL);
@@ -231,6 +359,11 @@ TEST(no_adb_at_all)
 int main(void)
 {
     RUN(the_server_starts_and_its_socket_is_handed_over);
+    RUN(audio_is_a_socket_between_video_and_control);
+    RUN(a_phone_is_connected_by_address);
+    RUN(a_cable_beats_the_network_when_asked_to);
+    RUN(a_phone_on_usb_is_switched_to_wifi);
+    RUN(wifi_failures_are_explained);
     RUN(an_unauthorized_phone_is_explained);
     RUN(a_failed_push_says_what_adb_said);
     RUN(a_server_that_dies_says_its_last_words);

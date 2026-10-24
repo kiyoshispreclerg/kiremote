@@ -4,7 +4,7 @@
 
 /* Starts the scrcpy-server on the phone and hands over its video socket
  * (docs/PROTOCOL.md, "Espelhamento"): `adb devices -l` to pick the phone,
- * `adb push` of the jar, a local TCP port on 127.0.0.1 behind an `adb
+ * `adb push` of the jar (before that, optionally `adb connect` or the switch to TCP/IP), a local TCP port on 127.0.0.1 behind an `adb
  * reverse` tunnel, then `adb shell ... app_process` with the options, and
  * the server connects back. Every step is a child process of the caller's
  * loop (kr_procs) or the listening socket: nothing blocks.
@@ -26,13 +26,22 @@ typedef struct {
     const char *codec;    /* "h264" (default), "h265", "av1" */
     double timeout;       /* seconds for the server to connect, 0 = 10 */
     bool view_only;       /* no control socket: the phone is only shown */
+    bool audio;           /* raw PCM from the phone (Android 11 or newer) */
+    bool stay_awake;      /* the phone does not sleep while it is charging */
+    /* Over the network (no cable): */
+    const char *connect;  /* HOST or HOST:PORT (port 5555 if none): `adb connect` it */
+    bool connect_fallback; /* ...only when adb lists no phone (a cable wins) */
+    bool tcpip;           /* the phone is on USB: switch it to TCP/IP and use that, so the cable can go */
 } kr_server_opts;
 
 typedef struct {
     /* The sockets are connected (blocking mode; the caller owns them):
-     * video, and control (-1 with view_only). serial and model: the phone
-     * adb picked. */
-    void (*on_ready)(void *ud, int video_fd, int control_fd, const char *serial, const char *model);
+     * video, audio (-1 without opts.audio) and control (-1 with view_only).
+     * An old phone still has an audio socket; it says there is no audio in
+     * its first bytes (kr_stream_disabled). serial and model: the phone adb
+     * picked. */
+    void (*on_ready)(void *ud, int video_fd, int audio_fd, int control_fd, const char *serial,
+                     const char *model);
     /* It could not start, or the server ended (before or after on_ready):
      * a translated sentence. Comes once; nothing else follows. */
     void (*on_error)(void *ud, const char *message);

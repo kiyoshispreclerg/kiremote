@@ -73,8 +73,8 @@ the phone asks, the daemon logs the key and you accept with
 files go to your downloads folder; the settings are described in
 [data/kiremote.ini](data/kiremote.ini).
 
-Mirroring (phase 5, under way: picture, mouse and keyboard; no audio or
-clipboard yet): turn on USB debugging on the phone, plug it in and run
+Mirroring (phase 5: picture, sound, mouse, keyboard, clipboard and Wi-Fi): turn
+on USB debugging on the phone, plug it in and run
 
 ```sh
 scripts/fetch-scrcpy-server.sh   # once: downloads and checks the scrcpy-server (into build/)
@@ -84,9 +84,22 @@ build/kiremote-mirror            # -s SERIAL with more than one phone; -m 1024 l
 It uses the system's `adb` and the `scrcpy-server` of the version pinned in
 `config.mk`; the phone does not need the scrcpy app. As in scrcpy, the left
 button touches, the right one is Back, the middle one Home, the side ones
-recent apps and the notifications; what you type goes to the phone
-(`-n` only shows the screen). The "Mirror the screen" action in the device
-list starts it too.
+recent apps and the notifications; what you type goes to the phone (`-n`
+only shows the screen), and the clipboard follows in both directions. The
+phone's sound plays here (Android 11 or newer; `--no-audio` turns it off).
+Alt+key (or Super+key) acts on the phone: `h` Home, `b` Back, `s` recent
+apps, `m` Menu, `p` power, Up/Down volume, `n` notifications (with Shift,
+close them), `r` rotate, `o` screen off (with Shift, on), `f` fullscreen.
+The "Mirror the screen" action in the device list starts it too, and the
+Mirroring tab of the settings has resolution, quality, frames per second,
+codec and the rest (`[mirror]` in the .ini; the command line wins).
+
+Without a cable: `kiremote-mirror --tcpip` switches the phone that is on USB
+to Wi-Fi (`adb tcpip`) and uses it from then on, so the cable can go;
+`--connect 192.168.0.7` (or `:PORT`) connects to a phone that is already
+listening, such as one with Android's wireless debugging turned on. The
+device list passes the phone's address it already knows (`--wifi`), used only
+when no phone is on a cable.
 
 If the computer doesn't show up on the phone, check that the firewall lets
 UDP and TCP 1716 to 1764 through, or add the computer's IP in the app ("Add
@@ -96,8 +109,8 @@ the phone sees them as two different computers.
 ## Building
 
 Needs a C11 compiler, `make`, `pkg-config`, OpenSSL and gettext (`msgfmt`).
-`kiremote-mirror` is only built with libavcodec, libswscale and Xext
-(`libavcodec-dev libswscale-dev libxext-dev`).
+`kiremote-mirror` is only built with libavcodec, libswscale, Xext, Xfixes and
+libpulse (`libavcodec-dev libswscale-dev libxext-dev libxfixes-dev libpulse-dev`).
 
 ```sh
 make

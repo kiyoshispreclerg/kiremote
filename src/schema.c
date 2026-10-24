@@ -17,6 +17,10 @@
 static const char *const device_types[] = {"desktop", "laptop", "phone", "tablet", "tv", NULL};
 static const char *const players[] = {"", "paplay", "pw-play", "aplay", NULL};
 static const char *const tray_choices[] = {"auto", "yes", "no", NULL};
+static const char *const mirror_sizes[] = {"", "800", "1024", "1280", "1600", "1920", NULL};
+static const char *const mirror_rates[] = {"", "2M", "4M", "8M", "16M", "32M", NULL};
+static const char *const mirror_fps[] = {"", "15", "24", "30", "60", NULL};
+static const char *const mirror_codecs[] = {"h264", "h265", "av1", NULL};
 
 /* How a choice is shown (msgids); a choice not listed is shown as it is. */
 static const struct {
@@ -43,6 +47,7 @@ static const kr_setting_group groups[] = {
     {"find", N_("Find my phone")},
     {"lock", N_("Screen lock")},
     {"commands", N_("Commands")},
+    {"mirror", N_("Mirroring")},
     {"interface", N_("Interface")},
     {"advanced", N_("Advanced")},
 };
@@ -110,6 +115,32 @@ static const kr_setting settings[] = {
 
     {"ui", "tray", KR_S_ENUM, "auto", tray_choices, "interface", N_("Tray icon"),
      N_("Show an icon in the notification area. Automatic: unless the desktop already has one for Kiremote (KiDesktop)."),
+     NULL, false},
+
+    /* Read by kiremote-mirror each time it starts (mirror/conf.c); the
+     * command line overrides them. */
+    {"mirror", "max_size", KR_S_ENUM, "", mirror_sizes, "mirror", N_("Resolution"),
+     N_("The longer side of the picture, in pixels. Default: the phone's own. Less is lighter for the phone."),
+     NULL, false},
+    {"mirror", "bit_rate", KR_S_ENUM, "", mirror_rates, "mirror", N_("Video quality"),
+     N_("Bits per second the phone may spend on the picture. Default: 8M."), NULL, false},
+    {"mirror", "max_fps", KR_S_ENUM, "", mirror_fps, "mirror", N_("Frames per second"),
+     N_("The most frames the phone sends each second. Default: no limit."), NULL, false},
+    {"mirror", "codec", KR_S_ENUM, "h264", mirror_codecs, "mirror", N_("Video codec"),
+     N_("H.264 works everywhere. H.265 and AV1 use less data but need a newer phone and a faster computer."),
+     NULL, false},
+    {"mirror", "audio", KR_S_BOOL, "true", NULL, "mirror", N_("Play the phone's sound"),
+     N_("Needs Android 11 or newer."), NULL, false},
+    {"mirror", "control", KR_S_BOOL, "true", NULL, "mirror", N_("Mouse and keyboard"),
+     N_("Let the mouse and keyboard act on the phone. Off: the screen is only shown."), NULL, false},
+    {"mirror", "clipboard", KR_S_BOOL, "true", NULL, "mirror", N_("Share the clipboard"),
+     N_("Copy and paste between the phone and this computer while mirroring."), NULL, false},
+    {"mirror", "screen_off", KR_S_BOOL, "false", NULL, "mirror", N_("Turn the phone's screen off"),
+     N_("Switch the phone's own screen off while mirroring. It stays on in the window."), NULL, false},
+    {"mirror", "stay_awake", KR_S_BOOL, "false", NULL, "mirror", N_("Keep the phone awake"),
+     N_("Do not let the phone sleep while mirroring (only works while it is charging)."), NULL, false},
+    {"mirror", "wifi", KR_S_BOOL, "true", NULL, "mirror", N_("Use Wi-Fi without a cable"),
+     N_("When no cable is connected, try the phone over the network (its debugging over Wi-Fi must be on)."),
      NULL, false},
 
     {"runcommand", NULL, KR_S_MAP, "", NULL, "commands", N_("Commands the phone may run"),

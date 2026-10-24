@@ -512,8 +512,9 @@ Lido em `upstream/scrcpy` (v5.0.1): `app/src/server.c`, `app/src/demuxer.c`,
    com.genymobile.scrcpy.Server <versão> chave=valor...`. Chaves que usamos:
    `scid`, `log_level` (`verbose`, `debug`, `info`, `warn`, `error`),
    `video` / `audio` / `control` (`false` desliga), `video_codec` (`h264`,
-   `h265`, `av1`), `max_size` (lado maior, em pixels), `video_bit_rate`,
-   `max_fps`, `cleanup`. A saída do shell é o log do servidor.
+   `h265`, `av1`), `audio_codec` (`raw`: PCM s16le, sem codificar), `max_size`
+   (lado maior, em pixels), `video_bit_rate`, `max_fps`, `stay_awake`,
+   `cleanup`. A saída do shell é o log do servidor.
 4. Depois de conectados os sockets, `adb reverse --remove
    localabstract:scrcpy_<scid>`.
 
@@ -572,6 +573,32 @@ metastate dos modificadores (shift 0x41/0x81, ctrl 0x3000/0x5000, alt
 navegação também (Enter 66, Backspace 67, Tab 61, Esc 111, Delete 112,
 setas 19–22, Home 122, End 123, PgUp 92, PgDn 93); o resto do que se digita
 vai como texto.
+
+**Áudio** (`audio=true`, `audio_codec=raw`; `AudioRawRecorder` e `Streamer`
+do servidor): o segundo socket, depois do vídeo. Sem o nome (só o primeiro
+socket o tem): 4 bytes de codec (`raw`) e depois pacotes de 12 bytes de
+cabeçalho (como os de vídeo, sem sessões) com PCM estéreo s16le de 48 kHz.
+Antes do Android 11 não há captura de áudio: o servidor manda o codec `0` e o
+socket fica quieto (ou fecha), e o vídeo segue. Bytes que não são múltiplo de
+um quadro (4) esperam a outra metade.
+
+**Clipboard.** O servidor avisa sozinho (tipo 0 do celular) quando o
+clipboard do celular muda (`clipboard_autosync`, ligado por padrão); o
+cliente põe o texto no dele. No outro sentido o cliente manda o tipo 9
+(`colar` = 0) quando o dele muda (só quando alguém copia: o que já estava lá
+ao abrir a janela não vai, pode ser uma senha). O texto que
+acabou de viajar não é mandado de volta (o servidor pode ecoá-lo): o cliente
+compara com o último que moveu.
+
+**Pelo Wi-Fi.** É o mesmo servidor, com o adb falando TCP/IP em vez de USB
+(`adb reverse` funciona do mesmo jeito). `adb connect HOST:PORTA` (porta
+padrão 5555) sai com código 0 mesmo quando falha: só o texto diz ("connected
+to" / "already connected to", `sc_adb_connect`). Para um celular no USB:
+`adb -s S shell ip route` (o `src` da linha de uma interface `wlan*`,
+`sc_adb_parse_device_ip`), `adb -s S tcpip 5555` e `adb connect IP:5555` até
+o adbd voltar a escutar (o scrcpy espera até 10 s). A depuração sem fio do
+Android 11 usa uma porta sorteada e um pareamento (`adb pair`) que não
+fazemos: o usuário passa `--connect IP:PORTA`.
 
 Do celular para o cliente, no mesmo socket: tipo 0 clipboard (tamanho u32
 + texto, até 256 KiB), tipo 1 confirmação de "pôr clipboard" (sequência

@@ -30,4 +30,23 @@ int kr_adb_parse_devices(const char *out, kr_adb_dev *devs, int max);
  * is none, it is not ready, or there are several to choose from. */
 int kr_adb_pick(const kr_adb_dev *devs, int n, const char *serial, const char **why);
 
+/* ---- over the network ------------------------------------------------------ */
+
+#define KR_ADB_TCPIP_PORT 5555
+
+/* "192.168.0.7" → "192.168.0.7:5555"; "192.168.0.7:37005" is kept. false if
+ * it does not fit or is empty. */
+bool kr_adb_host_port(const char *host, char *out, size_t size);
+
+/* A serial that is an address (adb's TCP/IP connections), not a USB one. */
+bool kr_adb_is_tcpip(const char *serial);
+
+/* The phone's address on Wi-Fi from `adb shell ip route` (the line of a
+ * wlan interface, its "src"), as scrcpy finds it. false if there is none. */
+bool kr_adb_parse_device_ip(const char *out, char *ip, size_t size);
+
+/* `adb connect` exits 0 even when it fails: only its words say
+ * ("connected to" or "already connected to"). */
+bool kr_adb_connect_ok(const char *out);
+
 #endif

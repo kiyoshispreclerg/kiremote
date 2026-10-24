@@ -2,6 +2,7 @@
 /* The device list from `adb devices -l` (adb.h). */
 #include "adb.h"
 
+#include <arpa/inet.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -132,4 +133,70 @@ int kr_adb_pick(const kr_adb_dev *devs, int n, const char *serial, const char **
         return -1;
     }
     return idx;
+}
+
+bool kr_adb_host_port(const char *host, char *out, size_t size)
+{
+    if (!host || !*host)
+        return false;
+    int n = strchr(host, ':') ? snprintf(out, size, "%s", host) : snprintf(out, size, "%s:%d", host, KR_ADB_TCPIP_PORT);
+    return n > 0 && (size_t)n < size;
+}
+
+bool kr_adb_is_tcpip(const char *serial)
+{
+    /* "adb-XXXX-YYYY._adb-tls-connect._tcp" (mDNS) has no port to speak of. */
+    return strchr(serial, ':') && strncmp(serial, "adb-", 4) != 0;
+}
+
+/* The word after `key` in a whitespace-separated line, into out. */
+static bool word_after(const char *line, size_t len, const char *key, char *out, size_t size)
+{
+    size_t klen = strlen(key);
+    size_t i = 0;
+    while (i < len) {
+        while (i < len && (line[i] == ' ' || line[i] == '\t'))
+            i++;
+        size_t start = i;
+        while (i < len && line[i] != ' ' && line[i] != '\t')
+            i++;
+        if (i - start == klen && !memcmp(line + start, key, klen)) {
+            while (i < len && (line[i] == ' ' || line[i] == '\t'))
+                i++;
+            size_t v = i;
+            while (i < len && line[i] != ' ' && line[i] != '\t' && line[i] != '\r')
+                i++;
+            if (i == v || i - v >= size)
+                return false;
+            memcpy(out, line + v, i - v);
+            out[i - v] = 0;
+            return true;
+        }
+    }
+    return false;
+}
+
+bool kr_adb_parse_device_ip(const char *out, char *ip, size_t size)
+{
+    for (const char *p = out; *p;) {
+        size_t len = strcspn(p, "\n");
+        char dev[32], src[INET_ADDRSTRLEN];
+        struct in_addr a;
+        if (word_after(p, len, "dev", dev, sizeof dev) && !strncmp(dev, "wlan", 4) &&
+            word_after(p, len, "src", src, sizeof src) && inet_pton(AF_INET, src, &a) == 1) {
+            if (strlen(src) >= size)
+                return false;
+            memcpy(ip, src, strlen(src) + 1);
+            return true;
+        }
+        p += len;
+        if (*p)
+            p++;
+    }
+    return false;
+}
+
+bool kr_adb_connect_ok(const char *out)
+{
+    return !strncmp(out, "connected", 9) || !strncmp(out, "already connected", 17);
 }

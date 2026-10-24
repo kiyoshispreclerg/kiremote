@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kiremote\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-23 20:46-0300\n"
+"POT-Creation-Date: 2026-10-24 00:19-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -481,7 +481,7 @@ msgid ""
 "  -h, --help         show this help and exit\n"
 msgstr ""
 
-#: src/kiremoted.c:96 mirror/main.c:431
+#: src/kiremoted.c:96 mirror/main.c:696
 #, c-format
 msgid "cannot watch signals: %s"
 msgstr ""
@@ -820,376 +820,469 @@ msgstr ""
 msgid "pactl not found: the volume control is off"
 msgstr ""
 
-#: src/schema.c:25
+#: src/schema.c:29
 msgid "(default)"
 msgstr ""
 
-#: src/schema.c:26
+#: src/schema.c:30
 msgid "Automatic"
 msgstr ""
 
-#: src/schema.c:27
+#: src/schema.c:31
 msgid "Always"
 msgstr ""
 
-#: src/schema.c:28
+#: src/schema.c:32
 msgid "Never"
 msgstr ""
 
-#: src/schema.c:29
+#: src/schema.c:33
 msgid "Desktop"
 msgstr ""
 
-#: src/schema.c:30
+#: src/schema.c:34
 msgid "Laptop"
 msgstr ""
 
-#: src/schema.c:31
+#: src/schema.c:35
 msgid "Phone"
 msgstr ""
 
-#: src/schema.c:32
+#: src/schema.c:36
 msgid "Tablet"
 msgstr ""
 
-#: src/schema.c:33
+#: src/schema.c:37
 msgid "TV"
 msgstr ""
 
-#: src/schema.c:37
+#: src/schema.c:41
 msgid "This computer"
 msgstr ""
 
-#: src/schema.c:38
+#: src/schema.c:42
 msgid "Network"
 msgstr ""
 
-#: src/schema.c:39
+#: src/schema.c:43
 msgid "Files"
 msgstr ""
 
-#: src/schema.c:40
+#: src/schema.c:44
 msgid "Features"
 msgstr ""
 
-#: src/schema.c:41 src/schema.c:80
+#: src/schema.c:45 src/schema.c:85
 msgid "Clipboard"
 msgstr ""
 
-#: src/schema.c:42
+#: src/schema.c:46
 msgid "Media"
 msgstr ""
 
-#: src/schema.c:43 src/schema.c:75
+#: src/schema.c:47 src/schema.c:80
 msgid "Find my phone"
 msgstr ""
 
-#: src/schema.c:44
+#: src/schema.c:48
 msgid "Screen lock"
 msgstr ""
 
-#: src/schema.c:45
+#: src/schema.c:49
 msgid "Commands"
 msgstr ""
 
-#: src/schema.c:46
+#: src/schema.c:50
+msgid "Mirroring"
+msgstr ""
+
+#: src/schema.c:51
 msgid "Interface"
 msgstr ""
 
-#: src/schema.c:47
+#: src/schema.c:52
 msgid "Advanced"
 msgstr ""
 
-#: src/schema.c:56 ui/gtk/krsettings.c:241 ui/gtk/krsettings.c:334
+#: src/schema.c:61 ui/gtk/krsettings.c:241 ui/gtk/krsettings.c:334
 msgid "Name"
 msgstr ""
 
-#: src/schema.c:57
+#: src/schema.c:62
 msgid "How the phone calls this computer. Empty: the host name."
 msgstr ""
 
-#: src/schema.c:58
+#: src/schema.c:63
 msgid "Type"
 msgstr ""
 
-#: src/schema.c:59
+#: src/schema.c:64
 msgid "Only changes the icon on the phone."
 msgstr ""
 
-#: src/schema.c:61
+#: src/schema.c:66
 msgid "Extra addresses"
 msgstr ""
 
-#: src/schema.c:62
+#: src/schema.c:67
 msgid ""
 "IPv4 addresses that also get our discovery packet, separated by commas. For "
 "networks that block broadcasts."
 msgstr ""
 
-#: src/schema.c:66
+#: src/schema.c:71
 msgid "Received files"
 msgstr ""
 
-#: src/schema.c:67
+#: src/schema.c:72
 msgid "Where files from the phone go. Empty: your downloads folder."
 msgstr ""
 
-#: src/schema.c:68
+#: src/schema.c:73
 msgid "sshfs program"
 msgstr ""
 
-#: src/schema.c:69
+#: src/schema.c:74
 msgid "The program that mounts the phone's files. Empty: sshfs."
 msgstr ""
 
-#: src/schema.c:71
+#: src/schema.c:76
 msgid "Ping"
 msgstr ""
 
-#: src/schema.c:71
+#: src/schema.c:76
 msgid "Send and receive pings."
 msgstr ""
 
-#: src/schema.c:72
+#: src/schema.c:77
 msgid "Share files and text"
 msgstr ""
 
-#: src/schema.c:72
+#: src/schema.c:77
 msgid "Send and receive files, text and links."
 msgstr ""
 
-#: src/schema.c:73
+#: src/schema.c:78
 msgid "Battery"
 msgstr ""
 
-#: src/schema.c:73
+#: src/schema.c:78
 msgid "Show the phone's battery and tell it ours."
 msgstr ""
 
-#: src/schema.c:74
+#: src/schema.c:79
 msgid "Signal"
 msgstr ""
 
-#: src/schema.c:74
+#: src/schema.c:79
 msgid "Show the phone's mobile signal."
 msgstr ""
 
-#: src/schema.c:75
+#: src/schema.c:80
 msgid "Make the phone ring, and answer when it looks for this computer."
 msgstr ""
 
-#: src/schema.c:76
+#: src/schema.c:81
 msgid "Calls"
 msgstr ""
 
-#: src/schema.c:76
+#: src/schema.c:81
 msgid "Notify about calls and let you mute the ringer."
 msgstr ""
 
-#: src/schema.c:77
+#: src/schema.c:82
 msgid "Pause media on calls"
 msgstr ""
 
-#: src/schema.c:77
+#: src/schema.c:82
 msgid "Pause the players here while the phone rings."
 msgstr ""
 
-#: src/schema.c:78
+#: src/schema.c:83
 msgid "Media players"
 msgstr ""
 
-#: src/schema.c:78
+#: src/schema.c:83
 msgid "Control this computer's players from the phone."
 msgstr ""
 
-#: src/schema.c:79
+#: src/schema.c:84
 msgid "Volume"
 msgstr ""
 
-#: src/schema.c:79
+#: src/schema.c:84
 msgid "Let the phone change this computer's volume."
 msgstr ""
 
-#: src/schema.c:80
+#: src/schema.c:85
 msgid "Share the clipboard with the phone."
 msgstr ""
 
-#: src/schema.c:81
+#: src/schema.c:86
 msgid "Phone notifications"
 msgstr ""
 
-#: src/schema.c:81
+#: src/schema.c:86
 msgid "Show the phone's notifications here."
 msgstr ""
 
-#: src/schema.c:82
+#: src/schema.c:87
 msgid "Run commands"
 msgstr ""
 
-#: src/schema.c:82
+#: src/schema.c:87
 msgid "Let the phone run the commands listed under Commands."
 msgstr ""
 
-#: src/schema.c:83
+#: src/schema.c:88
 msgid "Remote mouse and keyboard"
 msgstr ""
 
-#: src/schema.c:83
+#: src/schema.c:88
 msgid "Let the phone move the pointer and type here."
 msgstr ""
 
-#: src/schema.c:84
+#: src/schema.c:89
 msgid "Presentation pointer"
 msgstr ""
 
-#: src/schema.c:84
+#: src/schema.c:89
 msgid "Let the phone point at the screen during a presentation."
 msgstr ""
 
-#: src/schema.c:85
+#: src/schema.c:90
 msgid "Lock the screen"
 msgstr ""
 
-#: src/schema.c:85
+#: src/schema.c:90
 msgid "Let the phone lock this computer."
 msgstr ""
 
-#: src/schema.c:86
+#: src/schema.c:91
 msgid "Keep the screen awake"
 msgstr ""
 
-#: src/schema.c:86
+#: src/schema.c:91
 msgid "Do not let the screen sleep while a phone is connected."
 msgstr ""
 
-#: src/schema.c:87
+#: src/schema.c:92
 msgid "Browse phone files"
 msgstr ""
 
-#: src/schema.c:87
+#: src/schema.c:92
 msgid "Mount the phone's storage as a folder."
 msgstr ""
 
-#: src/schema.c:89
+#: src/schema.c:94
 msgid "Send what I copy"
 msgstr ""
 
-#: src/schema.c:90
+#: src/schema.c:95
 msgid "Send what is copied here to the phone as soon as it is copied."
 msgstr ""
 
-#: src/schema.c:91
+#: src/schema.c:96
 msgid "Send passwords too"
 msgstr ""
 
-#: src/schema.c:92
+#: src/schema.c:97
 msgid "Also send what a password manager marks as secret."
 msgstr ""
 
-#: src/schema.c:94
+#: src/schema.c:99
 msgid "Pause only when answered"
 msgstr ""
 
-#: src/schema.c:95
+#: src/schema.c:100
 msgid "Wait until the call is answered instead of pausing while it rings."
 msgstr ""
 
-#: src/schema.c:96
+#: src/schema.c:101
 msgid "Resume afterwards"
 msgstr ""
 
-#: src/schema.c:97
+#: src/schema.c:102
 msgid "Start the players again when the call ends."
 msgstr ""
 
-#: src/schema.c:99
+#: src/schema.c:104
 msgid "Sound"
 msgstr ""
 
-#: src/schema.c:100
+#: src/schema.c:105
 msgid "The sound played when the phone looks for this computer. Empty: a beep."
 msgstr ""
 
-#: src/schema.c:101
+#: src/schema.c:106
 msgid "Player"
 msgstr ""
 
-#: src/schema.c:102
+#: src/schema.c:107
 msgid "The program that plays it. Empty: the first one found."
 msgstr ""
 
-#: src/schema.c:104
+#: src/schema.c:109
 msgid "Lock command"
 msgstr ""
 
-#: src/schema.c:105
+#: src/schema.c:110
 msgid "Empty: loginctl lock-session."
 msgstr ""
 
-#: src/schema.c:106
+#: src/schema.c:111
 msgid "Let the phone unlock"
 msgstr ""
 
-#: src/schema.c:107
+#: src/schema.c:112
 msgid ""
 "Off by default: anyone with the phone could otherwise unlock this computer."
 msgstr ""
 
-#: src/schema.c:108
+#: src/schema.c:113
 msgid "Unlock command"
 msgstr ""
 
-#: src/schema.c:109
+#: src/schema.c:114
 msgid "Empty: loginctl unlock-session. Needs the option above."
 msgstr ""
 
-#: src/schema.c:111
+#: src/schema.c:116
 msgid "Tray icon"
 msgstr ""
 
-#: src/schema.c:112
+#: src/schema.c:117
 msgid ""
 "Show an icon in the notification area. Automatic: unless the desktop already "
 "has one for Kiremote (KiDesktop)."
 msgstr ""
 
-#: src/schema.c:115
+#: src/schema.c:122
+msgid "Resolution"
+msgstr ""
+
+#: src/schema.c:123
+msgid ""
+"The longer side of the picture, in pixels. Default: the phone's own. Less is "
+"lighter for the phone."
+msgstr ""
+
+#: src/schema.c:125
+msgid "Video quality"
+msgstr ""
+
+#: src/schema.c:126
+msgid "Bits per second the phone may spend on the picture. Default: 8M."
+msgstr ""
+
+#: src/schema.c:127
+msgid "Frames per second"
+msgstr ""
+
+#: src/schema.c:128
+msgid "The most frames the phone sends each second. Default: no limit."
+msgstr ""
+
+#: src/schema.c:129
+msgid "Video codec"
+msgstr ""
+
+#: src/schema.c:130
+msgid ""
+"H.264 works everywhere. H.265 and AV1 use less data but need a newer phone "
+"and a faster computer."
+msgstr ""
+
+#: src/schema.c:132
+msgid "Play the phone's sound"
+msgstr ""
+
+#: src/schema.c:133
+msgid "Needs Android 11 or newer."
+msgstr ""
+
+#: src/schema.c:134
+msgid "Mouse and keyboard"
+msgstr ""
+
+#: src/schema.c:135
+msgid ""
+"Let the mouse and keyboard act on the phone. Off: the screen is only shown."
+msgstr ""
+
+#: src/schema.c:136
+msgid "Share the clipboard"
+msgstr ""
+
+#: src/schema.c:137
+msgid "Copy and paste between the phone and this computer while mirroring."
+msgstr ""
+
+#: src/schema.c:138
+msgid "Turn the phone's screen off"
+msgstr ""
+
+#: src/schema.c:139
+msgid ""
+"Switch the phone's own screen off while mirroring. It stays on in the window."
+msgstr ""
+
+#: src/schema.c:140
+msgid "Keep the phone awake"
+msgstr ""
+
+#: src/schema.c:141
+msgid ""
+"Do not let the phone sleep while mirroring (only works while it is charging)."
+msgstr ""
+
+#: src/schema.c:142
+msgid "Use Wi-Fi without a cable"
+msgstr ""
+
+#: src/schema.c:143
+msgid ""
+"When no cable is connected, try the phone over the network (its debugging "
+"over Wi-Fi must be on)."
+msgstr ""
+
+#: src/schema.c:146
 msgid "Commands the phone may run"
 msgstr ""
 
-#: src/schema.c:116
+#: src/schema.c:147
 msgid "Name and shell command. The phone only sees the names."
 msgstr ""
 
-#: src/schema.c:221 src/schema.c:265
+#: src/schema.c:252 src/schema.c:296
 msgid "too long"
 msgstr ""
 
-#: src/schema.c:229
+#: src/schema.c:260
 msgid "invalid name"
 msgstr ""
 
-#: src/schema.c:232
+#: src/schema.c:263
 msgid "must be a single line"
 msgstr ""
 
-#: src/schema.c:239
+#: src/schema.c:270
 msgid "must be true or false"
 msgstr ""
 
-#: src/schema.c:245
+#: src/schema.c:276
 msgid "not one of the choices"
 msgstr ""
 
-#: src/schema.c:248
+#: src/schema.c:279
 msgid "must be IPv4 addresses separated by commas"
 msgstr ""
 
-#: src/schema.c:252
+#: src/schema.c:283
 msgid "must be an absolute path"
 msgstr ""
 
-#: src/schema.c:258
+#: src/schema.c:289
 msgid "not a usable name"
 msgstr ""
 
@@ -1328,22 +1421,22 @@ msgstr ""
 msgid "Send text"
 msgstr ""
 
-#: ui/gtk/kractions.c:77 mirror/server.c:107
+#: ui/gtk/kractions.c:77 mirror/server.c:111
 #, c-format
 msgid "Could not run %s: %s"
 msgstr ""
 
-#: ui/gtk/kractions.c:169
+#: ui/gtk/kractions.c:171
 #, c-format
 msgid "Refuse the pairing request from %s?"
 msgstr ""
 
-#: ui/gtk/kractions.c:170
+#: ui/gtk/kractions.c:172
 #, c-format
 msgid "Unpair from %s?"
 msgstr ""
 
-#: ui/gtk/kractions.c:251
+#: ui/gtk/kractions.c:253
 msgid "Nothing to do"
 msgstr ""
 
@@ -1452,7 +1545,8 @@ msgid "Yes"
 msgstr ""
 
 #: kidesktop/page.c:132 kidesktop/tab.c:20 mirror/stream.c:164
-#: mirror/screen.c:157 mirror/main.c:300 mirror/main.c:441
+#: mirror/screen.c:168 mirror/main.c:496 mirror/main.c:517 mirror/main.c:706
+#: mirror/audio.c:117 mirror/audio.c:124
 msgid "Out of memory"
 msgstr ""
 
@@ -1492,67 +1586,84 @@ msgstr ""
 msgid "The phone sent data on a stream it turned off"
 msgstr ""
 
-#: mirror/adb.c:109
+#: mirror/adb.c:110
 msgid "That device is not connected to adb"
 msgstr ""
 
-#: mirror/adb.c:113
+#: mirror/adb.c:114
 msgid "More than one device is connected: choose one with --serial"
 msgstr ""
 
-#: mirror/adb.c:119 mirror/adb.c:127
+#: mirror/adb.c:120 mirror/adb.c:128
 msgid ""
 "The phone has not allowed this computer yet: accept the USB debugging prompt "
 "on it"
 msgstr ""
 
-#: mirror/adb.c:122 mirror/adb.c:131
+#: mirror/adb.c:123 mirror/adb.c:132
 msgid "The phone is not ready for adb (offline)"
 msgstr ""
 
-#: mirror/adb.c:123
+#: mirror/adb.c:124
 msgid "No phone found by adb: connect it by USB with USB debugging on"
 msgstr ""
 
-#: mirror/server.c:132 mirror/server.c:135
+#: mirror/server.c:141 mirror/server.c:144
 msgid "The server on the phone stopped"
 msgstr ""
 
-#: mirror/server.c:181
+#: mirror/server.c:194
 msgid "Could not open the adb tunnel to the phone"
 msgstr ""
 
-#: mirror/server.c:202
+#: mirror/server.c:215
 #, c-format
 msgid "Could not open a local port: %s"
 msgstr ""
 
-#: mirror/server.c:236
+#: mirror/server.c:249
 msgid "Could not copy the server to the phone"
 msgstr ""
 
-#: mirror/server.c:249
+#: mirror/server.c:287
+#, c-format
+msgid "Could not connect to %s"
+msgstr ""
+
+#: mirror/server.c:307
+msgid "That is not an address adb can connect to"
+msgstr ""
+
+#: mirror/server.c:320
+msgid "Could not switch the phone to Wi-Fi debugging"
+msgstr ""
+
+#: mirror/server.c:336
+msgid "The phone is not on Wi-Fi (no address found)"
+msgstr ""
+
+#: mirror/server.c:373
 msgid "adb could not list the devices"
 msgstr ""
 
-#: mirror/server.c:340
+#: mirror/server.c:468
 #, c-format
 msgid "Could not accept the server's connection: %s"
 msgstr ""
 
-#: mirror/server.c:380 mirror/server.c:383
+#: mirror/server.c:512 mirror/server.c:515
 msgid "The server on the phone did not connect"
 msgstr ""
 
-#: mirror/screen.c:162
+#: mirror/screen.c:173
 msgid "Could not open the X display"
 msgstr ""
 
-#: mirror/screen.c:191
+#: mirror/screen.c:202
 msgid "The X display needs 24-bit color for the mirror"
 msgstr ""
 
-#: mirror/main.c:31
+#: mirror/main.c:34
 #, c-format
 msgid ""
 "Usage: %s [OPTION]...\n"
@@ -1561,39 +1672,74 @@ msgid ""
 "  -s, --serial SERIAL   the phone, as adb names it (default: the only one)\n"
 "  -m, --max-size N      longer side of the video, in pixels (default: the "
 "phone's)\n"
-"  -b, --bit-rate N      video bit rate, in bits per second\n"
+"  -b, --bit-rate N      video bit rate, in bits per second (8M, 500K...)\n"
 "      --max-fps N       frames per second at most\n"
 "      --codec CODEC     h264 (default), h265 or av1\n"
 "  -n, --no-control      only show the screen, no mouse or keyboard\n"
+"      --no-audio        do not play the phone's sound\n"
+"      --no-clipboard    do not share the clipboard\n"
+"      --connect ADDR    use the phone at ADDR[:PORT] over Wi-Fi (adb "
+"connect)\n"
+"      --wifi ADDR       like --connect, but only when no phone is on a "
+"cable\n"
+"      --tcpip           switch the phone on the cable to Wi-Fi and use that\n"
+"  -c, --config FILE     the settings file (default: ~/.config/kiremote/"
+"kiremote.ini)\n"
 "  -v, --verbose         debug messages (and the server's)\n"
 "  -V, --version         show the version and exit\n"
 "  -h, --help            show this help and exit\n"
+"\n"
+"In the window, Alt+key (or Super+key) acts on the phone: h home, b back,\n"
+"s recent apps, m menu, p power, Up and Down volume, n notifications (Shift:\n"
+"close them), r rotate, o screen off (Shift: on); and f fullscreen.\n"
 msgstr ""
 
-#: mirror/main.c:215
+#: mirror/main.c:305
 msgid "The phone sent a message that could not be read"
 msgstr ""
 
-#: mirror/main.c:219 mirror/main.c:326
+#: mirror/main.c:309 mirror/main.c:543
 msgid "The phone closed the connection"
 msgstr ""
 
-#: mirror/main.c:240
+#: mirror/main.c:382
 msgid ""
 "This computer cannot decode the phone's video (no decoder in libavcodec)"
 msgstr ""
 
-#: mirror/main.c:281
+#: mirror/main.c:427
 msgid "The video could not be decoded"
 msgstr ""
 
-#: mirror/main.c:293
+#: mirror/main.c:450
+msgid "The phone sent sound in a format this program does not play"
+msgstr ""
+
+#: mirror/main.c:474
+msgid "The phone cannot share its sound (Android 11 or newer is needed)"
+msgstr ""
+
+#: mirror/main.c:508
 #, c-format
 msgid "Mirroring %s"
 msgstr ""
 
-#: mirror/main.c:424
+#: mirror/main.c:689
 #, c-format
 msgid ""
 "scrcpy-server %s not found (scripts/fetch-scrcpy-server.sh downloads it)"
+msgstr ""
+
+#: mirror/main.c:766
+msgid "The sound stopped"
+msgstr ""
+
+#: mirror/conf.c:46
+#, c-format
+msgid "kiremote.ini: [mirror] %s = %s is not valid, using the default"
+msgstr ""
+
+#: mirror/audio.c:41 mirror/audio.c:55 mirror/audio.c:88 mirror/audio.c:102
+#, c-format
+msgid "Sound: %s"
 msgstr ""

@@ -8,6 +8,7 @@
 #include <X11/Xatom.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
+#include <X11/extensions/Xfixes.h>
 #include <X11/extensions/XShm.h>
 #include <libavutil/frame.h>
 #include <libavutil/pixfmt.h>
@@ -41,6 +42,16 @@ struct kr_screen {
     kr_screen_input in;
     void *in_ud;
     unsigned char held[256]; /* keycodes down, to tell auto-repeat */
+    /* The clipboard. */
+    Atom a_clipboard, a_utf8, a_targets, a_string, a_text, a_incr, a_prop, a_atom;
+    int fixes_base; /* XFixes' event base, -1 without it */
+    char *clip;     /* what we hold */
+    size_t clip_len;
+    bool clip_mine;
+    void (*clip_changed)(void *ud);
+    void *clip_changed_ud;
+    kr_clip_cb clip_cb;
+    void *clip_cb_ud;
 };
 
 static void free_image(kr_screen *s)
@@ -236,6 +247,20 @@ kr_screen *kr_screen_new(const char *title, unsigned width, unsigned height, con
     if (!s->ic)
         kr_log_debug("screen: no input method, keys only as X looks them up");
 
+    s->a_clipboard = XInternAtom(s->dpy, "CLIPBOARD", False);
+    s->a_utf8 = utf8;
+    s->a_targets = XInternAtom(s->dpy, "TARGETS", False);
+    s->a_string = XA_STRING;
+    s->a_text = XInternAtom(s->dpy, "TEXT", False);
+    s->a_incr = XInternAtom(s->dpy, "INCR", False);
+    s->a_prop = XInternAtom(s->dpy, "KIREMOTE_CLIPBOARD", False);
+    s->a_atom = XA_ATOM;
+    int fixes_error;
+    if (XFixesQueryExtension(s->dpy, &s->fixes_base, &fixes_error))
+        XFixesSelectSelectionInput(s->dpy, s->win, s->a_clipboard, XFixesSetSelectionOwnerNotifyMask);
+    else
+        s->fixes_base = -1;
+
     XMapWindow(s->dpy, s->win);
     XFlush(s->dpy);
     return s;
@@ -247,11 +272,25 @@ void kr_screen_set_input(kr_screen *s, const kr_screen_input *cbs, void *ud)
     s->in_ud = ud;
 }
 
+void kr_screen_toggle_fullscreen(kr_screen *s)
+{
+    Atom state = XInternAtom(s->dpy, "_NET_WM_STATE", False);
+    XEvent ev = {.xclient = {.type = ClientMessage,
+                             .window = s->win,
+                             .message_type = state,
+                             .format = 32,
+                             .data.l = {2 /* toggle */, (long)XInternAtom(s->dpy, "_NET_WM_STATE_FULLSCREEN", False),
+                                        0, 1, 0}}};
+    XSendEvent(s->dpy, DefaultRootWindow(s->dpy), False, SubstructureRedirectMask | SubstructureNotifyMask, &ev);
+    XFlush(s->dpy);
+}
+
 void kr_screen_free(kr_screen *s)
 {
     if (!s)
         return;
     free_image(s);
+    free(s->clip);
     if (s->ic)
         XDestroyIC(s->ic);
     if (s->im)
@@ -389,6 +428,100 @@ static void key_event(kr_screen *s, XKeyEvent *k)
     s->in.on_key(s->in_ud, use, down, repeat, k->state, text);
 }
 
+/* ---- clipboard --------------------------------------------------------------- */
+
+void kr_screen_clipboard_watch(kr_screen *s, void (*on_changed)(void *ud), void *ud)
+{
+    s->clip_changed = on_changed;
+    s->clip_changed_ud = ud;
+}
+
+void kr_screen_clipboard_get(kr_screen *s, kr_clip_cb cb, void *ud)
+{
+    s->clip_cb = cb;
+    s->clip_cb_ud = ud;
+    XConvertSelection(s->dpy, s->a_clipboard, s->a_utf8, s->a_prop, s->win, CurrentTime);
+    XFlush(s->dpy);
+}
+
+void kr_screen_clipboard_set(kr_screen *s, const char *text, size_t len)
+{
+    /* One property is one request; X's limit is in 4-byte units. */
+    if (len > (size_t)XMaxRequestSize(s->dpy) * 4 - 1024) {
+        kr_log_debug("screen: clipboard of %zu bytes is too big for X", len);
+        return;
+    }
+    char *copy = malloc(len + 1);
+    if (!copy)
+        return;
+    memcpy(copy, text, len);
+    copy[len] = 0;
+    free(s->clip);
+    s->clip = copy;
+    s->clip_len = len;
+    XSetSelectionOwner(s->dpy, s->a_clipboard, s->win, CurrentTime);
+    s->clip_mine = XGetSelectionOwner(s->dpy, s->a_clipboard) == s->win;
+    XFlush(s->dpy);
+}
+
+bool kr_screen_clipboard_mine(const kr_screen *s)
+{
+    return s->clip_mine;
+}
+
+/* Somebody asks us for the text we hold. */
+static void clip_request(kr_screen *s, const XSelectionRequestEvent *rq)
+{
+    XEvent ev = {.xselection = {.type = SelectionNotify,
+                                .display = rq->display,
+                                .requestor = rq->requestor,
+                                .selection = rq->selection,
+                                .target = rq->target,
+                                .property = None,
+                                .time = rq->time}};
+    Atom prop = rq->property != None ? rq->property : rq->target; /* old clients */
+    if (s->clip_mine && rq->selection == s->a_clipboard) {
+        if (rq->target == s->a_targets) {
+            Atom list[] = {s->a_targets, s->a_utf8, s->a_string, s->a_text};
+            XChangeProperty(s->dpy, rq->requestor, prop, s->a_atom, 32, PropModeReplace, (unsigned char *)list,
+                            (int)(sizeof list / sizeof *list));
+            ev.xselection.property = prop;
+        } else if (rq->target == s->a_utf8 || rq->target == s->a_string || rq->target == s->a_text) {
+            XChangeProperty(s->dpy, rq->requestor, prop, rq->target == s->a_string ? s->a_string : s->a_utf8, 8,
+                            PropModeReplace, (unsigned char *)s->clip, (int)s->clip_len);
+            ev.xselection.property = prop;
+        }
+    }
+    XSendEvent(s->dpy, rq->requestor, False, NoEventMask, &ev);
+    XFlush(s->dpy);
+}
+
+/* The answer to kr_screen_clipboard_get. */
+static void clip_answer(kr_screen *s, const XSelectionEvent *se)
+{
+    kr_clip_cb cb = s->clip_cb;
+    void *ud = s->clip_cb_ud;
+    s->clip_cb = NULL;
+    if (!cb)
+        return;
+    if (se->property == None || se->selection != s->a_clipboard) {
+        cb(ud, NULL, 0);
+        return;
+    }
+    Atom type;
+    int format;
+    unsigned long n, after;
+    unsigned char *data = NULL;
+    int rc = XGetWindowProperty(s->dpy, s->win, s->a_prop, 0, (long)(KR_CLIP_MAX / 4 + 1), True, AnyPropertyType, &type,
+                                &format, &n, &after, &data);
+    if (rc == Success && type == s->a_utf8 && format == 8 && after == 0 && data)
+        cb(ud, (const char *)data, n);
+    else
+        cb(ud, NULL, 0); /* INCR, too long or not text */
+    if (data)
+        XFree(data);
+}
+
 bool kr_screen_dispatch(kr_screen *s)
 {
     bool open = true;
@@ -423,6 +556,20 @@ bool kr_screen_dispatch(kr_screen *s)
             if (s->ic)
                 XSetICFocus(s->ic);
             break;
+        case SelectionRequest:
+            clip_request(s, &ev.xselectionrequest);
+            break;
+        case SelectionClear:
+            if (ev.xselectionclear.selection == s->a_clipboard) {
+                s->clip_mine = false;
+                free(s->clip);
+                s->clip = NULL;
+                s->clip_len = 0;
+            }
+            break;
+        case SelectionNotify:
+            clip_answer(s, &ev.xselection);
+            break;
         case FocusOut:
             if (s->ic)
                 XUnsetICFocus(s->ic);
@@ -449,6 +596,14 @@ bool kr_screen_dispatch(kr_screen *s)
                 open = false;
             break;
         default:
+            if (s->fixes_base >= 0 && ev.type == s->fixes_base + XFixesSelectionNotify) {
+                const XFixesSelectionNotifyEvent *fe = (const XFixesSelectionNotifyEvent *)&ev;
+                if (fe->selection == s->a_clipboard && fe->owner != s->win) {
+                    s->clip_mine = false; /* it is not ours any more */
+                    if (s->clip_changed)
+                        s->clip_changed(s->clip_changed_ud);
+                }
+            }
             break;
         }
     }

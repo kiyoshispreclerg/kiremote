@@ -68,10 +68,49 @@ TEST(picking_the_phone)
     CHECK_INT_EQ(kr_adb_pick(d, n, "b", &why), 1);
 }
 
+TEST(the_phone_address_comes_from_its_wifi_route)
+{
+    char ip[32];
+    /* A phone with mobile data and Wi-Fi: only the wlan line counts. */
+    CHECK(kr_adb_parse_device_ip("10.12.0.0/16 dev rmnet_data1 proto kernel scope link src 10.12.4.9\r\n"
+                                 "192.168.1.0/24 dev wlan0  proto kernel  scope link  src 192.168.1.42\r\n",
+                                 ip, sizeof ip));
+    CHECK_STR_EQ(ip, "192.168.1.42");
+    CHECK(!kr_adb_parse_device_ip("10.12.0.0/16 dev rmnet_data1 proto kernel scope link src 10.12.4.9\n", ip, sizeof ip));
+    CHECK(!kr_adb_parse_device_ip("192.168.1.0/24 dev wlan0 proto kernel scope link src not-an-ip\n", ip, sizeof ip));
+    CHECK(!kr_adb_parse_device_ip("192.168.1.0/24 dev wlan0 proto kernel scope link\n", ip, sizeof ip));
+    CHECK(!kr_adb_parse_device_ip("", ip, sizeof ip));
+    char tiny[8];
+    CHECK(!kr_adb_parse_device_ip("192.168.1.0/24 dev wlan0 src 192.168.1.42\n", tiny, sizeof tiny));
+}
+
+TEST(addresses_and_connect_replies)
+{
+    char hp[32];
+    CHECK(kr_adb_host_port("192.168.1.42", hp, sizeof hp));
+    CHECK_STR_EQ(hp, "192.168.1.42:5555");
+    CHECK(kr_adb_host_port("192.168.1.42:37005", hp, sizeof hp));
+    CHECK_STR_EQ(hp, "192.168.1.42:37005");
+    CHECK(!kr_adb_host_port("", hp, sizeof hp));
+    CHECK(!kr_adb_host_port(NULL, hp, sizeof hp));
+    CHECK(!kr_adb_host_port("192.168.100.200", hp, 10));
+    CHECK(kr_adb_is_tcpip("192.168.1.42:5555"));
+    CHECK(!kr_adb_is_tcpip("5a0d7fcd"));
+    CHECK(!kr_adb_is_tcpip("adb-R5CT-x._adb-tls-connect._tcp"));
+
+    CHECK(kr_adb_connect_ok("connected to 192.168.1.42:5555\n"));
+    CHECK(kr_adb_connect_ok("already connected to 192.168.1.42:5555\n"));
+    CHECK(!kr_adb_connect_ok("failed to connect to '192.168.1.42:5555': Connection refused\n"));
+    CHECK(!kr_adb_connect_ok("cannot connect to 192.168.1.42:5555: Connection refused (10061)\n"));
+    CHECK(!kr_adb_connect_ok(""));
+}
+
 int main(void)
 {
     RUN(device_lines_parse_from_the_end);
     RUN(garbage_is_not_a_device);
     RUN(picking_the_phone);
+    RUN(the_phone_address_comes_from_its_wifi_route);
+    RUN(addresses_and_connect_replies);
     return harness_report();
 }

@@ -537,7 +537,7 @@ contra o qual foi compilado no `Depends`.
 
 ### 4. SMS e contatos
 
-### 5. Espelhamento (em andamento)
+### 5. Espelhamento (feita, fora o que está em "Fica para depois")
 
 `kiremote-mirror`: adb, servidor, vídeo, Xv, controle, clipboard; depois
 áudio; depois Wi-Fi casado pelo IP do KDE Connect. Botão na interface e no
@@ -559,8 +559,36 @@ fuzz para as respostas), teclas X → Android (`mirror/keys.c`, modo `mixed`
 do scrcpy), mouse com os atalhos padrão do scrcpy e texto pelo input method
 do X (teclas mortas e compose).
 
-Falta: clipboard nos dois sentidos; atalhos de teclado (girar, desligar a
-tela); Xv; áudio; Wi-Fi; o pacote `kiremote-mirror`.
+Depois, o resto da fase: **som** (`audio_codec=raw` do servidor, PCM s16le
+sem decodificar; `mirror/audio.c` toca pelo libpulse com o laço do próprio
+libpulse dentro do `poll()` do mirror, `kr_audio_poll`; fila cortada em
+250 ms; sem Android 11 o servidor avisa com o codec 0 e o vídeo segue),
+**clipboard** nos dois sentidos (CLIPBOARD do X com XFixes; só quando alguém
+copia, nunca o que já estava lá ao abrir a janela; o que acabou de viajar não
+volta), **atalhos** Alt/Super+tecla (`h b s m p n r o f` e volume, os do
+scrcpy), **configurações** (aba "Mirroring" no esquema, `[mirror]` no .ini:
+resolução, qualidade, fps, codec, som, controle, clipboard, apagar a tela,
+manter acordado, Wi-Fi; lidas pelo `mirror/conf.c`, a linha de comando vale
+mais) e **Wi-Fi**: `--connect ADDR` (`adb connect`), `--tcpip` (celular no USB
+→ `ip route`, `adb tcpip 5555`, `adb connect` até o adbd voltar) e `--wifi ADDR`
+(só se não houver celular no cabo; é o que as interfaces passam, com o
+endereço do link do KDE Connect). A depuração sem fio do Android 11 (porta
+sorteada, `adb pair`) não é automatizada: `--connect IP:PORTA`. O pacote
+`kiremote-mirror` (4º `.deb`, baixa e confere o jar na hora do build) entra no
+`build-deb.sh`, no `release.yml` (smoke test `mirror`) e no CI.
+
+Testado com o celular de verdade (Android 12): vídeo, fluxo de som aberto no
+PulseAudio, clipboard computador → celular e o eco ignorado, `--tcpip` pelo
+Wi-Fi (e o celular devolvido ao modo USB). Não testado: som audível (o celular
+estava sem tocar nada), clipboard celular → computador ao vivo (só na janela de
+teste do X, `tests/mirror/`), a depuração sem fio, os `.deb` nas outras
+distros.
+
+Fica para depois (não bloqueiam a fase): Xv (o X desta máquina não tem),
+Ctrl+V com `paste` (hoje o atalho vai como tecla e a sincronização cuida do
+resto), reconectar sozinho quando o Wi-Fi cai, avisar na interface quando o
+`kiremote-mirror` não está instalado (a aba Mirroring aparece mesmo assim),
+`adb pair` e mDNS (fase 6).
 
 ### 6. Fechamento dos plugins
 

@@ -36,10 +36,39 @@ TEST(modifiers_become_the_metastate)
     CHECK_INT_EQ(kr_keys_metastate(Mod4Mask | LockMask | Mod2Mask), 0x330000);
 }
 
+TEST(alt_or_super_make_shortcuts)
+{
+    CHECK_INT_EQ(kr_keys_shortcut(XK_h, Mod1Mask), KR_SC_HOME);
+    CHECK_INT_EQ(kr_keys_shortcut(XK_h, Mod4Mask), KR_SC_HOME);
+    CHECK_INT_EQ(kr_keys_shortcut(XK_H, Mod1Mask | LockMask), KR_SC_HOME); /* Caps Lock */
+    CHECK_INT_EQ(kr_keys_shortcut(XK_b, Mod1Mask | Mod2Mask), KR_SC_BACK); /* Num Lock */
+    CHECK_INT_EQ(kr_keys_shortcut(XK_BackSpace, Mod1Mask), KR_SC_BACK);
+    CHECK_INT_EQ(kr_keys_shortcut(XK_Up, Mod1Mask), KR_SC_VOLUME_UP);
+    CHECK_INT_EQ(kr_keys_shortcut(XK_Down, Mod1Mask), KR_SC_VOLUME_DOWN);
+    CHECK_INT_EQ(kr_keys_shortcut(XK_n, Mod1Mask), KR_SC_NOTIFICATIONS);
+    CHECK_INT_EQ(kr_keys_shortcut(XK_N, Mod1Mask | ShiftMask), KR_SC_COLLAPSE);
+    CHECK_INT_EQ(kr_keys_shortcut(XK_o, Mod1Mask), KR_SC_SCREEN_OFF);
+    CHECK_INT_EQ(kr_keys_shortcut(XK_O, Mod1Mask | ShiftMask), KR_SC_SCREEN_ON);
+    CHECK_INT_EQ(kr_keys_shortcut(XK_r, Mod1Mask), KR_SC_ROTATE);
+    CHECK_INT_EQ(kr_keys_shortcut(XK_f, Mod1Mask), KR_SC_FULLSCREEN);
+}
+
+TEST(everything_else_is_typed)
+{
+    CHECK_INT_EQ(kr_keys_shortcut(XK_h, 0), KR_SC_NONE);
+    CHECK_INT_EQ(kr_keys_shortcut(XK_h, ShiftMask), KR_SC_NONE);
+    CHECK_INT_EQ(kr_keys_shortcut(XK_h, Mod1Mask | ControlMask), KR_SC_NONE); /* the window manager's */
+    CHECK_INT_EQ(kr_keys_shortcut(XK_h, Mod1Mask | ShiftMask), KR_SC_NONE);
+    CHECK_INT_EQ(kr_keys_shortcut(XK_x, Mod1Mask), KR_SC_NONE);
+    CHECK_INT_EQ(kr_keys_shortcut(XK_Return, Mod1Mask), KR_SC_NONE);
+}
+
 int main(void)
 {
     RUN(keys_that_go_as_keycodes);
     RUN(what_types_something_else_goes_as_text);
     RUN(modifiers_become_the_metastate);
+    RUN(alt_or_super_make_shortcuts);
+    RUN(everything_else_is_typed);
     return harness_report();
 }

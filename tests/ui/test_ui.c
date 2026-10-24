@@ -23,7 +23,7 @@
 
 #define DEVICES                                                                                                    \
     "[{\"id\":\"b-phone\",\"name\":\"moto g\",\"type\":\"phone\",\"reachable\":true,\"paired\":true,"          \
-    "\"state\":\"paired\",\"plugins\":[\"ping\",\"share\",\"findmyphone\",\"sftp\"],"                           \
+    "\"address\":\"192.168.1.9\",\"state\":\"paired\",\"plugins\":[\"ping\",\"share\",\"findmyphone\",\"sftp\"],"                           \
     "\"battery\":{\"charge\":80,\"charging\":true},\"signal\":{\"type\":\"LTE\",\"strength\":3}},"              \
     "{\"id\":\"c-near\",\"name\":\"Vizinho\",\"type\":\"phone\",\"reachable\":true,\"paired\":false,\"state\":\"none\"},"  \
     "{\"id\":\"bad\",\"name\":\"Quebrado\",\"type\":\"phone\",\"reachable\":true,\"paired\":true,\"state\":\"paired\","     \
@@ -243,6 +243,7 @@ static struct {
     char *text;
     GPtrArray *errors;
     char spawned[256]; /* argv[0] of the last program run */
+    char spawned_args[256]; /* the rest of its command line, space separated */
 } ask;
 
 static gboolean h_confirm(GtkWindow *p, const char *q)
@@ -275,6 +276,11 @@ static gboolean h_spawn(GtkWindow *p, const char *const *argv)
 {
     (void)p;
     g_strlcpy(ask.spawned, argv[0], sizeof ask.spawned);
+    ask.spawned_args[0] = 0;
+    for (int i = 1; argv[i]; i++) {
+        g_strlcat(ask.spawned_args, i > 1 ? " " : "", sizeof ask.spawned_args);
+        g_strlcat(ask.spawned_args, argv[i], sizeof ask.spawned_args);
+    }
     return TRUE;
 }
 
@@ -511,6 +517,7 @@ TEST(actions_send_their_requests)
     /* Mirroring runs the program, it is not a request. */
     gtk_menu_item_activate(GTK_MENU_ITEM(menu_item(m, "Mirror the screen")));
     CHECK_STR_EQ(ask.spawned, "/bin/true");
+    CHECK_STR_EQ(ask.spawned_args, "--wifi 192.168.1.9"); /* where to try if no cable */
     gtk_widget_destroy(m);
     g_object_unref(m);
     kr_ui_free(ui);

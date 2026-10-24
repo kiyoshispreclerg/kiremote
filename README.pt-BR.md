@@ -71,8 +71,8 @@ com `kiremote-cli -d <aparelho> --pair` (ou recusa com `--unpair`). Os
 arquivos recebidos vão para a pasta de downloads; a configuração está em
 [data/kiremote.ini](data/kiremote.ini).
 
-Espelhamento (fase 5, em andamento: imagem, mouse e teclado; ainda sem áudio
-nem clipboard): ligue a depuração USB no celular, conecte pelo USB e rode
+Espelhamento (fase 5: imagem, som, mouse, teclado, área de transferência e
+Wi-Fi): ligue a depuração USB no celular, conecte pelo USB e rode
 
 ```sh
 scripts/fetch-scrcpy-server.sh   # uma vez: baixa e confere o scrcpy-server (fica em build/)
@@ -83,8 +83,21 @@ Ele usa o `adb` do sistema e o `scrcpy-server` da versão fixada no
 `config.mk`; o celular não precisa do app do scrcpy. Como no scrcpy, o botão
 esquerdo toca, o direito é Voltar, o do meio é Início, os laterais são os
 apps recentes e as notificações; o que você digita vai para o celular (`-n`
-só mostra a tela). A ação "Espelhar a tela" na lista de aparelhos também o
-abre.
+só mostra a tela), e a área de transferência acompanha nos dois sentidos. O
+som do celular toca aqui (Android 11 ou mais novo; `--no-audio` desliga).
+Alt+tecla (ou Super+tecla) age no celular: `h` Início, `b` Voltar, `s` apps
+recentes, `m` Menu, `p` liga/desliga, Cima/Baixo volume, `n` notificações
+(com Shift, fecha), `r` girar, `o` apaga a tela (com Shift, acende) e `f` tela
+cheia. A ação "Espelhar a tela" na lista de aparelhos também o abre, e a aba
+Espelhamento das configurações tem resolução, qualidade, quadros por segundo,
+codec e o resto (`[mirror]` no .ini; a linha de comando vale mais).
+
+Sem cabo: `kiremote-mirror --tcpip` passa o celular que está no USB para o
+Wi-Fi (`adb tcpip`) e o usa assim daí em diante, então o cabo pode sair;
+`--connect 192.168.0.7` (ou `:PORTA`) conecta a um celular que já escuta, como
+um com a depuração sem fio do Android ligada. A lista de aparelhos passa o
+endereço do celular que ela já conhece (`--wifi`), usado só se nenhum celular
+estiver no cabo.
 
 Se o computador não aparecer no celular, confira se o firewall deixa passar
 UDP e TCP de 1716 a 1764, ou adicione o IP do computador no app ("Adicionar
@@ -95,7 +108,8 @@ mesma máquina: os dois aparecem no celular como computadores diferentes.
 
 Precisa de um compilador C11, `make`, `pkg-config`, OpenSSL e gettext
 (`msgfmt`). O `kiremote-mirror` só é compilado se houver libavcodec,
-libswscale e Xext (`libavcodec-dev libswscale-dev libxext-dev`).
+libswscale, Xext, Xfixes e libpulse (`libavcodec-dev libswscale-dev libxext-dev
+libxfixes-dev libpulse-dev`).
 
 ```sh
 make

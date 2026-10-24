@@ -6,6 +6,7 @@
 
 #include <X11/X.h>
 #include <X11/keysym.h>
+#include <stdbool.h>
 #include <stddef.h>
 
 static const struct {
@@ -54,4 +55,46 @@ uint32_t kr_keys_metastate(unsigned state)
     if (state & Mod2Mask) /* Num Lock */
         m |= 0x200000;
     return m;
+}
+
+kr_shortcut kr_keys_shortcut(unsigned long sym, unsigned state)
+{
+    if (!(state & (Mod1Mask | Mod4Mask)) || (state & ControlMask))
+        return KR_SC_NONE;
+    bool shift = state & ShiftMask;
+    if (sym >= XK_A && sym <= XK_Z)
+        sym += XK_a - XK_A;
+    switch (sym) {
+    case XK_n:
+        return shift ? KR_SC_COLLAPSE : KR_SC_NOTIFICATIONS;
+    case XK_o:
+        return shift ? KR_SC_SCREEN_ON : KR_SC_SCREEN_OFF;
+    default:
+        break;
+    }
+    if (shift)
+        return KR_SC_NONE;
+    switch (sym) {
+    case XK_h:
+        return KR_SC_HOME;
+    case XK_b:
+    case XK_BackSpace:
+        return KR_SC_BACK;
+    case XK_s:
+        return KR_SC_APP_SWITCH;
+    case XK_m:
+        return KR_SC_MENU;
+    case XK_p:
+        return KR_SC_POWER;
+    case XK_Up:
+        return KR_SC_VOLUME_UP;
+    case XK_Down:
+        return KR_SC_VOLUME_DOWN;
+    case XK_r:
+        return KR_SC_ROTATE;
+    case XK_f:
+        return KR_SC_FULLSCREEN;
+    default:
+        return KR_SC_NONE;
+    }
 }

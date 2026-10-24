@@ -26,7 +26,7 @@
  * another version on the same phone does not swap ours (docs/UPSTREAM.md). */
 #define DEVICE_JAR "/data/local/tmp/kiremote-scrcpy-server.jar"
 
-typedef enum { ST_DEVICES, ST_PUSH, ST_REVERSE, ST_WAIT, ST_RUNNING, ST_DONE } state;
+typedef enum { ST_DEVICES, ST_ROUTE, ST_TCPIP, ST_CONNECT, ST_RETRY, ST_PUSH, ST_REVERSE, ST_WAIT, ST_RUNNING, ST_DONE } state;
 
 struct kr_server {
     kr_procs *ps;
@@ -43,8 +43,12 @@ struct kr_server {
     kr_proc *shell; /* the server */
     bool reverse_on;
     int listen_fd;
-    int video_fd; /* accepted, waiting for the control socket */
+    int accepted[3]; /* video, audio, control: as many as are expected, in this order */
+    int n_accepted;
     double deadline;
+    char target[128];    /* HOST:PORT being connected to */
+    int tries;           /* `adb connect` attempts left */
+    bool connect_tried;  /* the network connection was made (or given up) */
     char last_line[256]; /* the server's, to say why it ended */
 };
 
@@ -108,6 +112,11 @@ static void step_failed_to_start(kr_server *s)
     fail(s, buf);
 }
 
+static void begin_connect(kr_server *s, int tries);
+static void route_exit(void *ud, int status, const char *out, size_t len);
+static void push_exit(void *ud, int status, const char *out, size_t len);
+static void start_push(kr_server *s);
+
 /* ---- 4. the server --------------------------------------------------------- */
 
 static void shell_line(void *ud, const char *line)
@@ -142,10 +151,14 @@ static void start_shell(kr_server *s)
     snprintf(scid, sizeof scid, "scid=%s", s->socket_name + strlen("scrcpy_"));
     snprintf(cp, sizeof cp, "CLASSPATH=%s", DEVICE_JAR);
     snprintf(codec, sizeof codec, "video_codec=%s", s->codec);
-    const char *args[24] = {"shell", cp, "app_process", "/", "com.genymobile.scrcpy.Server", KR_SCRCPY_VERSION,
+    const char *args[28] = {"shell", cp, "app_process", "/", "com.genymobile.scrcpy.Server", KR_SCRCPY_VERSION,
                             scid,    kr_log_verbose() ? "log_level=debug" : "log_level=info",
-                            "audio=false", codec};
+                            s->o.audio ? "audio=true" : "audio=false", codec};
     int n = 10;
+    if (s->o.audio)
+        args[n++] = "audio_codec=raw"; /* PCM: nothing to decode, and USB or Wi-Fi carry 1.5 Mbit/s */
+    if (s->o.stay_awake)
+        args[n++] = "stay_awake=true";
     if (s->o.view_only)
         args[n++] = "control=false";
     if (s->o.max_size) {
@@ -239,7 +252,118 @@ static void push_exit(void *ud, int status, const char *out, size_t len)
     open_tunnel(s);
 }
 
+/* ---- 0. the network ---------------------------------------------------------- */
+
+static void list_devices(kr_server *s);
+
+static void start_push(kr_server *s)
+{
+    const char *args[] = {"push", s->jar, DEVICE_JAR, NULL};
+    static const kr_proc_cb cb = {NULL, push_exit};
+    s->st = ST_PUSH;
+    s->step = adb(s, args, &cb, KR_PROC_CAPTURE | KR_PROC_STDERR);
+    if (!s->step)
+        step_failed_to_start(s);
+}
+
+static void connect_exit(void *ud, int status, const char *out, size_t len)
+{
+    kr_server *s = ud;
+    s->step = NULL;
+    if (status == 0 && out && kr_adb_connect_ok(out)) {
+        kr_log_debug("adb: connected to %s", s->target);
+        s->connect_tried = true;
+        snprintf(s->want, sizeof s->want, "%s", s->target); /* the phone to pick now */
+        s->o.serial = s->want;
+        list_devices(s);
+        return;
+    }
+    if (--s->tries > 0) {
+        s->st = ST_RETRY;
+        s->deadline = kr_now() + 0.25;
+        return;
+    }
+    char ours[256];
+    snprintf(ours, sizeof ours, _("Could not connect to %s"), s->target);
+    fail_with_output(s, ours, out ? out : "", out ? len : 0);
+}
+
+static void do_connect(kr_server *s)
+{
+    const char *args[] = {"connect", s->target, NULL};
+    static const kr_proc_cb cb = {NULL, connect_exit};
+    s->serial[0] = 0; /* adb connect is not about one device */
+    s->st = ST_CONNECT;
+    s->deadline = 0;
+    s->step = adb(s, args, &cb, KR_PROC_CAPTURE | KR_PROC_STDERR);
+    if (!s->step)
+        step_failed_to_start(s);
+}
+
+static void begin_connect(kr_server *s, int tries)
+{
+    s->connect_tried = true; /* once, whatever comes of it */
+    if (!kr_adb_host_port(s->o.connect, s->target, sizeof s->target)) {
+        fail(s, _("That is not an address adb can connect to"));
+        return;
+    }
+    s->tries = tries;
+    do_connect(s);
+}
+
+/* The phone is on USB: its address on Wi-Fi, then adbd listens on the network. */
+static void tcpip_exit(void *ud, int status, const char *out, size_t len)
+{
+    kr_server *s = ud;
+    s->step = NULL;
+    if (status != 0) {
+        fail_with_output(s, _("Could not switch the phone to Wi-Fi debugging"), out ? out : "", out ? len : 0);
+        return;
+    }
+    /* adbd restarts: it takes a moment to listen (scrcpy waits up to 10 s). */
+    s->tries = 40;
+    s->st = ST_RETRY;
+    s->deadline = kr_now() + 0.5;
+}
+
+static void route_exit(void *ud, int status, const char *out, size_t len)
+{
+    kr_server *s = ud;
+    s->step = NULL;
+    char ip[32];
+    if (status != 0 || !out || !kr_adb_parse_device_ip(out, ip, sizeof ip)) {
+        (void)len;
+        fail(s, _("The phone is not on Wi-Fi (no address found)"));
+        return;
+    }
+    snprintf(s->target, sizeof s->target, "%s:%d", ip, KR_ADB_TCPIP_PORT);
+    s->connect_tried = true;
+    kr_log_debug("adb: the phone is at %s", s->target);
+    char port[16];
+    snprintf(port, sizeof port, "%d", KR_ADB_TCPIP_PORT);
+    const char *args[] = {"tcpip", port, NULL};
+    static const kr_proc_cb cb = {NULL, tcpip_exit};
+    s->st = ST_TCPIP;
+    s->step = adb(s, args, &cb, KR_PROC_CAPTURE | KR_PROC_STDERR);
+    if (!s->step)
+        step_failed_to_start(s);
+}
+
 /* ---- 1. the phone ---------------------------------------------------------- */
+
+static void devices_exit(void *ud, int status, const char *out, size_t len);
+
+static void list_devices(kr_server *s)
+{
+    const char *args[] = {"devices", "-l", NULL};
+    static const kr_proc_cb pcb = {NULL, devices_exit};
+    s->serial[0] = 0;
+    s->st = ST_DEVICES;
+    s->deadline = 0;
+    s->step = adb(s, args, &pcb, KR_PROC_CAPTURE | KR_PROC_STDERR);
+    if (!s->step)
+        step_failed_to_start(s); /* on_error before this returns */
+}
 
 static void devices_exit(void *ud, int status, const char *out, size_t len)
 {
@@ -251,6 +375,10 @@ static void devices_exit(void *ud, int status, const char *out, size_t len)
     }
     kr_adb_dev devs[16];
     int n = kr_adb_parse_devices(out, devs, 16);
+    if (n == 0 && !s->connect_tried && s->o.connect && *s->o.connect) {
+        begin_connect(s, 1); /* no cable: the network, if we were told where */
+        return;
+    }
     const char *why = NULL;
     int i = kr_adb_pick(devs, n, s->o.serial, &why);
     if (i < 0) {
@@ -261,12 +389,16 @@ static void devices_exit(void *ud, int status, const char *out, size_t len)
     snprintf(s->model, sizeof s->model, "%s", devs[i].model);
     kr_log_debug("adb: %s (%s)", s->serial, s->model);
 
-    const char *args[] = {"push", s->jar, DEVICE_JAR, NULL};
-    static const kr_proc_cb cb = {NULL, push_exit};
-    s->st = ST_PUSH;
-    s->step = adb(s, args, &cb, KR_PROC_CAPTURE | KR_PROC_STDERR);
-    if (!s->step)
-        step_failed_to_start(s);
+    if (s->o.tcpip && !s->connect_tried && !kr_adb_is_tcpip(s->serial)) {
+        const char *args[] = {"shell", "ip", "route", NULL};
+        static const kr_proc_cb rcb = {NULL, route_exit};
+        s->st = ST_ROUTE;
+        s->step = adb(s, args, &rcb, KR_PROC_CAPTURE | KR_PROC_STDERR);
+        if (!s->step)
+            step_failed_to_start(s);
+        return;
+    }
+    start_push(s);
 }
 
 kr_server *kr_server_start(kr_procs *ps, const kr_server_opts *opts, const kr_server_cb *cb, void *ud)
@@ -279,7 +411,6 @@ kr_server *kr_server_start(kr_procs *ps, const kr_server_opts *opts, const kr_se
     s->ud = ud;
     s->o = *opts;
     s->listen_fd = -1;
-    s->video_fd = -1;
     snprintf(s->jar, sizeof s->jar, "%s", opts->jar);
     snprintf(s->codec, sizeof s->codec, "%s", opts->codec && *opts->codec ? opts->codec : "h264");
     s->o.jar = s->jar;
@@ -287,13 +418,10 @@ kr_server *kr_server_start(kr_procs *ps, const kr_server_opts *opts, const kr_se
     snprintf(s->want, sizeof s->want, "%s", opts->serial ? opts->serial : "");
     s->o.serial = s->want;
 
-    const char *args[] = {"devices", "-l", NULL};
-    static const kr_proc_cb pcb = {NULL, devices_exit};
-    s->st = ST_DEVICES;
-    s->step = adb(s, args, &pcb, KR_PROC_CAPTURE | KR_PROC_STDERR);
-    if (!s->step) {
-        step_failed_to_start(s); /* on_error before this returns */
-    }
+    if (s->o.connect && *s->o.connect && !s->o.connect_fallback)
+        begin_connect(s, 1);
+    else
+        list_devices(s);
     return s;
 }
 
@@ -312,8 +440,8 @@ void kr_server_free(kr_server *s)
     remove_tunnel(s);
     if (s->listen_fd >= 0)
         close(s->listen_fd);
-    if (s->video_fd >= 0)
-        close(s->video_fd);
+    for (int i = 0; i < s->n_accepted; i++)
+        close(s->accepted[i]);
     free(s);
 }
 
@@ -343,14 +471,14 @@ void kr_server_dispatch(kr_server *s, const struct pollfd *fds, int n)
         }
         fcntl(fd, F_SETFD, FD_CLOEXEC);
         fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) & ~O_NONBLOCK); /* as promised in server.h */
-        /* Video first, then control (the server's order). */
-        if (s->video_fd < 0 && !s->o.view_only) {
-            s->video_fd = fd;
+        /* Video first, then audio, then control (the server's order). */
+        int expected = 1 + (s->o.audio ? 1 : 0) + (s->o.view_only ? 0 : 1);
+        s->accepted[s->n_accepted++] = fd;
+        if (s->n_accepted < expected)
             return;
-        }
-        int video = s->video_fd >= 0 ? s->video_fd : fd;
-        int control = s->video_fd >= 0 ? fd : -1;
-        s->video_fd = -1;
+        int video = s->accepted[0], audio = s->o.audio ? s->accepted[1] : -1;
+        int control = s->o.view_only ? -1 : s->accepted[expected - 1];
+        s->n_accepted = 0; /* the caller owns them now */
         if (control >= 0) {
             /* Small and urgent: no Nagle (sc_server_connect_to). */
             int one = 1;
@@ -362,18 +490,22 @@ void kr_server_dispatch(kr_server *s, const struct pollfd *fds, int n)
         s->deadline = 0;
         remove_tunnel(s);
         s->st = ST_RUNNING;
-        s->cb.on_ready(s->ud, video, control, s->serial, s->model);
+        s->cb.on_ready(s->ud, video, audio, control, s->serial, s->model);
         return;
     }
 }
 
 double kr_server_deadline(const kr_server *s)
 {
-    return s->st == ST_WAIT ? s->deadline : 0;
+    return s->st == ST_WAIT || s->st == ST_RETRY ? s->deadline : 0;
 }
 
 void kr_server_tick(kr_server *s)
 {
+    if (s->st == ST_RETRY && s->deadline && kr_now() >= s->deadline) {
+        do_connect(s);
+        return;
+    }
     if (s->st == ST_WAIT && s->deadline && kr_now() >= s->deadline) {
         if (s->last_line[0]) {
             char buf[512];
