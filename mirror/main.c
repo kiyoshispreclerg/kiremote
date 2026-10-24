@@ -446,6 +446,7 @@ static void drop_audio(mirror *m, const char *why)
 static void on_audio_codec(void *ud, uint32_t codec)
 {
     mirror *m = ud;
+    kr_log_debug("audio codec %08x", codec);
     if (codec != KR_CODEC_RAW)
         drop_audio(m, _("The phone sent sound in a format this program does not play"));
 }
@@ -455,6 +456,11 @@ static void on_audio_packet(void *ud, const uint8_t *data, size_t len, int64_t p
     mirror *m = ud;
     (void)pts;
     (void)key;
+    static size_t total;
+    static int n;
+    total += len;
+    if (n++ % 100 == 0)
+        kr_log_debug("audio: %d packets, %zu bytes, queued %zu", n, total, m->audio ? kr_audio_queued(m->audio) : 0);
     if (m->audio)
         kr_audio_play(m->audio, data, len);
 }

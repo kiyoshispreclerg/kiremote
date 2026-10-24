@@ -66,6 +66,13 @@ static void stream_write(pa_stream *s, size_t nbytes, void *ud)
     drain(ud);
 }
 
+static void stream_underflow(pa_stream *s, void *ud)
+{
+    (void)s;
+    (void)ud;
+    kr_log_debug("sound: underrun");
+}
+
 static void start_stream(kr_audio *a)
 {
     static const pa_sample_spec ss = {.format = PA_SAMPLE_S16LE, .rate = KR_AUDIO_RATE, .channels = 2};
@@ -76,6 +83,7 @@ static void start_stream(kr_audio *a)
     }
     pa_stream_set_state_callback(a->st, stream_state, a);
     pa_stream_set_write_callback(a->st, stream_write, a);
+    pa_stream_set_underflow_callback(a->st, stream_underflow, a);
     /* About 80 ms ahead in the server: enough to ride out a late packet,
      * little enough to stay in step with the picture. */
     pa_buffer_attr ba = {.maxlength = (uint32_t)-1,
