@@ -378,7 +378,7 @@ lint:
 	cppcheck --std=c11 --enable=warning,performance,portability \
 		--error-exitcode=1 --inline-suppr --quiet \
 		--suppress=normalCheckLevelMaxBranches -Isrc -Imirror -Ivendor/cjson \
-		-D_XOPEN_SOURCE=700 -DKR_VERSION='"lint"' -DKR_FIXTURES_DIR='"."' src ui/krmodel.c ui/krclient.c mirror tests/unit tests/fuzz
+		-D_XOPEN_SOURCE=700 -DKR_VERSION='"lint"' -DKR_SCRCPY_VERSION='"lint"' -DKR_FIXTURES_DIR='"."' src ui/krmodel.c ui/krclient.c mirror tests/unit tests/fuzz
 
 clean:
 	rm -rf $(BUILD)

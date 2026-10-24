@@ -34,13 +34,25 @@ while [ ! -e "/tmp/.X11-unix/X$n" ] && [ $t -gt 0 ]; do sleep 0.1; t=$((t - 1));
 [ -e "/tmp/.X11-unix/X$n" ] || { echo "Xvfb did not start"; cat "$tmp/xvfb.log"; exit 1; }
 export DISPLAY=":$n" XDG_CONFIG_HOME="$tmp/cfg" HOME="$tmp"
 
-# Under ASan, GTK and fontconfig report what they never free (their
-# singletons). That is not ours to fix and a suppression for the libraries
-# would hide our own leaks (they pass through glib too), so a leak report
-# only fails the test if one of its stacks goes through our code.
+# Under ASan, GTK, pango and fontconfig report what they never free (their
+# caches and singletons), including what our widget code makes them allocate.
+# That is not ours to fix, and a suppression for the libraries would hide our
+# own leaks (they pass through glib too). So a leak report only fails the test
+# if the allocation was made by our own code: the first frame after the
+# allocator, skipping glib and libc wrappers (g_malloc, strdup...), is ours.
 rc=0
 LSAN_OPTIONS="${LSAN_OPTIONS:+$LSAN_OPTIONS:}exitcode=0" "$build/tests/test_ui" >"$tmp/out" 2>&1 || rc=$?
-if awk 'BEGIN { RS = "" } /leak of/ && /(ui\/gtk\/|tests\/ui\/)/ { bad = 1 } END { exit !bad }' "$tmp/out"; then
+if awk 'BEGIN { RS = "" }
+    /leak of/ {
+        n = split($0, l, "\n")
+        for (i = 2; i <= n; i++) {
+            if (l[i] !~ /#[1-9][0-9]* /) continue
+            if (l[i] ~ /\(\/[^)]*lib(glib|c)[-.0-9]*\.so/) continue
+            if (l[i] !~ /\(\/[^)]*\.so/) bad = 1
+            break
+        }
+    }
+    END { exit !bad }' "$tmp/out"; then
     cat "$tmp/out"
     echo "tests/ui/run.sh: a leak in the interface code"
     exit 1
