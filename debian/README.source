@@ -1,7 +1,7 @@
 kiremote Debian packaging
 =========================
 
-Three binary packages from one build of the top-level Makefile:
+Four binary packages from one build of the top-level Makefile:
 
     kiremote            kiremoted and kiremote-cli (+ translations, autostart)
     kiremote-gtk        the GTK2 window and tray icon, for any desktop;
@@ -10,12 +10,17 @@ Three binary packages from one build of the top-level Makefile:
                         widget; depends on kiremote (= same version) and
                         kidesktop-core (>= 0.1.4~)
 
-A fourth, kiremote-mirror (the screen mirroring, phase 5 of PLANO.md), has
-its stanza commented out in debian/control; when the program exists, add an
-install-mirror target and a line to debian/rules.
+    kiremote-mirror     the phone's screen in a window (libavcodec, libswscale,
+                        libpulse) and the scrcpy-server it copies to the
+                        phone; depends on kiremote (= same version), which
+                        holds the translations. The interfaces only Suggest
+                        it: it brings ffmpeg's libraries.
 
-Each package's directory is filled by `make install-daemon`, `install-gtk`
-and `install-kidesktop`.
+Each package's directory is filled by `make install-daemon`, `install-gtk`,
+`install-kidesktop` and `install-mirror`. The last one downloads the
+scrcpy-server jar from scrcpy's release and checks it against the SHA-256 in
+config.mk (scripts/fetch-scrcpy-server.sh), so building the package needs
+network access and curl.
 
 kidesktop-core is a Build-Depends only for the headers the widget and the
 page are compiled against (xispanel_widget.h, xisserve_page.h); the version

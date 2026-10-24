@@ -1,5 +1,5 @@
-# Source .zip and kiremote / kiremote-gtk / kiremote-kidesktop .deb packages
-# for Ubuntu 22.04, Ubuntu 24.04, Debian 12 (what Devuan 5 installs) and
+# Source .zip and kiremote / kiremote-gtk / kiremote-kidesktop / kiremote-mirror
+# .deb packages for Ubuntu 22.04, Ubuntu 24.04, Debian 12 (what Devuan 5 installs) and
 # Debian 13 (Devuan 6 "excalibur"). kiremote-kidesktop needs kidesktop-core
 # (>= 0.1.4), which is fetched from kidesktop's own releases.
 #
@@ -142,11 +142,12 @@ jobs:
     container: ${{ matrix.dist.image }}
     strategy:
       fail-fast: false
-      # "full" installs the three packages (with kidesktop-core, which the
+      # "full" installs the four packages (with kidesktop-core, which the
       # KiDesktop one depends on); "daemon" only kiremote, which must work
-      # without any interface; "gtk" kiremote and kiremote-gtk, without KiDesktop.
+      # without any interface; "gtk" kiremote and kiremote-gtk, without KiDesktop;
+      # "mirror" kiremote and kiremote-mirror, with nothing else of ours.
       matrix:
-        set: [full, daemon, gtk]
+        set: [full, daemon, gtk, mirror]
         dist:
           - image: "ubuntu:22.04"
             name: ubuntu-22.04
@@ -181,6 +182,8 @@ jobs:
               debs=$(ls ./pkg/kiremote_*.deb ./pkg/kiremote-gtk_*.deb) ;;
             daemon)
               debs=$(ls ./pkg/kiremote_*.deb) ;;
+            mirror)
+              debs=$(ls ./pkg/kiremote_*.deb ./pkg/kiremote-mirror_*.deb) ;;
           esac
           apt-get update
           apt-get install -y $debs xvfb x11-utils procps

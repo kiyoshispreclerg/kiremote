@@ -10,6 +10,18 @@ Files: vendor/cjson/*
 Copyright: 2009-2017 Dave Gamble and cJSON contributors
 License: Expat
 
+Files: usr/share/kiremote/scrcpy-server
+Copyright: Genymobile and scrcpy contributors
+Comment: Not part of this source: the server that kiremote-mirror copies to the
+ phone, downloaded from scrcpy's release (version and SHA-256 in config.mk)
+ when the package is built. Its source is https://github.com/Genymobile/scrcpy
+License: Apache-2.0
+
+License: Apache-2.0
+ Licensed under the Apache License, Version 2.0. On Debian systems, the
+ complete text of the Apache License version 2.0 can be found in
+ /usr/share/common-licenses/Apache-2.0.
+
 License: GPL-3+
  This program is free software: you can redistribute it and/or modify it
  under the terms of the GNU General Public License as published by the Free

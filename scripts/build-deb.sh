@@ -1,6 +1,6 @@
 #!/bin/sh
-# build-deb.sh - builds the kiremote, kiremote-gtk and kiremote-kidesktop
-# .debs into dist/ for the distro it runs on (see debian/README.source).
+# build-deb.sh - builds the kiremote, kiremote-gtk, kiremote-kidesktop and
+# kiremote-mirror .debs into dist/ for the distro it runs on (see debian/README.source).
 # Needs debhelper, dpkg-dev and the Build-Depends of debian/control installed
 # (scripts/install-build-deps.sh does that, kidesktop-core included).
 #
@@ -49,7 +49,7 @@ dpkg-buildpackage -b -us -uc $flags
 
 mkdir -p dist
 arch=$(dpkg --print-architecture)
-for pkg in kiremote kiremote-gtk kiremote-kidesktop; do
+for pkg in kiremote kiremote-gtk kiremote-kidesktop kiremote-mirror; do
 	mv "../${pkg}_${version}_${arch}.deb" dist/
 	rm -f "../${pkg}-dbgsym_${version}_${arch}.ddeb" "../${pkg}-dbgsym_${version}_${arch}.deb"
 	echo "build-deb: dist/${pkg}_${version}_${arch}.deb"

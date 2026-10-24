@@ -1,6 +1,7 @@
 #!/usr/bin/make -f
 # One build of the top-level Makefile, installed into one directory per
-# package by its install-daemon / install-gtk / install-kidesktop targets
+# package by its install-daemon / install-gtk / install-kidesktop /
+# install-mirror targets
 # (see README.source). The tests are not run here: they need namespaces, an
 # X server and, for the KiDesktop ones, kidesktop's own programs (CI runs
 # `make test` on its own).
@@ -23,8 +24,9 @@ override_dh_auto_build:
 	$(MAKE) $(MAKEVARS) all
 	# The panel widget, the popup page and the kiconf tab are built only when
 	# GTK and kidesktop-core's headers are there: here that is a failure.
-	for f in kiremote build/kidesktop/tabs/kiremote-tab.so build/kidesktop/pages/kiremote.so \
-	         build/kidesktop/widgets/kiremote.so; do \
+	# The same for the mirror (libavcodec, libswscale, libpulse).
+	for f in kiremote build/kiremote-mirror build/kidesktop/tabs/kiremote-tab.so \
+	         build/kidesktop/pages/kiremote.so build/kidesktop/widgets/kiremote.so; do \
 		test -e $$f || test -e build/$$f || { echo "debian/rules: $$f was not built"; exit 1; }; \
 	done
 
@@ -32,6 +34,8 @@ override_dh_auto_install:
 	$(MAKE) $(MAKEVARS) install-daemon DESTDIR=$(CURDIR)/debian/kiremote
 	$(MAKE) $(MAKEVARS) install-gtk DESTDIR=$(CURDIR)/debian/kiremote-gtk
 	$(MAKE) $(MAKEVARS) install-kidesktop DESTDIR=$(CURDIR)/debian/kiremote-kidesktop
+	# This one downloads the scrcpy-server (and checks its SHA-256).
+	$(MAKE) $(MAKEVARS) install-mirror DESTDIR=$(CURDIR)/debian/kiremote-mirror
 
 # The modules leave xpw_*() and xisserve_*() to the program that loads them:
 # dpkg-shlibdeps would warn about each.

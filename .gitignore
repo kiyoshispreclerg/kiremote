@@ -9,6 +9,7 @@ debian/files
 debian/kiremote/
 debian/kiremote-gtk/
 debian/kiremote-kidesktop/
+debian/kiremote-mirror/
 debian/*.substvars
 /dist/
 dist/

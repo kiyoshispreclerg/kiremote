@@ -16,6 +16,11 @@ Build-Depends: debhelper-compat (= 13),
                libxext-dev,
                libgtk2.0-dev,
                libcairo2-dev,
+               libavcodec-dev,
+               libavutil-dev,
+               libswscale-dev,
+               libpulse-dev,
+               curl,
                kidesktop-core (>= 0.1.4~)
 Standards-Version: 4.6.0
 Homepage: https://github.com/kiyoshispreclerg/kiremote
@@ -50,6 +55,7 @@ Depends: ${shlibs:Depends},
          ${misc:Depends},
          kiremote (= ${binary:Version})
 Recommends: adwaita-icon-theme | gnome-icon-theme
+Suggests: kiremote-mirror
 Description: Kiremote window and tray icon for any desktop (GTK 2)
  The Kiremote interface for desktops that are not KiDesktop: a window with
  the phones around (battery, signal, ping, find, send files and text, browse,
@@ -66,6 +72,7 @@ Depends: ${shlibs:Depends},
          kiremote (= ${binary:Version}),
          kidesktop-core (>= 0.1.4~),
          libgtk2.0-0
+Suggests: kiremote-mirror
 Enhances: kidesktop-core
 Description: Kiremote for KiDesktop: panel widget, popup page and settings tab
  The Kiremote interface integrated into KiDesktop, with the same functions
@@ -79,11 +86,25 @@ Description: Kiremote for KiDesktop: panel widget, popup page and settings tab
     xisserve --question
  .
  Add the widget to a panel in kiconf (Panels) or in xispanel.conf.
-# A fourth package comes with the screen mirroring (phase 5 of PLANO.md):
-#
-# Package: kiremote-mirror
-# Architecture: any
-# Depends: ${shlibs:Depends}, ${misc:Depends}, kiremote (= ${binary:Version})
-# Recommends: adb
-# Description: mirror and control the phone's screen
-#  kiremote-mirror: one window per phone, scrcpy's protocol, no SDL.
+
+Package: kiremote-mirror
+Architecture: any
+Depends: ${shlibs:Depends},
+         ${misc:Depends},
+         kiremote (= ${binary:Version})
+Recommends: adb
+Suggests: pulseaudio | pipewire-pulse
+Description: shows and controls the phone's screen in a window
+ kiremote-mirror: the phone's screen (and sound) in a window of its own,
+ with the mouse, the keyboard and the clipboard acting on the phone. It
+ speaks the protocol of scrcpy's server, which it copies to the phone through
+ adb, so USB debugging must be on; it works over a cable or over Wi-Fi.
+ .
+ The window is plain Xlib (no SDL): the video is decoded with libavcodec and
+ scaled with libswscale, and the sound goes to PulseAudio (or PipeWire). The
+ Kiremote windows offer "Mirror the screen" on each phone once this package
+ is installed, and its options are in their Mirroring settings.
+ .
+ The scrcpy-server it uses (Apache License 2.0, Genymobile) is the one from
+ scrcpy's releases, checked against a pinned checksum when the package is
+ built.

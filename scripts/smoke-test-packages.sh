@@ -1,6 +1,6 @@
 #!/bin/sh
-# smoke-test-packages.sh - what an installed kiremote, kiremote-gtk and
-# kiremote-kidesktop must do, in a clean image where only their Depends are
+# smoke-test-packages.sh - what an installed kiremote, kiremote-gtk,
+# kiremote-kidesktop and kiremote-mirror must do, in a clean image where only their Depends are
 # installed (so a missing one shows up here): the programs start, the daemon
 # answers on its socket, and the KiDesktop modules are loaded by the real
 # xisserve. Needs xvfb, x11-utils and procps besides the .debs.
@@ -14,9 +14,11 @@ cleanup() { for p in $pids; do kill "$p" 2>/dev/null || true; done; rm -rf "$tmp
 trap cleanup EXIT
 
 # What was installed decides what is checked: the daemon alone, with the GTK
-# window, with the KiDesktop modules, or all.
+# window, with the KiDesktop modules, with the mirror, or all.
 have_gtk=no
 have_kd=no
+have_mirror=no
+[ -x /usr/bin/kiremote-mirror ] && have_mirror=yes
 [ -x /usr/bin/kiremote ] && have_gtk=yes
 [ -e /usr/lib/xisserve/pages/kiremote.so ] && have_kd=yes
 
@@ -54,8 +56,23 @@ kiremote-cli --set clipboard.auto_share=off >/dev/null || fail "--set"
 [ "$(kiremote-cli --get clipboard.auto_share)" = false ] || fail "--get after --set"
 [ -s "$tmp/run/kiremote-status.json" ] || fail "no status file"
 
+# The mirror: it starts, finds its libraries and the scrcpy-server it copies to
+# the phone, and with an adb that sees no phone says so (no X, no phone here).
+if [ "$have_mirror" = yes ]; then
+	missing=$(ldd /usr/bin/kiremote-mirror | grep 'not found' || true)
+	[ -z "$missing" ] || fail "kiremote-mirror: $missing"
+	kiremote-mirror --version | grep -q 'scrcpy-server' || fail "kiremote-mirror --version"
+	kiremote-mirror --help | grep -q -- '--wifi' || fail "kiremote-mirror --help"
+	[ -s /usr/share/kiremote/scrcpy-server ] || fail "no scrcpy-server in /usr/share/kiremote"
+	printf '#!/bin/sh\necho "List of devices attached"\n' > "$tmp/adb"
+	chmod +x "$tmp/adb"
+	out=$(KIREMOTE_ADB="$tmp/adb" kiremote-mirror -c "$tmp/kiremote.ini" 2>&1) && fail "kiremote-mirror without a phone succeeded"
+	echo "$out" | grep -q 'No phone found' || { echo "$out"; fail "kiremote-mirror without a phone: $out"; }
+	[ "$(kiremote-cli --schema | grep -c '^mirror\.')" -ge 1 ] || fail "the daemon does not know the [mirror] settings"
+fi
+
 if [ "$have_gtk" = no ] && [ "$have_kd" = no ]; then
-	echo "smoke-test-packages: ok (daemon only)"
+	[ "$have_mirror" = no ] && echo "smoke-test-packages: ok (daemon only)" || echo "smoke-test-packages: ok (daemon and mirror)"
 	exit 0
 fi
 
