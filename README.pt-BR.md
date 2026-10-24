@@ -104,6 +104,18 @@ UDP e TCP de 1716 a 1764, ou adicione o IP do computador no app ("Adicionar
 dispositivos pelo IP"). O Kiremote convive com um KDE Connect rodando na
 mesma máquina: os dois aparecem no celular como computadores diferentes.
 
+## Instalar
+
+Baixe os pacotes `.deb` da sua distro na página de
+[Releases](https://github.com/kiyoshispreclerg/kiremote/releases)
+(Ubuntu 22.04, Ubuntu 24.04, Debian 12, Debian 13) e instale com
+`sudo apt install ./kiremote_*.deb ./kiremote-gtk_*.deb`. Sempre o `kiremote`
+(daemon e CLI), mais uma interface:
+
+- **KiDesktop:** `kiremote-kidesktop` (precisa do `kidesktop-core` 0.1.4 ou mais).
+- **Outro desktop qualquer:** `kiremote-gtk` (janela GTK 2 genérica e ícone na bandeja).
+- Opcional, para qualquer uma: `kiremote-mirror` (espelhamento da tela; precisa do `adb`).
+
 ## Compilar
 
 Precisa de um compilador C11, `make`, `pkg-config`, OpenSSL e gettext
@@ -126,8 +138,8 @@ protocolo o Kiremote é compatível.
 
 ## Pacotes
 
-Um fonte, três pacotes `.deb` (Ubuntu 22.04/24.04, Debian 12/13):
+Um fonte, quatro pacotes `.deb` (Ubuntu 22.04/24.04, Debian 12/13):
 `kiremote` (daemon e CLI), `kiremote-gtk` (a janela, para qualquer desktop) e
 `kiremote-kidesktop` (aba do kiconf, página do xisserve e widget do xispanel;
-depende de `kidesktop-core` 0.1.4 ou mais). `./scripts/install-build-deps.sh`
+depende de `kidesktop-core` 0.1.4 ou mais) e `kiremote-mirror` (espelhamento da tela). `./scripts/install-build-deps.sh`
 e `./scripts/build-deb.sh` geram os pacotes em `dist/`.

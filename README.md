@@ -106,6 +106,18 @@ UDP and TCP 1716 to 1764 through, or add the computer's IP in the app ("Add
 devices by IP"). Kiremote can run next to KDE Connect on the same machine:
 the phone sees them as two different computers.
 
+## Install
+
+Download the `.deb` packages for your distro from the
+[Releases](https://github.com/kiyoshispreclerg/kiremote/releases) page
+(Ubuntu 22.04, Ubuntu 24.04, Debian 12, Debian 13) and install them with
+`sudo apt install ./kiremote_*.deb ./kiremote-gtk_*.deb`. Always `kiremote`
+(the daemon and CLI), plus one interface:
+
+- **KiDesktop:** `kiremote-kidesktop` (needs `kidesktop-core` 0.1.4 or newer).
+- **Any other desktop:** `kiremote-gtk` (generic GTK 2 window and tray icon).
+- Optional, for either: `kiremote-mirror` (screen mirroring; needs `adb`).
+
 ## Building
 
 Needs a C11 compiler, `make`, `pkg-config`, OpenSSL and gettext (`msgfmt`).
@@ -127,8 +139,8 @@ Kiremote is compatible with.
 
 ## Packages
 
-One source, three `.deb` packages (Ubuntu 22.04/24.04, Debian 12/13):
+One source, four `.deb` packages (Ubuntu 22.04/24.04, Debian 12/13):
 `kiremote` (daemon and CLI), `kiremote-gtk` (the window, for any desktop) and
 `kiremote-kidesktop` (kiconf tab, xisserve page and xispanel widget; needs
-`kidesktop-core` 0.1.4 or newer). `./scripts/install-build-deps.sh` and
+`kidesktop-core` 0.1.4 or newer) and `kiremote-mirror` (screen mirroring). `./scripts/install-build-deps.sh` and
 `./scripts/build-deb.sh` build them into `dist/`.
