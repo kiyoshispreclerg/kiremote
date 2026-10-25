@@ -186,6 +186,12 @@ bool kr_config_share_dir(const kr_config *c, char *out, size_t size)
     return home && home[0] == '/' && kr_pathf(out, size, "%s/Downloads", home);
 }
 
+bool kr_config_get_path(const kr_config *c, const char *section, const char *key, char *out, size_t size)
+{
+    const char *v = kr_ini_get(c->ini, section, key);
+    return v && *v && expand_home(v, out, size);
+}
+
 const char *kr_config_get(const kr_config *c, const char *section, const char *key)
 {
     return kr_ini_get(c->ini, section, key);

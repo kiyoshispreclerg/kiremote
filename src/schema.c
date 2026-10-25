@@ -9,6 +9,7 @@
 
 #include "i18n.h"
 #include "packet.h"
+#include "pointer_img.h"
 #include "v4linfo.h"
 #include "util.h"
 
@@ -24,6 +25,9 @@ static const char *const mirror_fps[] = {"", "15", "24", "30", "60", NULL};
 static const char *const mirror_codecs[] = {"h264", "h265", "av1", NULL};
 static const char *const camera_facings[] = {"back", "front", "external", NULL};
 static const char *const camera_sizes[] = {"640", "960", "1280", "1920", NULL};
+static const char *const pointer_shapes[] = {"circle", "ring", "square", "diamond", "cross", NULL};
+static const char *const pointer_sizes[] = {"small", "medium", "large", "huge", NULL};
+static const char *const pointer_hides[] = {"0.5", "1", "2", "5", "0", NULL};
 
 /* How a choice is shown (msgids); a choice not listed is shown as it is. */
 static const struct {
@@ -41,6 +45,20 @@ static const struct {
     {"back", N_("Back")},
     {"front", N_("Front (selfie)")},
     {"external", N_("External (USB)")},
+    {"circle", N_("Circle")},
+    {"ring", N_("Ring")},
+    {"square", N_("Square")},
+    {"diamond", N_("Diamond")},
+    {"cross", N_("Cross")},
+    {"small", N_("Small")},
+    {"medium", N_("Medium")},
+    {"large", N_("Large")},
+    {"huge", N_("Huge")},
+    {"0.5", N_("Half a second")},
+    {"1", N_("1 second")},
+    {"2", N_("2 seconds")},
+    {"5", N_("5 seconds")},
+    {"0", N_("Never (until the phone stops)")},
 };
 
 static const kr_setting_group groups[] = {
@@ -50,6 +68,7 @@ static const kr_setting_group groups[] = {
     {"features", N_("Features")},
     {"clipboard", N_("Clipboard")},
     {"media", N_("Media")},
+    {"presenter", N_("Presentation pointer")},
     {"find", N_("Find my phone")},
     {"lock", N_("Screen lock")},
     {"commands", N_("Commands")},
@@ -112,6 +131,24 @@ static const kr_setting settings[] = {
      N_("The sound played when the phone looks for this computer. Empty: a beep."), "findmyphone", false},
     {"find", "player", KR_S_ENUM, "", players, "find", N_("Player"),
      N_("The program that plays it. Empty: the first one found."), "findmyphone", false},
+
+    /* The look of the presentation pointer (src/plugin_presenter.c). */
+    {"pointer", "shape", KR_S_ENUM, "circle", pointer_shapes, "presenter", N_("Shape"),
+     N_("What the pointer looks like. An image below replaces it."), "presenter", false},
+    {"pointer", "color", KR_S_COLOR, "#ff0000", NULL, "presenter", N_("Color"), N_("The color of the pointer."),
+     "presenter", false},
+    {"pointer", "outline", KR_S_BOOL, "true", NULL, "presenter", N_("Outline"),
+     N_("Draw a thin line around the pointer so it shows on any background."), "presenter", false},
+    {"pointer", "outline_color", KR_S_COLOR, "#ffffff", NULL, "presenter", N_("Outline color"),
+     N_("The color of that line."), "presenter", false},
+    {"pointer", "size", KR_S_ENUM, "medium", pointer_sizes, "presenter", N_("Size"),
+     N_("How big the pointer is, compared to the screen."), "presenter", false},
+    {"pointer", "image", KR_S_PATH, "", NULL, "presenter", N_("Image"),
+     N_("A PNG or GIF (it can be animated) to use as the pointer. Transparent parts are see-through, "
+        "with no soft edges. Empty: use the shape."),
+     "presenter", false},
+    {"pointer", "hide_after", KR_S_ENUM, "0.5", pointer_hides, "presenter", N_("Hide after"),
+     N_("How long the pointer stays on the screen after the phone stops moving it."), "presenter", false},
 
     {"lock", "command", KR_S_STRING, "", NULL, "lock", N_("Lock command"),
      N_("Empty: loginctl lock-session."), "lockdevice", false},
@@ -309,6 +346,13 @@ bool kr_schema_check(const kr_setting *s, const char *name, const char *value, c
             return fail(err, err_size, _("not a usable name"));
         break;
     }
+    case KR_S_COLOR: {
+        uint32_t rgb;
+        if (!kr_color_parse(v, &rgb))
+            return fail(err, err_size, _("must be a color like #ff0000"));
+        snprintf(norm, norm_size, "#%06x", (unsigned)rgb);
+        return true;
+    }
     case KR_S_NOTE:
         return fail(err, err_size, _("this is not a setting"));
     case KR_S_STRING:
@@ -322,7 +366,7 @@ bool kr_schema_check(const kr_setting *s, const char *name, const char *value, c
 
 static const char *type_name(kr_setting_type t)
 {
-    static const char *const names[] = {"bool", "string", "name", "path", "enum", "addresses", "map", "note"};
+    static const char *const names[] = {"bool", "string", "name", "path", "enum", "addresses", "color", "map", "note"};
     return names[t];
 }
 

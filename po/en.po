@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kiremote\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-24 01:21-0300\n"
+"POT-Creation-Date: 2026-10-25 13:00-0300\n"
 "PO-Revision-Date: 2026-10-09 08:41-0300\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -76,7 +76,7 @@ msgstr "cannot find the configuration folder (is HOME set?)"
 msgid "cannot read %s: %s"
 msgstr "cannot read %s: %s"
 
-#: src/config.c:244 src/daemon.c:952 src/trust.c:182 src/trust.c:200
+#: src/config.c:250 src/daemon.c:952 src/trust.c:182 src/trust.c:200
 #, c-format
 msgid "cannot write %s: %s"
 msgstr "cannot write %s: %s"
@@ -90,7 +90,7 @@ msgid "TLS write error"
 msgstr "TLS write error"
 
 #: src/conn.c:346 src/conn.c:400 src/conn.c:429 src/daemon.c:1009
-#: src/daemon.c:1241 src/link.c:229 ui/gtk/main.c:281
+#: src/daemon.c:1241 src/link.c:229 src/pointer_img.c:268 ui/gtk/main.c:281
 msgid "out of memory"
 msgstr "out of memory"
 
@@ -668,6 +668,40 @@ msgstr "Remote lock failed"
 msgid "Ping!"
 msgstr "Ping!"
 
+#: src/plugin_presenter.c:116
+msgid "the presentation pointer needs a true color display"
+msgstr "the presentation pointer needs a true color display"
+
+#: src/plugin_presenter.c:241
+#, c-format
+msgid "pointer image %s: %s; using the shape instead"
+msgstr "pointer image %s: %s; using the shape instead"
+
+#: src/pointer_img.c:115 src/pointer_img.c:128
+msgid "not a valid PNG image"
+msgstr "not a valid PNG image"
+
+#
+#: src/pointer_img.c:118 src/pointer_img.c:168 src/pointer_img.c:179
+msgid "the image is too big"
+msgstr "the image is too big"
+
+#: src/pointer_img.c:165 src/pointer_img.c:172
+msgid "not a valid GIF image"
+msgstr "not a valid GIF image"
+
+#: src/pointer_img.c:249 src/pointer_img.c:255
+msgid "cannot read the image"
+msgstr "cannot read the image"
+
+#: src/pointer_img.c:251
+msgid "the image file is too big"
+msgstr "the image file is too big"
+
+#: src/pointer_img.c:265
+msgid "only PNG and GIF images are supported"
+msgstr "only PNG and GIF images are supported"
+
 #: src/plugin_runcommand.c:165
 #, c-format
 msgid "%s asked for a command that is not configured: %s"
@@ -874,127 +908,187 @@ msgstr "Mute Call"
 msgid "pactl not found: the volume control is off"
 msgstr "pactl not found: the volume control is off"
 
-#: src/schema.c:32
+#: src/schema.c:36
 msgid "(default)"
 msgstr "(default)"
 
-#: src/schema.c:33
+#: src/schema.c:37
 msgid "Automatic"
 msgstr "Automatic"
 
-#: src/schema.c:34
+#: src/schema.c:38
 msgid "Always"
 msgstr "Always"
 
-#: src/schema.c:35
+#: src/schema.c:39
 msgid "Never"
 msgstr "Never"
 
-#: src/schema.c:36
+#: src/schema.c:40
 msgid "Desktop"
 msgstr "Desktop"
 
-#: src/schema.c:37
+#: src/schema.c:41
 msgid "Laptop"
 msgstr "Laptop"
 
-#: src/schema.c:38
+#: src/schema.c:42
 msgid "Phone"
 msgstr "Phone"
 
-#: src/schema.c:39
+#: src/schema.c:43
 msgid "Tablet"
 msgstr "Tablet"
 
-#: src/schema.c:40
+#: src/schema.c:44
 msgid "TV"
 msgstr "TV"
 
-#: src/schema.c:41
+#: src/schema.c:45
 msgid "Back"
 msgstr "Back"
 
-#: src/schema.c:42
+#: src/schema.c:46
 msgid "Front (selfie)"
 msgstr "Front (selfie)"
 
-#: src/schema.c:43
+#: src/schema.c:47
 msgid "External (USB)"
 msgstr "External (USB)"
 
-#: src/schema.c:47
+#: src/schema.c:48
+msgid "Circle"
+msgstr "Circle"
+
+#: src/schema.c:49
+msgid "Ring"
+msgstr "Ring"
+
+#: src/schema.c:50
+msgid "Square"
+msgstr "Square"
+
+#: src/schema.c:51
+msgid "Diamond"
+msgstr "Diamond"
+
+#: src/schema.c:52
+msgid "Cross"
+msgstr "Cross"
+
+#: src/schema.c:53
+msgid "Small"
+msgstr "Small"
+
+#: src/schema.c:54
+msgid "Medium"
+msgstr "Medium"
+
+#: src/schema.c:55
+msgid "Large"
+msgstr "Large"
+
+#: src/schema.c:56
+msgid "Huge"
+msgstr "Huge"
+
+#: src/schema.c:57
+msgid "Half a second"
+msgstr "Half a second"
+
+#: src/schema.c:58
+msgid "1 second"
+msgstr "1 second"
+
+#: src/schema.c:59
+msgid "2 seconds"
+msgstr "2 seconds"
+
+#: src/schema.c:60
+msgid "5 seconds"
+msgstr "5 seconds"
+
+#: src/schema.c:61
+msgid "Never (until the phone stops)"
+msgstr "Never (until the phone stops)"
+
+#: src/schema.c:65
 msgid "This computer"
 msgstr "This computer"
 
-#: src/schema.c:48
+#: src/schema.c:66
 msgid "Network"
 msgstr "Network"
 
-#: src/schema.c:49
+#: src/schema.c:67
 msgid "Files"
 msgstr "Files"
 
-#: src/schema.c:50
+#: src/schema.c:68
 msgid "Features"
 msgstr "Features"
 
-#: src/schema.c:51 src/schema.c:92
+#: src/schema.c:69 src/schema.c:111
 msgid "Clipboard"
 msgstr "Clipboard"
 
-#: src/schema.c:52
+#: src/schema.c:70
 msgid "Media"
 msgstr "Media"
 
-#: src/schema.c:53 src/schema.c:87
+#: src/schema.c:71 src/schema.c:115
+msgid "Presentation pointer"
+msgstr "Presentation pointer"
+
+#: src/schema.c:72 src/schema.c:106
 msgid "Find my phone"
 msgstr "Find my phone"
 
-#: src/schema.c:54
+#: src/schema.c:73
 msgid "Screen lock"
 msgstr "Screen lock"
 
-#: src/schema.c:55
+#: src/schema.c:74
 msgid "Commands"
 msgstr "Commands"
 
-#: src/schema.c:56
+#: src/schema.c:75
 msgid "Mirroring"
 msgstr "Mirroring"
 
-#: src/schema.c:57 src/schema.c:159
+#: src/schema.c:76 src/schema.c:196
 msgid "Camera"
 msgstr "Camera"
 
-#: src/schema.c:58
+#: src/schema.c:77
 msgid "Interface"
 msgstr "Interface"
 
-#: src/schema.c:59
+#: src/schema.c:78
 msgid "Advanced"
 msgstr "Advanced"
 
-#: src/schema.c:68 ui/gtk/krsettings.c:241 ui/gtk/krsettings.c:348
+#: src/schema.c:87 ui/gtk/krsettings.c:253 ui/gtk/krsettings.c:360
 msgid "Name"
 msgstr "Name"
 
-#: src/schema.c:69
+#: src/schema.c:88
 msgid "How the phone calls this computer. Empty: the host name."
 msgstr "How the phone calls this computer. Empty: the host name."
 
-#: src/schema.c:70
+#: src/schema.c:89
 msgid "Type"
 msgstr "Type"
 
-#: src/schema.c:71
+#: src/schema.c:90
 msgid "Only changes the icon on the phone."
 msgstr "Only changes the icon on the phone."
 
-#: src/schema.c:73
+#: src/schema.c:92
 msgid "Extra addresses"
 msgstr "Extra addresses"
 
-#: src/schema.c:74
+#: src/schema.c:93
 msgid ""
 "IPv4 addresses that also get our discovery packet, separated by commas. For "
 "networks that block broadcasts."
@@ -1002,230 +1096,285 @@ msgstr ""
 "IPv4 addresses that also get our discovery packet, separated by commas. For "
 "networks that block broadcasts."
 
-#: src/schema.c:78
+#: src/schema.c:97
 msgid "Received files"
 msgstr "Received files"
 
-#: src/schema.c:79
+#: src/schema.c:98
 msgid "Where files from the phone go. Empty: your downloads folder."
 msgstr "Where files from the phone go. Empty: your downloads folder."
 
-#: src/schema.c:80
+#: src/schema.c:99
 msgid "sshfs program"
 msgstr "sshfs program"
 
-#: src/schema.c:81
+#: src/schema.c:100
 msgid "The program that mounts the phone's files. Empty: sshfs."
 msgstr "The program that mounts the phone's files. Empty: sshfs."
 
-#: src/schema.c:83
+#: src/schema.c:102
 msgid "Ping"
 msgstr "Ping"
 
-#: src/schema.c:83
+#: src/schema.c:102
 msgid "Send and receive pings."
 msgstr "Send and receive pings."
 
-#: src/schema.c:84
+#: src/schema.c:103
 msgid "Share files and text"
 msgstr "Share files and text"
 
-#: src/schema.c:84
+#: src/schema.c:103
 msgid "Send and receive files, text and links."
 msgstr "Send and receive files, text and links."
 
-#: src/schema.c:85
+#: src/schema.c:104
 msgid "Battery"
 msgstr "Battery"
 
-#: src/schema.c:85
+#: src/schema.c:104
 msgid "Show the phone's battery and tell it ours."
 msgstr "Show the phone's battery and tell it ours."
 
-#: src/schema.c:86
+#: src/schema.c:105
 msgid "Signal"
 msgstr "Signal"
 
-#: src/schema.c:86
+#: src/schema.c:105
 msgid "Show the phone's mobile signal."
 msgstr "Show the phone's mobile signal."
 
-#: src/schema.c:87
+#: src/schema.c:106
 msgid "Make the phone ring, and answer when it looks for this computer."
 msgstr "Make the phone ring, and answer when it looks for this computer."
 
-#: src/schema.c:88
+#: src/schema.c:107
 msgid "Calls"
 msgstr "Calls"
 
-#: src/schema.c:88
+#: src/schema.c:107
 msgid "Notify about calls and let you mute the ringer."
 msgstr "Notify about calls and let you mute the ringer."
 
-#: src/schema.c:89
+#: src/schema.c:108
 msgid "Pause media on calls"
 msgstr "Pause media on calls"
 
-#: src/schema.c:89
+#: src/schema.c:108
 msgid "Pause the players here while the phone rings."
 msgstr "Pause the players here while the phone rings."
 
-#: src/schema.c:90
+#: src/schema.c:109
 msgid "Media players"
 msgstr "Media players"
 
-#: src/schema.c:90
+#: src/schema.c:109
 msgid "Control this computer's players from the phone."
 msgstr "Control this computer's players from the phone."
 
-#: src/schema.c:91
+#: src/schema.c:110
 msgid "Volume"
 msgstr "Volume"
 
-#: src/schema.c:91
+#: src/schema.c:110
 msgid "Let the phone change this computer's volume."
 msgstr "Let the phone change this computer's volume."
 
-#: src/schema.c:92
+#: src/schema.c:111
 msgid "Share the clipboard with the phone."
 msgstr "Share the clipboard with the phone."
 
-#: src/schema.c:93
+#: src/schema.c:112
 msgid "Phone notifications"
 msgstr "Phone notifications"
 
-#: src/schema.c:93
+#: src/schema.c:112
 msgid "Show the phone's notifications here."
 msgstr "Show the phone's notifications here."
 
-#: src/schema.c:94
+#: src/schema.c:113
 msgid "Run commands"
 msgstr "Run commands"
 
-#: src/schema.c:94
+#: src/schema.c:113
 msgid "Let the phone run the commands listed under Commands."
 msgstr "Let the phone run the commands listed under Commands."
 
-#: src/schema.c:95
+#: src/schema.c:114
 msgid "Remote mouse and keyboard"
 msgstr "Remote mouse and keyboard"
 
-#: src/schema.c:95
+#: src/schema.c:114
 msgid "Let the phone move the pointer and type here."
 msgstr "Let the phone move the pointer and type here."
 
-#: src/schema.c:96
-msgid "Presentation pointer"
-msgstr "Presentation pointer"
-
-#: src/schema.c:96
+#: src/schema.c:115
 msgid "Let the phone point at the screen during a presentation."
 msgstr "Let the phone point at the screen during a presentation."
 
-#: src/schema.c:97
+#: src/schema.c:116
 msgid "Lock the screen"
 msgstr "Lock the screen"
 
-#: src/schema.c:97
+#: src/schema.c:116
 msgid "Let the phone lock this computer."
 msgstr "Let the phone lock this computer."
 
-#: src/schema.c:98
+#: src/schema.c:117
 msgid "Keep the screen awake"
 msgstr "Keep the screen awake"
 
-#: src/schema.c:98
+#: src/schema.c:117
 msgid "Do not let the screen sleep while a phone is connected."
 msgstr "Do not let the screen sleep while a phone is connected."
 
-#: src/schema.c:99
+#: src/schema.c:118
 msgid "Browse phone files"
 msgstr "Browse phone files"
 
-#: src/schema.c:99
+#: src/schema.c:118
 msgid "Mount the phone's storage as a folder."
 msgstr "Mount the phone's storage as a folder."
 
-#: src/schema.c:101
+#: src/schema.c:120
 msgid "Send what I copy"
 msgstr "Send what I copy"
 
-#: src/schema.c:102
+#: src/schema.c:121
 msgid "Send what is copied here to the phone as soon as it is copied."
 msgstr "Send what is copied here to the phone as soon as it is copied."
 
-#: src/schema.c:103
+#: src/schema.c:122
 msgid "Send passwords too"
 msgstr "Send passwords too"
 
-#: src/schema.c:104
+#: src/schema.c:123
 msgid "Also send what a password manager marks as secret."
 msgstr "Also send what a password manager marks as secret."
 
-#: src/schema.c:106
+#: src/schema.c:125
 msgid "Pause only when answered"
 msgstr "Pause only when answered"
 
-#: src/schema.c:107
+#: src/schema.c:126
 msgid "Wait until the call is answered instead of pausing while it rings."
 msgstr "Wait until the call is answered instead of pausing while it rings."
 
-#: src/schema.c:108
+#: src/schema.c:127
 msgid "Resume afterwards"
 msgstr "Resume afterwards"
 
-#: src/schema.c:109
+#: src/schema.c:128
 msgid "Start the players again when the call ends."
 msgstr "Start the players again when the call ends."
 
-#: src/schema.c:111
+#: src/schema.c:130
 msgid "Sound"
 msgstr "Sound"
 
-#: src/schema.c:112
+#: src/schema.c:131
 msgid "The sound played when the phone looks for this computer. Empty: a beep."
 msgstr ""
 "The sound played when the phone looks for this computer. Empty: a beep."
 
-#: src/schema.c:113
+#: src/schema.c:132
 msgid "Player"
 msgstr "Player"
 
-#: src/schema.c:114
+#: src/schema.c:133
 msgid "The program that plays it. Empty: the first one found."
 msgstr "The program that plays it. Empty: the first one found."
 
-#: src/schema.c:116
+#: src/schema.c:136
+msgid "Shape"
+msgstr "Shape"
+
+#: src/schema.c:137
+msgid "What the pointer looks like. An image below replaces it."
+msgstr "What the pointer looks like. An image below replaces it."
+
+#: src/schema.c:138
+msgid "Color"
+msgstr "Color"
+
+#: src/schema.c:138
+msgid "The color of the pointer."
+msgstr "The color of the pointer."
+
+#: src/schema.c:140
+msgid "Outline"
+msgstr "Outline"
+
+#: src/schema.c:141
+msgid "Draw a thin line around the pointer so it shows on any background."
+msgstr "Draw a thin line around the pointer so it shows on any background."
+
+#: src/schema.c:142
+msgid "Outline color"
+msgstr "Outline color"
+
+#: src/schema.c:143
+msgid "The color of that line."
+msgstr "The color of that line."
+
+#: src/schema.c:144
+msgid "Size"
+msgstr "Size"
+
+#: src/schema.c:145
+msgid "How big the pointer is, compared to the screen."
+msgstr "How big the pointer is, compared to the screen."
+
+#: src/schema.c:146
+msgid "Image"
+msgstr "Image"
+
+#: src/schema.c:147
+msgid ""
+"A PNG or GIF (it can be animated) to use as the pointer. Transparent parts "
+"are see-through, with no soft edges. Empty: use the shape."
+msgstr "A PNG or GIF (it can be animated) to use as the pointer. Transparent parts are see-through, with no soft edges. Empty: use the shape."
+
+#: src/schema.c:150
+msgid "Hide after"
+msgstr "Hide after"
+
+#: src/schema.c:151
+msgid ""
+"How long the pointer stays on the screen after the phone stops moving it."
+msgstr "How long the pointer stays on the screen after the phone stops moving it."
+
+#: src/schema.c:153
 msgid "Lock command"
 msgstr "Lock command"
 
-#: src/schema.c:117
+#: src/schema.c:154
 msgid "Empty: loginctl lock-session."
 msgstr "Empty: loginctl lock-session."
 
-#: src/schema.c:118
+#: src/schema.c:155
 msgid "Let the phone unlock"
 msgstr "Let the phone unlock"
 
-#: src/schema.c:119
+#: src/schema.c:156
 msgid ""
 "Off by default: anyone with the phone could otherwise unlock this computer."
 msgstr ""
 "Off by default: anyone with the phone could otherwise unlock this computer."
 
-#: src/schema.c:120
+#: src/schema.c:157
 msgid "Unlock command"
 msgstr "Unlock command"
 
-#: src/schema.c:121
+#: src/schema.c:158
 msgid "Empty: loginctl unlock-session. Needs the option above."
 msgstr "Empty: loginctl unlock-session. Needs the option above."
 
-#: src/schema.c:123
+#: src/schema.c:160
 msgid "Tray icon"
 msgstr "Tray icon"
 
-#: src/schema.c:124
+#: src/schema.c:161
 msgid ""
 "Show an icon in the notification area. Automatic: unless the desktop already "
 "has one for Kiremote (KiDesktop)."
@@ -1233,11 +1382,11 @@ msgstr ""
 "Show an icon in the notification area. Automatic: unless the desktop already "
 "has one for Kiremote (KiDesktop)."
 
-#: src/schema.c:129 src/schema.c:161
+#: src/schema.c:166 src/schema.c:198
 msgid "Resolution"
 msgstr "Resolution"
 
-#: src/schema.c:130
+#: src/schema.c:167
 msgid ""
 "The longer side of the picture, in pixels. Default: the phone's own. Less is "
 "lighter for the phone."
@@ -1245,27 +1394,27 @@ msgstr ""
 "The longer side of the picture, in pixels. Default: the phone's own. Less is "
 "lighter for the phone."
 
-#: src/schema.c:132
+#: src/schema.c:169
 msgid "Video quality"
 msgstr "Video quality"
 
-#: src/schema.c:133
+#: src/schema.c:170
 msgid "Bits per second the phone may spend on the picture. Default: 8M."
 msgstr "Bits per second the phone may spend on the picture. Default: 8M."
 
-#: src/schema.c:134
+#: src/schema.c:171
 msgid "Frames per second"
 msgstr "Frames per second"
 
-#: src/schema.c:135
+#: src/schema.c:172
 msgid "The most frames the phone sends each second. Default: no limit."
 msgstr "The most frames the phone sends each second. Default: no limit."
 
-#: src/schema.c:136
+#: src/schema.c:173
 msgid "Video codec"
 msgstr "Video codec"
 
-#: src/schema.c:137
+#: src/schema.c:174
 msgid ""
 "H.264 works everywhere. H.265 and AV1 use less data but need a newer phone "
 "and a faster computer."
@@ -1273,57 +1422,57 @@ msgstr ""
 "H.264 works everywhere. H.265 and AV1 use less data but need a newer phone "
 "and a faster computer."
 
-#: src/schema.c:139
+#: src/schema.c:176
 msgid "Play the phone's sound"
 msgstr "Play the phone's sound"
 
-#: src/schema.c:140
+#: src/schema.c:177
 msgid "Needs Android 11 or newer."
 msgstr "Needs Android 11 or newer."
 
-#: src/schema.c:141
+#: src/schema.c:178
 msgid "Mouse and keyboard"
 msgstr "Mouse and keyboard"
 
-#: src/schema.c:142
+#: src/schema.c:179
 msgid ""
 "Let the mouse and keyboard act on the phone. Off: the screen is only shown."
 msgstr ""
 "Let the mouse and keyboard act on the phone. Off: the screen is only shown."
 
-#: src/schema.c:143
+#: src/schema.c:180
 msgid "Share the clipboard"
 msgstr "Share the clipboard"
 
-#: src/schema.c:144
+#: src/schema.c:181
 msgid "Copy and paste between the phone and this computer while mirroring."
 msgstr "Copy and paste between the phone and this computer while mirroring."
 
-#: src/schema.c:145
+#: src/schema.c:182
 msgid "Turn the phone's screen off"
 msgstr "Turn the phone's screen off"
 
-#: src/schema.c:146
+#: src/schema.c:183
 msgid ""
 "Switch the phone's own screen off while mirroring. It stays on in the window."
 msgstr ""
 "Switch the phone's own screen off while mirroring. It stays on in the window."
 
-#: src/schema.c:147
+#: src/schema.c:184
 msgid "Keep the phone awake"
 msgstr "Keep the phone awake"
 
-#: src/schema.c:148
+#: src/schema.c:185
 msgid ""
 "Do not let the phone sleep while mirroring (only works while it is charging)."
 msgstr ""
 "Do not let the phone sleep while mirroring (only works while it is charging)."
 
-#: src/schema.c:149
+#: src/schema.c:186
 msgid "Use Wi-Fi without a cable"
 msgstr "Use Wi-Fi without a cable"
 
-#: src/schema.c:150
+#: src/schema.c:187
 msgid ""
 "When no cable is connected, try the phone over the network (its debugging "
 "over Wi-Fi must be on)."
@@ -1331,19 +1480,19 @@ msgstr ""
 "When no cable is connected, try the phone over the network (its debugging "
 "over Wi-Fi must be on)."
 
-#: src/schema.c:154
+#: src/schema.c:191
 msgid "Video device status"
 msgstr "Video device status"
 
-#: src/schema.c:155
+#: src/schema.c:192
 msgid "Whether the video device the camera goes to is ready."
 msgstr "Whether the video device the camera goes to is ready."
 
-#: src/schema.c:156
+#: src/schema.c:193
 msgid "Video device"
 msgstr "Video device"
 
-#: src/schema.c:157
+#: src/schema.c:194
 msgid ""
 "The v4l2loopback device the camera goes to, such as /dev/video10. Empty: the "
 "only one there is."
@@ -1351,11 +1500,11 @@ msgstr ""
 "The v4l2loopback device the camera goes to, such as /dev/video10. Empty: the "
 "only one there is."
 
-#: src/schema.c:160
+#: src/schema.c:197
 msgid "Which of the phone's cameras to use."
 msgstr "Which of the phone's cameras to use."
 
-#: src/schema.c:162
+#: src/schema.c:199
 msgid ""
 "The longer side of the picture, in pixels. The phone picks the best size up "
 "to this one."
@@ -1363,11 +1512,11 @@ msgstr ""
 "The longer side of the picture, in pixels. The phone picks the best size up "
 "to this one."
 
-#: src/schema.c:163
+#: src/schema.c:200
 msgid "Flip left to right"
 msgstr "Flip left to right"
 
-#: src/schema.c:164
+#: src/schema.c:201
 msgid ""
 "Like a mirror: the picture other people see is the one you see in the "
 "preview."
@@ -1375,47 +1524,51 @@ msgstr ""
 "Like a mirror: the picture other people see is the one you see in the "
 "preview."
 
-#: src/schema.c:166
+#: src/schema.c:203
 msgid "Commands the phone may run"
 msgstr "Commands the phone may run"
 
-#: src/schema.c:167
+#: src/schema.c:204
 msgid "Name and shell command. The phone only sees the names."
 msgstr "Name and shell command. The phone only sees the names."
 
-#: src/schema.c:272 src/schema.c:318
+#: src/schema.c:309 src/schema.c:362
 msgid "too long"
 msgstr "too long"
 
-#: src/schema.c:280
+#: src/schema.c:317
 msgid "invalid name"
 msgstr "invalid name"
 
-#: src/schema.c:283
+#: src/schema.c:320
 msgid "must be a single line"
 msgstr "must be a single line"
 
-#: src/schema.c:290
+#: src/schema.c:327
 msgid "must be true or false"
 msgstr "must be true or false"
 
-#: src/schema.c:296
+#: src/schema.c:333
 msgid "not one of the choices"
 msgstr "not one of the choices"
 
-#: src/schema.c:299
+#: src/schema.c:336
 msgid "must be IPv4 addresses separated by commas"
 msgstr "must be IPv4 addresses separated by commas"
 
-#: src/schema.c:303
+#: src/schema.c:340
 msgid "must be an absolute path"
 msgstr "must be an absolute path"
 
-#: src/schema.c:309
+#: src/schema.c:346
 msgid "not a usable name"
 msgstr "not a usable name"
 
-#: src/schema.c:313
+#: src/schema.c:352
+msgid "must be a color like #ff0000"
+msgstr "must be a color like #ff0000"
+
+#: src/schema.c:357
 msgid "this is not a setting"
 msgstr "this is not a setting"
 
@@ -1633,27 +1786,27 @@ msgstr ""
 msgid "Some changes take effect when kiremoted starts again."
 msgstr "Some changes take effect when kiremoted starts again."
 
-#: ui/gtk/krsettings.c:201
+#: ui/gtk/krsettings.c:213
 msgid "Choose a folder"
 msgstr "Choose a folder"
 
-#: ui/gtk/krsettings.c:201
+#: ui/gtk/krsettings.c:213
 msgid "Choose a file"
 msgstr "Choose a file"
 
-#: ui/gtk/krsettings.c:234
+#: ui/gtk/krsettings.c:246
 msgid "New command"
 msgstr "New command"
 
-#: ui/gtk/krsettings.c:243 ui/gtk/krsettings.c:353
+#: ui/gtk/krsettings.c:255 ui/gtk/krsettings.c:365
 msgid "Command"
 msgstr "Command"
 
-#: ui/gtk/krsettings.c:401
+#: ui/gtk/krsettings.c:417
 msgid "Browse..."
 msgstr "Browse..."
 
-#: ui/gtk/krsettings.c:603
+#: ui/gtk/krsettings.c:623
 msgid ""
 "Kiremote is not running.\n"
 "Start kiremoted to change its settings."

@@ -98,6 +98,21 @@ TEST(check_bool)
     CHECK(err[0]);
 }
 
+TEST(check_color)
+{
+    char norm[1100], err[160];
+    CHECK(check("pointer.color", "#FF8000", norm, err));
+    CHECK_STR_EQ(norm, "#ff8000");
+    CHECK(!check("pointer.color", "red", norm, err));
+    CHECK(!check("pointer.color", "#ff80", norm, err));
+    CHECK(!check("pointer.color", "#gg0000", norm, err));
+    CHECK(!check("pointer.outline_color", "ff0000", norm, err));
+    CHECK(check("pointer.shape", "diamond", norm, err));
+    CHECK(!check("pointer.shape", "star", norm, err));
+    CHECK(check("pointer.hide_after", "0", norm, err));
+    CHECK(!check("pointer.hide_after", "3", norm, err));
+}
+
 TEST(check_empty_means_default)
 {
     char norm[1100], err[160];
@@ -369,6 +384,7 @@ int main(void)
     RUN(table_is_consistent);
     RUN(find_by_spec);
     RUN(check_bool);
+    RUN(check_color);
     RUN(check_empty_means_default);
     RUN(check_enum);
     RUN(check_addresses);

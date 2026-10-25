@@ -114,6 +114,7 @@ LANGUAGE=en build/kiremoted --help   # o catálogo vem de build/locale
 | `ui/krmodel.c` | estado dos aparelhos, ordem, textos e ações, sem GTK (as duas interfaces e o widget do xispanel usam) |
 | `ui/krclient.c` | cliente assíncrono do socket com reconexão, sem GLib; quem hospeda liga o fd no laço |
 | `src/plugins.c`, `src/plugin_*.c` | lista de plugins e capacidades; um arquivo por plugin (ping, share, battery, connectivity, find, telephony, pausemusic, mpris, volume, clipboard, notifications, runcommand, mousepad, presenter, screensaver, lock, sftp) |
+| `src/pointer_img.c` | o visual do ponteiro da apresentação em pixels (formas, PNG/GIF com quadros via libpng/giflib), sem X; o `plugin_presenter.c` o põe numa janela com XShape |
 | `src/proc.c` | processos filhos sem bloquear (`pactl`, player de som), `pidfd` |
 | `src/bus.c` | D-Bus de sessão no `poll()`: chamadas assíncronas, sinais |
 | `src/notify.c` | notificações (`Notify`), cai para o log sem servidor |

@@ -56,6 +56,10 @@ bool kr_config_plugin_enabled(const kr_config *c, const char *name, bool fallbac
 const char *kr_config_get(const kr_config *c, const char *section, const char *key);
 bool kr_config_get_bool(const kr_config *c, const char *section, const char *key, bool fallback);
 
+/* A path setting, with a leading "~/" expanded, into out. False if the
+ * setting is empty or not absolute. */
+bool kr_config_get_path(const kr_config *c, const char *section, const char *key, char *out, size_t size);
+
 /* Walks the "key = value" lines of a section in file order: start with
  * *i = 0; false at the end. Strings are owned by c. */
 bool kr_config_each(const kr_config *c, const char *section, int *i, const char **key, const char **value);

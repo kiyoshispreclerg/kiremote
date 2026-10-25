@@ -194,6 +194,18 @@ static void combo_changed(GtkComboBox *c, gpointer data)
         set_value(f->s, f->key, g_ptr_array_index(f->choices, (guint)i));
 }
 
+static void color_set(GtkColorButton *b, gpointer data)
+{
+    field *f = data;
+    GdkColor c;
+    char text[8];
+    if (f->s->updating)
+        return;
+    gtk_color_button_get_color(b, &c);
+    g_snprintf(text, sizeof text, "#%02x%02x%02x", c.red >> 8, c.green >> 8, c.blue >> 8);
+    set_value(f->s, f->key, text);
+}
+
 static void browse_clicked(GtkButton *b, gpointer data)
 {
     field *f = data;
@@ -391,6 +403,10 @@ static int add_field(settings *s, GtkWidget *table, int row, const cJSON *def)
         }
         g_signal_connect(f->input, "changed", G_CALLBACK(combo_changed), f);
         gtk_box_pack_start(GTK_BOX(box), f->input, FALSE, FALSE, 0);
+    } else if (strcmp(f->type, "color") == 0) {
+        f->input = gtk_color_button_new();
+        g_signal_connect(f->input, "color-set", G_CALLBACK(color_set), f);
+        gtk_box_pack_start(GTK_BOX(box), f->input, FALSE, FALSE, 0);
     } else {
         f->input = gtk_entry_new();
         gtk_widget_set_size_request(f->input, 220, -1);
@@ -448,6 +464,10 @@ static void apply_values(settings *s)
             for (guint k = 0; k < f->choices->len; k++)
                 if (strcmp(g_ptr_array_index(f->choices, k), val) == 0)
                     gtk_combo_box_set_active(GTK_COMBO_BOX(f->input), (gint)k);
+        } else if (strcmp(f->type, "color") == 0) {
+            GdkColor c;
+            if (gdk_color_parse(val, &c))
+                gtk_color_button_set_color(GTK_COLOR_BUTTON(f->input), &c);
         } else {
             /* Don't overwrite what is being typed in another field. */
             if (!GTK_WIDGET_HAS_FOCUS(f->input))

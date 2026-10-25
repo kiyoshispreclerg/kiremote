@@ -60,7 +60,10 @@ escreve no log. O volume usa o `pactl`, e o som de "achar o computador",
 `paplay`, `pw-play` ou `aplay`. Cada plugin pode ser desligado na seção
 `[plugins]` do .ini. Clipboard, mouse/teclado e ponteiro de apresentação
 precisam de X11 (`$DISPLAY`); os comandos que o celular pode rodar são só os
-da seção `[runcommand]`. Para navegar pelos arquivos do celular
+da seção `[runcommand]`. O visual do ponteiro de apresentação (formato, cor,
+tamanho, ou uma imagem PNG/GIF, até animada; as partes transparentes são
+recortadas, sem bordas suaves) se muda na janela de configurações ou na seção
+`[pointer]`. Para navegar pelos arquivos do celular
 (`kiremote-cli -d CELULAR --browse-files`) o ideal é ter o `sshfs`
 instalado; sem ele o daemon entrega o endereço `sftp://` ao `xdg-open`.
 
@@ -131,8 +134,8 @@ Baixe os pacotes `.deb` da sua distro na página de
 
 ## Compilar
 
-Precisa de um compilador C11, `make`, `pkg-config`, OpenSSL e gettext
-(`msgfmt`). O `kiremote-mirror` só é compilado se houver libavcodec,
+Precisa de um compilador C11, `make`, `pkg-config`, OpenSSL, libpng, giflib
+(`libpng-dev libgif-dev`) e gettext (`msgfmt`). O `kiremote-mirror` só é compilado se houver libavcodec,
 libswscale, Xext, Xfixes e libpulse (`libavcodec-dev libswscale-dev libxext-dev
 libxfixes-dev libpulse-dev`).
 

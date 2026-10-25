@@ -11,6 +11,8 @@ src/plugin_battery.c
 src/plugin_find.c
 src/plugin_lock.c
 src/plugin_ping.c
+src/plugin_presenter.c
+src/pointer_img.c
 src/plugin_runcommand.c
 src/plugin_screensaver.c
 src/plugin_sftp.c

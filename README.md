@@ -62,7 +62,10 @@ writes to its log. Volume uses `pactl`, and the "find this computer" sound
 uses `paplay`, `pw-play` or `aplay`. Each plugin can be turned off in the
 `[plugins]` section of the .ini. The clipboard, mouse/keyboard and
 presentation pointer need X11 (`$DISPLAY`); the commands the phone may run
-are only the ones in the `[runcommand]` section. To browse the phone's files
+are only the ones in the `[runcommand]` section. The presentation pointer's
+look (shape, color, size, or a PNG/GIF image, animated too; transparent parts
+are cut out, without soft edges) is set in the settings window or in the
+`[pointer]` section. To browse the phone's files
 (`kiremote-cli -d PHONE --browse-files`) `sshfs` is the best way; without it
 the daemon hands the `sftp://` address to `xdg-open`.
 
@@ -132,7 +135,8 @@ Download the `.deb` packages for your distro from the
 
 ## Building
 
-Needs a C11 compiler, `make`, `pkg-config`, OpenSSL and gettext (`msgfmt`).
+Needs a C11 compiler, `make`, `pkg-config`, OpenSSL, libpng, giflib
+(`libpng-dev libgif-dev`) and gettext (`msgfmt`).
 `kiremote-mirror` is only built with libavcodec, libswscale, Xext, Xfixes and
 libpulse (`libavcodec-dev libswscale-dev libxext-dev libxfixes-dev libpulse-dev`).
 

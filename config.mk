@@ -23,12 +23,12 @@ OPTFLAGS ?= -O2 -g
 
 # Daemon libraries. Library headers go in as -isystem so -Wpedantic/-Werror
 # only judge our code.
-PKGS       = openssl dbus-1 x11 xfixes xtst xext
+PKGS       = openssl dbus-1 x11 xfixes xtst xext libpng
 PKG_CFLAGS = $(shell $(PKG_CONFIG) --cflags $(PKGS) | sed 's/-I/-isystem /g')
 PKG_LIBS   = $(shell $(PKG_CONFIG) --libs $(PKGS))
 
 CPPFLAGS += -Isrc -Iui -Iui/gtk -Imirror -Ivendor/cjson -DKR_VERSION='"$(VERSION)"' -DLOCALEDIR='"$(LOCALEDIR)"' -DKR_DATADIR='"$(DATADIR)"' -DKR_SCRCPY_VERSION='"$(SCRCPY_VERSION)"'
-LDLIBS   += $(PKG_LIBS) -lm
+LDLIBS   += $(PKG_LIBS) -lgif -lm
 
 # `make asan` sets SANITIZE=1.
 SANITIZE ?= 0

@@ -324,6 +324,48 @@ send '{"type":"kdeconnect.presenter","body":{"stop":true}}'
 wait_for 5 sh -c "[ -z \"\$('$xtool' windows)\" ]" || fail "stop did not hide the pointer"
 echo "presenter ok"
 
+# ---- the pointer's look ([pointer] in the ini; changes apply the next time it appears) ----------
+cli --set pointer.shape=square && cli --set pointer.size=huge && cli --set pointer.hide_after=0 || fail "--set pointer"
+send '{"type":"kdeconnect.presenter","body":{"dx":0.0,"dy":0.0}}'
+wait_for 5 sh -c "'$xtool' windows | grep -q '^win 13x13+'" || fail "the pointer did not take the new size: $("$xtool" windows)"
+send '{"type":"kdeconnect.presenter","body":{"stop":true}}'
+wait_for 5 sh -c "[ -z \"\$('$xtool' windows)\" ]" || fail "stop (shape)"
+# an image replaces the shape, scaled to fit the size and keeping its proportions (40x20 → 12x6)
+python3 - "$tmp/dot.png" <<'PY'
+import struct, sys, zlib
+w, h = 40, 20
+raw = b"".join(b"\x00" + b"\xff\x00\x00\xff" * w for _ in range(h))
+def chunk(t, d):
+    c = struct.pack(">I", len(d)) + t + d
+    return c + struct.pack(">I", zlib.crc32(t + d) & 0xffffffff)
+open(sys.argv[1], "wb").write(b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", w, h, 8, 6, 0, 0, 0))
+                              + chunk(b"IDAT", zlib.compress(raw)) + chunk(b"IEND", b""))
+PY
+cli --set pointer.size= && cli --set "pointer.image=$tmp/dot.png" || fail "--set image"
+send '{"type":"kdeconnect.presenter","body":{"dx":0.0,"dy":0.0}}'
+wait_for 5 sh -c "'$xtool' windows | grep -q '^win 12x6+'" || fail "the image pointer: $("$xtool" windows)"
+sleep 0.9
+[ -n "$("$xtool" windows)" ] || fail "hide_after=0 still hid the pointer"
+send '{"type":"kdeconnect.presenter","body":{"stop":true}}'
+wait_for 5 sh -c "[ -z \"\$('$xtool' windows)\" ]" || fail "stop (image)"
+# an animated GIF (two frames, 100 and 200 ms): the frames keep changing while it is up
+printf 'GIF89a\002\000\001\000\200\000\000\377\000\000\000\000\377!\371\004\005\012\000\001\000,\000\000\000\000\002\000\001\000\000\002\002D\012\000!\371\004\004\024\000\000\000,\000\000\000\000\002\000\001\000\000\002\002\014\012\000;' >"$tmp/dot.gif"
+cli --set "pointer.image=$tmp/dot.gif" || fail "--set gif"
+send '{"type":"kdeconnect.presenter","body":{"dx":0.0,"dy":0.0}}'
+wait_for 5 sh -c "'$xtool' windows | grep -q '^win 12x6+'" || fail "the gif pointer: $("$xtool" windows)"
+sleep 1
+[ -n "$("$xtool" windows)" ] || fail "the animated pointer went away"
+send '{"type":"kdeconnect.presenter","body":{"stop":true}}'
+wait_for 5 sh -c "[ -z \"\$('$xtool' windows)\" ]" || fail "stop (gif)"
+# a broken image falls back to the shape instead of showing nothing
+printf 'not an image' >"$tmp/dot.png"
+cli --set "pointer.image=$tmp/dot.png"
+send '{"type":"kdeconnect.presenter","body":{"dx":0.0,"dy":0.0}}'
+wait_for 5 sh -c "'$xtool' windows | grep -q '^win 12x12+'" || fail "a bad image left no pointer: $("$xtool" windows)"
+send '{"type":"kdeconnect.presenter","body":{"stop":true}}'
+cli --set pointer.shape= && cli --set pointer.image= && cli --set pointer.hide_after=
+echo "pointer look ok"
+
 # ---- keeping the screen awake -----------------------------------------------------------------------------------
 wait_for 5 has "$tmp/ss.log" "INHIBIT Kiremote | Phone is connected | 42" || fail "the screensaver was not inhibited"
 send '{"type":"kdeconnect.ping","body":{}}'

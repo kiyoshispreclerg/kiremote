@@ -43,6 +43,7 @@ LIB_SRC = src/log.c \
       src/plugin_runcommand.c \
       src/plugin_mousepad.c \
       src/plugin_presenter.c \
+      src/pointer_img.c \
       src/plugin_screensaver.c \
       src/plugin_lock.c \
       src/plugin_sftp.c \

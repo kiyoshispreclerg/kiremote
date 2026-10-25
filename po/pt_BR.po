@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kiremote\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-24 01:21-0300\n"
+"POT-Creation-Date: 2026-10-25 13:00-0300\n"
 "PO-Revision-Date: 2026-10-17 21:00-0300\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -77,7 +77,7 @@ msgstr "pasta de configuração não encontrada (HOME está definido?)"
 msgid "cannot read %s: %s"
 msgstr "não foi possível ler %s: %s"
 
-#: src/config.c:244 src/daemon.c:952 src/trust.c:182 src/trust.c:200
+#: src/config.c:250 src/daemon.c:952 src/trust.c:182 src/trust.c:200
 #, c-format
 msgid "cannot write %s: %s"
 msgstr "não foi possível gravar %s: %s"
@@ -91,7 +91,7 @@ msgid "TLS write error"
 msgstr "erro de escrita no TLS"
 
 #: src/conn.c:346 src/conn.c:400 src/conn.c:429 src/daemon.c:1009
-#: src/daemon.c:1241 src/link.c:229 ui/gtk/main.c:281
+#: src/daemon.c:1241 src/link.c:229 src/pointer_img.c:268 ui/gtk/main.c:281
 msgid "out of memory"
 msgstr "sem memória"
 
@@ -674,6 +674,40 @@ msgstr "O bloqueio remoto falhou"
 msgid "Ping!"
 msgstr "Ping!"
 
+#: src/plugin_presenter.c:116
+msgid "the presentation pointer needs a true color display"
+msgstr "o ponteiro de apresentação precisa de uma tela com cores reais"
+
+#: src/plugin_presenter.c:241
+#, c-format
+msgid "pointer image %s: %s; using the shape instead"
+msgstr "imagem do ponteiro %s: %s; usando o formato no lugar"
+
+#: src/pointer_img.c:115 src/pointer_img.c:128
+msgid "not a valid PNG image"
+msgstr "não é uma imagem PNG válida"
+
+#
+#: src/pointer_img.c:118 src/pointer_img.c:168 src/pointer_img.c:179
+msgid "the image is too big"
+msgstr "a imagem é grande demais"
+
+#: src/pointer_img.c:165 src/pointer_img.c:172
+msgid "not a valid GIF image"
+msgstr "não é uma imagem GIF válida"
+
+#: src/pointer_img.c:249 src/pointer_img.c:255
+msgid "cannot read the image"
+msgstr "não foi possível ler a imagem"
+
+#: src/pointer_img.c:251
+msgid "the image file is too big"
+msgstr "o arquivo da imagem é grande demais"
+
+#: src/pointer_img.c:265
+msgid "only PNG and GIF images are supported"
+msgstr "só há suporte a imagens PNG e GIF"
+
 #: src/plugin_runcommand.c:165
 #, c-format
 msgid "%s asked for a command that is not configured: %s"
@@ -882,127 +916,187 @@ msgstr "Silenciar chamada"
 msgid "pactl not found: the volume control is off"
 msgstr "pactl não encontrado: o controle de volume está desligado"
 
-#: src/schema.c:32
+#: src/schema.c:36
 msgid "(default)"
 msgstr "(padrão)"
 
-#: src/schema.c:33
+#: src/schema.c:37
 msgid "Automatic"
 msgstr "Automático"
 
-#: src/schema.c:34
+#: src/schema.c:38
 msgid "Always"
 msgstr "Sempre"
 
-#: src/schema.c:35
+#: src/schema.c:39
 msgid "Never"
 msgstr "Nunca"
 
-#: src/schema.c:36
+#: src/schema.c:40
 msgid "Desktop"
 msgstr "Computador"
 
-#: src/schema.c:37
+#: src/schema.c:41
 msgid "Laptop"
 msgstr "Notebook"
 
-#: src/schema.c:38
+#: src/schema.c:42
 msgid "Phone"
 msgstr "Celular"
 
-#: src/schema.c:39
+#: src/schema.c:43
 msgid "Tablet"
 msgstr "Tablet"
 
-#: src/schema.c:40
+#: src/schema.c:44
 msgid "TV"
 msgstr "TV"
 
-#: src/schema.c:41
+#: src/schema.c:45
 msgid "Back"
 msgstr "Traseira"
 
-#: src/schema.c:42
+#: src/schema.c:46
 msgid "Front (selfie)"
 msgstr "Frontal (selfie)"
 
-#: src/schema.c:43
+#: src/schema.c:47
 msgid "External (USB)"
 msgstr "Externa (USB)"
 
-#: src/schema.c:47
+#: src/schema.c:48
+msgid "Circle"
+msgstr "Círculo"
+
+#: src/schema.c:49
+msgid "Ring"
+msgstr "Anel"
+
+#: src/schema.c:50
+msgid "Square"
+msgstr "Quadrado"
+
+#: src/schema.c:51
+msgid "Diamond"
+msgstr "Losango"
+
+#: src/schema.c:52
+msgid "Cross"
+msgstr "Cruz"
+
+#: src/schema.c:53
+msgid "Small"
+msgstr "Pequeno"
+
+#: src/schema.c:54
+msgid "Medium"
+msgstr "Médio"
+
+#: src/schema.c:55
+msgid "Large"
+msgstr "Grande"
+
+#: src/schema.c:56
+msgid "Huge"
+msgstr "Enorme"
+
+#: src/schema.c:57
+msgid "Half a second"
+msgstr "Meio segundo"
+
+#: src/schema.c:58
+msgid "1 second"
+msgstr "1 segundo"
+
+#: src/schema.c:59
+msgid "2 seconds"
+msgstr "2 segundos"
+
+#: src/schema.c:60
+msgid "5 seconds"
+msgstr "5 segundos"
+
+#: src/schema.c:61
+msgid "Never (until the phone stops)"
+msgstr "Nunca (até o celular parar)"
+
+#: src/schema.c:65
 msgid "This computer"
 msgstr "Este computador"
 
-#: src/schema.c:48
+#: src/schema.c:66
 msgid "Network"
 msgstr "Rede"
 
-#: src/schema.c:49
+#: src/schema.c:67
 msgid "Files"
 msgstr "Arquivos"
 
-#: src/schema.c:50
+#: src/schema.c:68
 msgid "Features"
 msgstr "Recursos"
 
-#: src/schema.c:51 src/schema.c:92
+#: src/schema.c:69 src/schema.c:111
 msgid "Clipboard"
 msgstr "Área de transferência"
 
-#: src/schema.c:52
+#: src/schema.c:70
 msgid "Media"
 msgstr "Mídia"
 
-#: src/schema.c:53 src/schema.c:87
+#: src/schema.c:71 src/schema.c:115
+msgid "Presentation pointer"
+msgstr "Ponteiro de apresentação"
+
+#: src/schema.c:72 src/schema.c:106
 msgid "Find my phone"
 msgstr "Achar meu celular"
 
-#: src/schema.c:54
+#: src/schema.c:73
 msgid "Screen lock"
 msgstr "Bloqueio de tela"
 
-#: src/schema.c:55
+#: src/schema.c:74
 msgid "Commands"
 msgstr "Comandos"
 
-#: src/schema.c:56
+#: src/schema.c:75
 msgid "Mirroring"
 msgstr "Espelhamento"
 
-#: src/schema.c:57 src/schema.c:159
+#: src/schema.c:76 src/schema.c:196
 msgid "Camera"
 msgstr "Câmera"
 
-#: src/schema.c:58
+#: src/schema.c:77
 msgid "Interface"
 msgstr "Interface"
 
-#: src/schema.c:59
+#: src/schema.c:78
 msgid "Advanced"
 msgstr "Avançado"
 
-#: src/schema.c:68 ui/gtk/krsettings.c:241 ui/gtk/krsettings.c:348
+#: src/schema.c:87 ui/gtk/krsettings.c:253 ui/gtk/krsettings.c:360
 msgid "Name"
 msgstr "Nome"
 
-#: src/schema.c:69
+#: src/schema.c:88
 msgid "How the phone calls this computer. Empty: the host name."
 msgstr "Como o celular chama este computador. Vazio: o nome da máquina."
 
-#: src/schema.c:70
+#: src/schema.c:89
 msgid "Type"
 msgstr "Tipo"
 
-#: src/schema.c:71
+#: src/schema.c:90
 msgid "Only changes the icon on the phone."
 msgstr "Só muda o ícone no celular."
 
-#: src/schema.c:73
+#: src/schema.c:92
 msgid "Extra addresses"
 msgstr "Endereços extras"
 
-#: src/schema.c:74
+#: src/schema.c:93
 msgid ""
 "IPv4 addresses that also get our discovery packet, separated by commas. For "
 "networks that block broadcasts."
@@ -1010,231 +1104,286 @@ msgstr ""
 "Endereços IPv4 que também recebem o nosso pacote de descoberta, separados "
 "por vírgula. Para redes que bloqueiam broadcast."
 
-#: src/schema.c:78
+#: src/schema.c:97
 msgid "Received files"
 msgstr "Arquivos recebidos"
 
-#: src/schema.c:79
+#: src/schema.c:98
 msgid "Where files from the phone go. Empty: your downloads folder."
 msgstr "Para onde vão os arquivos do celular. Vazio: a sua pasta de downloads."
 
-#: src/schema.c:80
+#: src/schema.c:99
 msgid "sshfs program"
 msgstr "Programa sshfs"
 
-#: src/schema.c:81
+#: src/schema.c:100
 msgid "The program that mounts the phone's files. Empty: sshfs."
 msgstr "O programa que monta os arquivos do celular. Vazio: sshfs."
 
-#: src/schema.c:83
+#: src/schema.c:102
 msgid "Ping"
 msgstr "Ping"
 
-#: src/schema.c:83
+#: src/schema.c:102
 msgid "Send and receive pings."
 msgstr "Enviar e receber pings."
 
-#: src/schema.c:84
+#: src/schema.c:103
 msgid "Share files and text"
 msgstr "Compartilhar arquivos e texto"
 
-#: src/schema.c:84
+#: src/schema.c:103
 msgid "Send and receive files, text and links."
 msgstr "Enviar e receber arquivos, textos e links."
 
-#: src/schema.c:85
+#: src/schema.c:104
 msgid "Battery"
 msgstr "Bateria"
 
-#: src/schema.c:85
+#: src/schema.c:104
 msgid "Show the phone's battery and tell it ours."
 msgstr "Mostrar a bateria do celular e informar a nossa."
 
-#: src/schema.c:86
+#: src/schema.c:105
 msgid "Signal"
 msgstr "Sinal"
 
-#: src/schema.c:86
+#: src/schema.c:105
 msgid "Show the phone's mobile signal."
 msgstr "Mostrar o sinal da operadora do celular."
 
-#: src/schema.c:87
+#: src/schema.c:106
 msgid "Make the phone ring, and answer when it looks for this computer."
 msgstr ""
 "Fazer o celular tocar, e responder quando ele procurar este computador."
 
-#: src/schema.c:88
+#: src/schema.c:107
 msgid "Calls"
 msgstr "Chamadas"
 
-#: src/schema.c:88
+#: src/schema.c:107
 msgid "Notify about calls and let you mute the ringer."
 msgstr "Avisar sobre chamadas e deixar silenciar o toque."
 
-#: src/schema.c:89
+#: src/schema.c:108
 msgid "Pause media on calls"
 msgstr "Pausar a mídia nas chamadas"
 
-#: src/schema.c:89
+#: src/schema.c:108
 msgid "Pause the players here while the phone rings."
 msgstr "Pausar os players daqui enquanto o celular toca."
 
-#: src/schema.c:90
+#: src/schema.c:109
 msgid "Media players"
 msgstr "Players de mídia"
 
-#: src/schema.c:90
+#: src/schema.c:109
 msgid "Control this computer's players from the phone."
 msgstr "Controlar os players deste computador pelo celular."
 
-#: src/schema.c:91
+#: src/schema.c:110
 msgid "Volume"
 msgstr "Volume"
 
-#: src/schema.c:91
+#: src/schema.c:110
 msgid "Let the phone change this computer's volume."
 msgstr "Deixar o celular mudar o volume deste computador."
 
-#: src/schema.c:92
+#: src/schema.c:111
 msgid "Share the clipboard with the phone."
 msgstr "Compartilhar a área de transferência com o celular."
 
-#: src/schema.c:93
+#: src/schema.c:112
 msgid "Phone notifications"
 msgstr "Notificações do celular"
 
-#: src/schema.c:93
+#: src/schema.c:112
 msgid "Show the phone's notifications here."
 msgstr "Mostrar aqui as notificações do celular."
 
-#: src/schema.c:94
+#: src/schema.c:113
 msgid "Run commands"
 msgstr "Executar comandos"
 
-#: src/schema.c:94
+#: src/schema.c:113
 msgid "Let the phone run the commands listed under Commands."
 msgstr "Deixar o celular executar os comandos listados em Comandos."
 
-#: src/schema.c:95
+#: src/schema.c:114
 msgid "Remote mouse and keyboard"
 msgstr "Mouse e teclado remotos"
 
-#: src/schema.c:95
+#: src/schema.c:114
 msgid "Let the phone move the pointer and type here."
 msgstr "Deixar o celular mover o ponteiro e digitar aqui."
 
-#: src/schema.c:96
-msgid "Presentation pointer"
-msgstr "Ponteiro de apresentação"
-
-#: src/schema.c:96
+#: src/schema.c:115
 msgid "Let the phone point at the screen during a presentation."
 msgstr "Deixar o celular apontar na tela durante uma apresentação."
 
-#: src/schema.c:97
+#: src/schema.c:116
 msgid "Lock the screen"
 msgstr "Bloquear a tela"
 
-#: src/schema.c:97
+#: src/schema.c:116
 msgid "Let the phone lock this computer."
 msgstr "Deixar o celular bloquear este computador."
 
-#: src/schema.c:98
+#: src/schema.c:117
 msgid "Keep the screen awake"
 msgstr "Manter a tela acesa"
 
-#: src/schema.c:98
+#: src/schema.c:117
 msgid "Do not let the screen sleep while a phone is connected."
 msgstr "Não deixar a tela apagar enquanto houver um celular conectado."
 
-#: src/schema.c:99
+#: src/schema.c:118
 msgid "Browse phone files"
 msgstr "Navegar pelos arquivos do celular"
 
-#: src/schema.c:99
+#: src/schema.c:118
 msgid "Mount the phone's storage as a folder."
 msgstr "Montar o armazenamento do celular como uma pasta."
 
-#: src/schema.c:101
+#: src/schema.c:120
 msgid "Send what I copy"
 msgstr "Enviar o que eu copio"
 
-#: src/schema.c:102
+#: src/schema.c:121
 msgid "Send what is copied here to the phone as soon as it is copied."
 msgstr "Enviar para o celular o que for copiado aqui, assim que copiar."
 
-#: src/schema.c:103
+#: src/schema.c:122
 msgid "Send passwords too"
 msgstr "Enviar senhas também"
 
-#: src/schema.c:104
+#: src/schema.c:123
 msgid "Also send what a password manager marks as secret."
 msgstr "Enviar também o que um gerenciador de senhas marca como secreto."
 
-#: src/schema.c:106
+#: src/schema.c:125
 msgid "Pause only when answered"
 msgstr "Pausar só ao atender"
 
-#: src/schema.c:107
+#: src/schema.c:126
 msgid "Wait until the call is answered instead of pausing while it rings."
 msgstr "Esperar a chamada ser atendida em vez de pausar enquanto toca."
 
-#: src/schema.c:108
+#: src/schema.c:127
 msgid "Resume afterwards"
 msgstr "Retomar depois"
 
-#: src/schema.c:109
+#: src/schema.c:128
 msgid "Start the players again when the call ends."
 msgstr "Tocar os players de novo quando a chamada acabar."
 
-#: src/schema.c:111
+#: src/schema.c:130
 msgid "Sound"
 msgstr "Som"
 
-#: src/schema.c:112
+#: src/schema.c:131
 msgid "The sound played when the phone looks for this computer. Empty: a beep."
 msgstr "O som tocado quando o celular procura este computador. Vazio: um bipe."
 
-#: src/schema.c:113
+#: src/schema.c:132
 msgid "Player"
 msgstr "Player"
 
-#: src/schema.c:114
+#: src/schema.c:133
 msgid "The program that plays it. Empty: the first one found."
 msgstr "O programa que toca o som. Vazio: o primeiro que for encontrado."
 
-#: src/schema.c:116
+#: src/schema.c:136
+msgid "Shape"
+msgstr "Formato"
+
+#: src/schema.c:137
+msgid "What the pointer looks like. An image below replaces it."
+msgstr "Como o ponteiro se parece. Uma imagem, abaixo, o substitui."
+
+#: src/schema.c:138
+msgid "Color"
+msgstr "Cor"
+
+#: src/schema.c:138
+msgid "The color of the pointer."
+msgstr "A cor do ponteiro."
+
+#: src/schema.c:140
+msgid "Outline"
+msgstr "Contorno"
+
+#: src/schema.c:141
+msgid "Draw a thin line around the pointer so it shows on any background."
+msgstr "Desenha uma linha fina em volta do ponteiro para ele aparecer em qualquer fundo."
+
+#: src/schema.c:142
+msgid "Outline color"
+msgstr "Cor do contorno"
+
+#: src/schema.c:143
+msgid "The color of that line."
+msgstr "A cor dessa linha."
+
+#: src/schema.c:144
+msgid "Size"
+msgstr "Tamanho"
+
+#: src/schema.c:145
+msgid "How big the pointer is, compared to the screen."
+msgstr "O tamanho do ponteiro em relação à tela."
+
+#: src/schema.c:146
+msgid "Image"
+msgstr "Imagem"
+
+#: src/schema.c:147
+msgid ""
+"A PNG or GIF (it can be animated) to use as the pointer. Transparent parts "
+"are see-through, with no soft edges. Empty: use the shape."
+msgstr "Um PNG ou GIF (pode ser animado) para usar de ponteiro. As partes transparentes ficam vazadas, sem bordas suaves. Vazio: usa o formato."
+
+#: src/schema.c:150
+msgid "Hide after"
+msgstr "Esconder depois de"
+
+#: src/schema.c:151
+msgid ""
+"How long the pointer stays on the screen after the phone stops moving it."
+msgstr "Quanto tempo o ponteiro fica na tela depois que o celular para de movê-lo."
+
+#: src/schema.c:153
 msgid "Lock command"
 msgstr "Comando de bloqueio"
 
-#: src/schema.c:117
+#: src/schema.c:154
 msgid "Empty: loginctl lock-session."
 msgstr "Vazio: loginctl lock-session."
 
-#: src/schema.c:118
+#: src/schema.c:155
 msgid "Let the phone unlock"
 msgstr "Deixar o celular desbloquear"
 
-#: src/schema.c:119
+#: src/schema.c:156
 msgid ""
 "Off by default: anyone with the phone could otherwise unlock this computer."
 msgstr ""
 "Desligado por padrão: quem estivesse com o celular poderia desbloquear este "
 "computador."
 
-#: src/schema.c:120
+#: src/schema.c:157
 msgid "Unlock command"
 msgstr "Comando de desbloqueio"
 
-#: src/schema.c:121
+#: src/schema.c:158
 msgid "Empty: loginctl unlock-session. Needs the option above."
 msgstr "Vazio: loginctl unlock-session. Precisa da opção acima."
 
-#: src/schema.c:123
+#: src/schema.c:160
 msgid "Tray icon"
 msgstr "Ícone na bandeja"
 
-#: src/schema.c:124
+#: src/schema.c:161
 msgid ""
 "Show an icon in the notification area. Automatic: unless the desktop already "
 "has one for Kiremote (KiDesktop)."
@@ -1242,11 +1391,11 @@ msgstr ""
 "Mostra um ícone na área de notificação. Automático: a menos que o desktop já "
 "tenha um para o Kiremote (KiDesktop)."
 
-#: src/schema.c:129 src/schema.c:161
+#: src/schema.c:166 src/schema.c:198
 msgid "Resolution"
 msgstr "Resolução"
 
-#: src/schema.c:130
+#: src/schema.c:167
 msgid ""
 "The longer side of the picture, in pixels. Default: the phone's own. Less is "
 "lighter for the phone."
@@ -1254,28 +1403,28 @@ msgstr ""
 "O lado maior da imagem, em pixels. Padrão: o do próprio celular. Menos pesa "
 "menos para o celular."
 
-#: src/schema.c:132
+#: src/schema.c:169
 msgid "Video quality"
 msgstr "Qualidade do vídeo"
 
-#: src/schema.c:133
+#: src/schema.c:170
 msgid "Bits per second the phone may spend on the picture. Default: 8M."
 msgstr "Bits por segundo que o celular pode gastar com a imagem. Padrão: 8M."
 
-#: src/schema.c:134
+#: src/schema.c:171
 msgid "Frames per second"
 msgstr "Quadros por segundo"
 
-#: src/schema.c:135
+#: src/schema.c:172
 msgid "The most frames the phone sends each second. Default: no limit."
 msgstr ""
 "O máximo de quadros que o celular envia por segundo. Padrão: sem limite."
 
-#: src/schema.c:136
+#: src/schema.c:173
 msgid "Video codec"
 msgstr "Codec de vídeo"
 
-#: src/schema.c:137
+#: src/schema.c:174
 msgid ""
 "H.264 works everywhere. H.265 and AV1 use less data but need a newer phone "
 "and a faster computer."
@@ -1283,60 +1432,60 @@ msgstr ""
 "O H.264 funciona em qualquer lugar. O H.265 e o AV1 usam menos dados, mas "
 "pedem um celular mais novo e um computador mais rápido."
 
-#: src/schema.c:139
+#: src/schema.c:176
 msgid "Play the phone's sound"
 msgstr "Tocar o som do celular"
 
-#: src/schema.c:140
+#: src/schema.c:177
 msgid "Needs Android 11 or newer."
 msgstr "Precisa do Android 11 ou mais novo."
 
-#: src/schema.c:141
+#: src/schema.c:178
 msgid "Mouse and keyboard"
 msgstr "Mouse e teclado"
 
-#: src/schema.c:142
+#: src/schema.c:179
 msgid ""
 "Let the mouse and keyboard act on the phone. Off: the screen is only shown."
 msgstr ""
 "Deixa o mouse e o teclado agirem no celular. Desligado: a tela só é mostrada."
 
-#: src/schema.c:143
+#: src/schema.c:180
 msgid "Share the clipboard"
 msgstr "Compartilhar a área de transferência"
 
-#: src/schema.c:144
+#: src/schema.c:181
 msgid "Copy and paste between the phone and this computer while mirroring."
 msgstr ""
 "Copiar e colar entre o celular e este computador durante o espelhamento."
 
-#: src/schema.c:145
+#: src/schema.c:182
 msgid "Turn the phone's screen off"
 msgstr "Apagar a tela do celular"
 
-#: src/schema.c:146
+#: src/schema.c:183
 msgid ""
 "Switch the phone's own screen off while mirroring. It stays on in the window."
 msgstr ""
 "Apaga a tela do próprio celular durante o espelhamento. Na janela ela "
 "continua ligada."
 
-#: src/schema.c:147
+#: src/schema.c:184
 msgid "Keep the phone awake"
 msgstr "Manter o celular acordado"
 
-#: src/schema.c:148
+#: src/schema.c:185
 msgid ""
 "Do not let the phone sleep while mirroring (only works while it is charging)."
 msgstr ""
 "Não deixa o celular dormir durante o espelhamento (só funciona enquanto ele "
 "estiver carregando)."
 
-#: src/schema.c:149
+#: src/schema.c:186
 msgid "Use Wi-Fi without a cable"
 msgstr "Usar o Wi-Fi sem cabo"
 
-#: src/schema.c:150
+#: src/schema.c:187
 msgid ""
 "When no cable is connected, try the phone over the network (its debugging "
 "over Wi-Fi must be on)."
@@ -1344,19 +1493,19 @@ msgstr ""
 "Sem cabo conectado, tenta o celular pela rede (a depuração por Wi-Fi dele "
 "precisa estar ligada)."
 
-#: src/schema.c:154
+#: src/schema.c:191
 msgid "Video device status"
 msgstr "Estado do dispositivo de vídeo"
 
-#: src/schema.c:155
+#: src/schema.c:192
 msgid "Whether the video device the camera goes to is ready."
 msgstr "Se o dispositivo de vídeo para onde vai a câmera está pronto."
 
-#: src/schema.c:156
+#: src/schema.c:193
 msgid "Video device"
 msgstr "Dispositivo de vídeo"
 
-#: src/schema.c:157
+#: src/schema.c:194
 msgid ""
 "The v4l2loopback device the camera goes to, such as /dev/video10. Empty: the "
 "only one there is."
@@ -1364,11 +1513,11 @@ msgstr ""
 "O dispositivo v4l2loopback para onde vai a câmera, como /dev/video10. Vazio: "
 "o único que houver."
 
-#: src/schema.c:160
+#: src/schema.c:197
 msgid "Which of the phone's cameras to use."
 msgstr "Qual das câmeras do celular usar."
 
-#: src/schema.c:162
+#: src/schema.c:199
 msgid ""
 "The longer side of the picture, in pixels. The phone picks the best size up "
 "to this one."
@@ -1376,58 +1525,62 @@ msgstr ""
 "O lado maior da imagem, em pixels. O celular escolhe o melhor tamanho até "
 "este."
 
-#: src/schema.c:163
+#: src/schema.c:200
 msgid "Flip left to right"
 msgstr "Inverter da esquerda para a direita"
 
-#: src/schema.c:164
+#: src/schema.c:201
 msgid ""
 "Like a mirror: the picture other people see is the one you see in the "
 "preview."
 msgstr ""
 "Como um espelho: a imagem que os outros veem é a que você vê na prévia."
 
-#: src/schema.c:166
+#: src/schema.c:203
 msgid "Commands the phone may run"
 msgstr "Comandos que o celular pode executar"
 
-#: src/schema.c:167
+#: src/schema.c:204
 msgid "Name and shell command. The phone only sees the names."
 msgstr "Nome e comando de shell. O celular só vê os nomes."
 
-#: src/schema.c:272 src/schema.c:318
+#: src/schema.c:309 src/schema.c:362
 msgid "too long"
 msgstr "comprido demais"
 
-#: src/schema.c:280
+#: src/schema.c:317
 msgid "invalid name"
 msgstr "nome inválido"
 
-#: src/schema.c:283
+#: src/schema.c:320
 msgid "must be a single line"
 msgstr "deve ter uma linha só"
 
-#: src/schema.c:290
+#: src/schema.c:327
 msgid "must be true or false"
 msgstr "deve ser verdadeiro ou falso"
 
-#: src/schema.c:296
+#: src/schema.c:333
 msgid "not one of the choices"
 msgstr "não é uma das opções"
 
-#: src/schema.c:299
+#: src/schema.c:336
 msgid "must be IPv4 addresses separated by commas"
 msgstr "devem ser endereços IPv4 separados por vírgula"
 
-#: src/schema.c:303
+#: src/schema.c:340
 msgid "must be an absolute path"
 msgstr "deve ser um caminho absoluto"
 
-#: src/schema.c:309
+#: src/schema.c:346
 msgid "not a usable name"
 msgstr "nome inválido para o protocolo"
 
-#: src/schema.c:313
+#: src/schema.c:352
+msgid "must be a color like #ff0000"
+msgstr "deve ser uma cor como #ff0000"
+
+#: src/schema.c:357
 msgid "this is not a setting"
 msgstr "isto não é uma configuração"
 
@@ -1645,27 +1798,27 @@ msgstr ""
 msgid "Some changes take effect when kiremoted starts again."
 msgstr "Algumas mudanças só valem quando o kiremoted for iniciado de novo."
 
-#: ui/gtk/krsettings.c:201
+#: ui/gtk/krsettings.c:213
 msgid "Choose a folder"
 msgstr "Escolher uma pasta"
 
-#: ui/gtk/krsettings.c:201
+#: ui/gtk/krsettings.c:213
 msgid "Choose a file"
 msgstr "Escolher um arquivo"
 
-#: ui/gtk/krsettings.c:234
+#: ui/gtk/krsettings.c:246
 msgid "New command"
 msgstr "Novo comando"
 
-#: ui/gtk/krsettings.c:243 ui/gtk/krsettings.c:353
+#: ui/gtk/krsettings.c:255 ui/gtk/krsettings.c:365
 msgid "Command"
 msgstr "Comando"
 
-#: ui/gtk/krsettings.c:401
+#: ui/gtk/krsettings.c:417
 msgid "Browse..."
 msgstr "Procurar..."
 
-#: ui/gtk/krsettings.c:603
+#: ui/gtk/krsettings.c:623
 msgid ""
 "Kiremote is not running.\n"
 "Start kiremoted to change its settings."
