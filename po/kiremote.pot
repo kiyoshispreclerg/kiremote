@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kiremote\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-25 13:00-0300\n"
+"POT-Creation-Date: 2026-10-25 14:20-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1723,10 +1723,28 @@ msgstr ""
 msgid "Browse..."
 msgstr ""
 
-#: ui/gtk/krsettings.c:623
+#: ui/gtk/krsettings.c:638
 msgid ""
 "Kiremote is not running.\n"
 "Start kiremoted to change its settings."
+msgstr ""
+
+#: ui/gtk/krui.c:177
+msgid ""
+"Mirroring and the camera need the programs kiremote-mirror and adb, and "
+"neither is installed."
+msgstr ""
+
+#: ui/gtk/krui.c:179
+msgid ""
+"Mirroring and the camera need the program kiremote-mirror, which is not "
+"installed."
+msgstr ""
+
+#: ui/gtk/krui.c:181
+msgid ""
+"Mirroring and the camera need adb (the Android platform tools), which is not "
+"installed."
 msgstr ""
 
 #: ui/gtk/main.c:28

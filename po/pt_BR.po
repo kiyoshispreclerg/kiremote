@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kiremote\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-25 13:00-0300\n"
+"POT-Creation-Date: 2026-10-25 14:20-0300\n"
 "PO-Revision-Date: 2026-10-17 21:00-0300\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -1315,7 +1315,9 @@ msgstr "Contorno"
 
 #: src/schema.c:141
 msgid "Draw a thin line around the pointer so it shows on any background."
-msgstr "Desenha uma linha fina em volta do ponteiro para ele aparecer em qualquer fundo."
+msgstr ""
+"Desenha uma linha fina em volta do ponteiro para ele aparecer em qualquer "
+"fundo."
 
 #: src/schema.c:142
 msgid "Outline color"
@@ -1341,7 +1343,9 @@ msgstr "Imagem"
 msgid ""
 "A PNG or GIF (it can be animated) to use as the pointer. Transparent parts "
 "are see-through, with no soft edges. Empty: use the shape."
-msgstr "Um PNG ou GIF (pode ser animado) para usar de ponteiro. As partes transparentes ficam vazadas, sem bordas suaves. Vazio: usa o formato."
+msgstr ""
+"Um PNG ou GIF (pode ser animado) para usar de ponteiro. As partes "
+"transparentes ficam vazadas, sem bordas suaves. Vazio: usa o formato."
 
 #: src/schema.c:150
 msgid "Hide after"
@@ -1350,7 +1354,8 @@ msgstr "Esconder depois de"
 #: src/schema.c:151
 msgid ""
 "How long the pointer stays on the screen after the phone stops moving it."
-msgstr "Quanto tempo o ponteiro fica na tela depois que o celular para de movê-lo."
+msgstr ""
+"Quanto tempo o ponteiro fica na tela depois que o celular para de movê-lo."
 
 #: src/schema.c:153
 msgid "Lock command"
@@ -1818,13 +1823,31 @@ msgstr "Comando"
 msgid "Browse..."
 msgstr "Procurar..."
 
-#: ui/gtk/krsettings.c:623
+#: ui/gtk/krsettings.c:638
 msgid ""
 "Kiremote is not running.\n"
 "Start kiremoted to change its settings."
 msgstr ""
 "O Kiremote não está rodando.\n"
 "Inicie o kiremoted para mudar as configurações."
+
+#: ui/gtk/krui.c:177
+msgid ""
+"Mirroring and the camera need the programs kiremote-mirror and adb, and "
+"neither is installed."
+msgstr "O espelhamento e a câmera precisam dos programas kiremote-mirror e adb, e nenhum dos dois está instalado."
+
+#: ui/gtk/krui.c:179
+msgid ""
+"Mirroring and the camera need the program kiremote-mirror, which is not "
+"installed."
+msgstr "O espelhamento e a câmera precisam do programa kiremote-mirror, que não está instalado."
+
+#: ui/gtk/krui.c:181
+msgid ""
+"Mirroring and the camera need adb (the Android platform tools), which is not "
+"installed."
+msgstr "O espelhamento e a câmera precisam do adb (as ferramentas de plataforma do Android), que não está instalado."
 
 #: ui/gtk/main.c:28
 #, c-format

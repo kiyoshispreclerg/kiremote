@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kiremote\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-25 13:00-0300\n"
+"POT-Creation-Date: 2026-10-25 14:20-0300\n"
 "PO-Revision-Date: 2026-10-09 08:41-0300\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -1333,7 +1333,9 @@ msgstr "Image"
 msgid ""
 "A PNG or GIF (it can be animated) to use as the pointer. Transparent parts "
 "are see-through, with no soft edges. Empty: use the shape."
-msgstr "A PNG or GIF (it can be animated) to use as the pointer. Transparent parts are see-through, with no soft edges. Empty: use the shape."
+msgstr ""
+"A PNG or GIF (it can be animated) to use as the pointer. Transparent parts "
+"are see-through, with no soft edges. Empty: use the shape."
 
 #: src/schema.c:150
 msgid "Hide after"
@@ -1342,7 +1344,8 @@ msgstr "Hide after"
 #: src/schema.c:151
 msgid ""
 "How long the pointer stays on the screen after the phone stops moving it."
-msgstr "How long the pointer stays on the screen after the phone stops moving it."
+msgstr ""
+"How long the pointer stays on the screen after the phone stops moving it."
 
 #: src/schema.c:153
 msgid "Lock command"
@@ -1806,13 +1809,31 @@ msgstr "Command"
 msgid "Browse..."
 msgstr "Browse..."
 
-#: ui/gtk/krsettings.c:623
+#: ui/gtk/krsettings.c:638
 msgid ""
 "Kiremote is not running.\n"
 "Start kiremoted to change its settings."
 msgstr ""
 "Kiremote is not running.\n"
 "Start kiremoted to change its settings."
+
+#: ui/gtk/krui.c:177
+msgid ""
+"Mirroring and the camera need the programs kiremote-mirror and adb, and "
+"neither is installed."
+msgstr "Mirroring and the camera need the programs kiremote-mirror and adb, and neither is installed."
+
+#: ui/gtk/krui.c:179
+msgid ""
+"Mirroring and the camera need the program kiremote-mirror, which is not "
+"installed."
+msgstr "Mirroring and the camera need the program kiremote-mirror, which is not installed."
+
+#: ui/gtk/krui.c:181
+msgid ""
+"Mirroring and the camera need adb (the Android platform tools), which is not "
+"installed."
+msgstr "Mirroring and the camera need adb (the Android platform tools), which is not installed."
 
 #: ui/gtk/main.c:28
 #, c-format

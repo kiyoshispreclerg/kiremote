@@ -525,6 +525,21 @@ static void build(settings *s)
         gtk_table_set_col_spacings(GTK_TABLE(table), 10);
         gtk_container_set_border_width(GTK_CONTAINER(table), 12);
         int row = 0;
+        const char *problem = strcmp(str(g, "id"), "mirror") == 0 || strcmp(str(g, "id"), "camera") == 0
+                                  ? kr_ui_mirror_problem()
+                                  : NULL;
+        if (problem) { /* the settings still work; they just do nothing yet */
+            GtkWidget *box = gtk_hbox_new(FALSE, 8);
+            GtkWidget *l = gtk_label_new(problem);
+            gtk_label_set_line_wrap(GTK_LABEL(l), TRUE);
+            gtk_misc_set_alignment(GTK_MISC(l), 0, 0.5);
+            gtk_widget_set_size_request(l, 360, -1);
+            gtk_box_pack_start(GTK_BOX(box), gtk_image_new_from_stock(GTK_STOCK_DIALOG_WARNING, GTK_ICON_SIZE_LARGE_TOOLBAR),
+                               FALSE, FALSE, 0);
+            gtk_box_pack_start(GTK_BOX(box), l, TRUE, TRUE, 0);
+            gtk_table_attach(GTK_TABLE(table), box, 0, 3, 0, 1, GTK_FILL | GTK_EXPAND, 0, 0, 6);
+            row = 1;
+        }
         cJSON_ArrayForEach(def, settings_l) if (strcmp(str(def, "group"), str(g, "id")) == 0) row = add_field(s, table, row, def) + 0;
         if (!row) {
             gtk_widget_destroy(table);

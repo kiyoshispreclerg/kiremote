@@ -23,6 +23,12 @@ gboolean kr_ui_closing(kr_ui *ui);
  * executable (a build tree), else from the PATH. NULL if there is none. */
 const char *kr_ui_mirror_program(void);
 
+/* What is missing for mirroring and the camera (kiremote-mirror, adb), as a
+ * translated sentence for the settings pages; NULL when both are there. adb
+ * is looked for each time, so installing it shows without a restart of the
+ * settings window (the actions follow at the next start). */
+const char *kr_ui_mirror_problem(void);
+
 /* Sends req (taken over) and shows the error, if any, over parent. */
 void kr_ui_request(kr_ui *ui, GtkWindow *parent, cJSON *req);
 

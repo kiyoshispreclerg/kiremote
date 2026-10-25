@@ -158,13 +158,39 @@ const char *kr_ui_mirror_program(void)
     return path[0] ? path : NULL;
 }
 
+static gboolean adb_found(void)
+{
+    /* The same choice as kr_adb_program() (mirror/adb.c), which this PIC code does not carry. */
+    const char *prog = g_getenv("KIREMOTE_ADB");
+    if (!prog || !*prog)
+        prog = "adb";
+    if (strchr(prog, '/'))
+        return g_file_test(prog, G_FILE_TEST_IS_EXECUTABLE);
+    char *p = g_find_program_in_path(prog);
+    gboolean found = p != NULL;
+    g_free(p);
+    return found;
+}
+
+const char *kr_ui_mirror_problem(void)
+{
+    gboolean mirror = kr_ui_mirror_program() != NULL, adb = adb_found();
+    if (!mirror && !adb)
+        return _("Mirroring and the camera need the programs kiremote-mirror and adb, and neither is installed.");
+    if (!mirror)
+        return _("Mirroring and the camera need the program kiremote-mirror, which is not installed.");
+    if (!adb)
+        return _("Mirroring and the camera need adb (the Android platform tools), which is not installed.");
+    return NULL;
+}
+
 kr_ui *kr_ui_new(const char *socket_path)
 {
     kr_ui *ui = g_new0(kr_ui, 1);
     ui->listeners = g_array_new(FALSE, FALSE, sizeof(listener));
     ui->next_id = 1;
     kr_ui_default_hooks(&ui->hooks);
-    kr_actions_set_mirror(kr_ui_mirror_program() != NULL);
+    kr_actions_set_mirror(kr_ui_mirror_problem() == NULL);
 
     static const kr_client_ops ops = {on_change};
     ui->client = kr_client_new(socket_path, &ops, ui);

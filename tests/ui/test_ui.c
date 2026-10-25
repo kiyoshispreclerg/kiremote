@@ -848,6 +848,25 @@ TEST(settings_are_built_from_the_daemons_schema)
     kr_ui_free(ui);
 }
 
+TEST(mirroring_tabs_warn_when_adb_or_the_mirror_program_is_missing)
+{
+    kr_ui *ui = connected_ui();
+    GtkWidget *w = settings_page(ui);
+    CHECK(!label_with(w, "need adb")); /* everything there: no warning */
+    CHECK(!label_with(w, "kiremote-mirror"));
+    gtk_widget_destroy(w);
+    g_object_unref(w);
+
+    setenv("KIREMOTE_ADB", "/nonexistent/adb", 1);
+    w = settings_page(ui);
+    CHECK(label_with(w, "need adb"));
+    CHECK(!label_with(w, "program kiremote-mirror"));
+    gtk_widget_destroy(w);
+    g_object_unref(w);
+    setenv("KIREMOTE_ADB", "/bin/true", 1);
+    kr_ui_free(ui);
+}
+
 static gboolean c_cfg_clipboard_off(void *unused)
 {
     (void)unused;
@@ -1218,6 +1237,7 @@ int main(int argc, char **argv)
     ask.errors = g_ptr_array_new_with_free_func(g_free);
     /* A program to mirror with: the action shows (h_spawn records it). */
     setenv("KIREMOTE_MIRROR", "/bin/true", 1);
+    setenv("KIREMOTE_ADB", "/bin/true", 1);
     if (getenv("KR_UI_SHOT")) {
         screenshot(getenv("KR_UI_SHOT"));
         fake_close();
@@ -1230,6 +1250,7 @@ int main(int argc, char **argv)
     RUN(the_menu_offers_what_the_model_allows);
     RUN(actions_send_their_requests);
     RUN(a_phone_is_mirrored_or_a_camera_not_both_and_not_twice);
+    RUN(mirroring_tabs_warn_when_adb_or_the_mirror_program_is_missing);
     RUN(unpairing_asks_first);
     RUN(a_failed_request_shows_the_daemons_reason);
     RUN(a_request_without_a_daemon_says_so_once);

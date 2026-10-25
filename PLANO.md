@@ -577,7 +577,9 @@ mais) e **Wi-Fi**: `--connect ADDR` (`adb connect`), `--tcpip` (celular no USB
 endereço do link do KDE Connect). A depuração sem fio do Android 11 (porta
 sorteada, `adb pair`) não é automatizada: `--connect IP:PORTA`. O pacote
 `kiremote-mirror` (4º `.deb`, baixa e confere o jar na hora do build) entra no
-`build-deb.sh`, no `release.yml` (smoke test `mirror`) e no CI.
+`build-deb.sh`, no `release.yml` (smoke test `mirror`) e no CI. Sem o
+`kiremote-mirror` ou sem o `adb`, as ações "Espelhar a tela" e "Usar como
+webcam" somem e as abas Mirroring e Camera mostram um aviso do que falta.
 
 Testado com o celular de verdade (Android 12): vídeo, fluxo de som aberto no
 PulseAudio, clipboard computador → celular e o eco ignorado, `--tcpip` pelo
@@ -587,9 +589,7 @@ teste do X, `tests/mirror/`), a depuração sem fio, os `.deb` nas outras
 distros.
 
 Fica para depois (não bloqueiam a fase): Ctrl+V com `paste` (hoje o atalho vai como tecla e a sincronização cuida do
-resto), reconectar sozinho quando o Wi-Fi cai, avisar na interface quando o
-`kiremote-mirror` não está instalado (a aba Mirroring aparece mesmo assim),
-`adb pair` e mDNS (fase 6).
+resto), reconectar sozinho quando o Wi-Fi cai, `adb pair` e mDNS (fase 6).
 
 **Câmera como webcam (feita).** `--camera` pede `video_source=camera`
 ao servidor, decodifica e escreve num dispositivo v4l2loopback
