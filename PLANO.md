@@ -46,7 +46,7 @@ kiremote          (GTK2, abre sob demanda: dispositivos, pareamento, SMS,
                    envio de arquivos, controle de mídia, configurações;
                    a fase 3 também o oferece como módulos do KiDesktop)
 kiremote-cli      (sem GTK: listar, parear, ping, enviar arquivo, scripts)
-kiremote-mirror   (Xlib + Xv/XShm + libavcodec + ALSA; um processo por
+kiremote-mirror   (Xlib + XShm + libavcodec + libswscale; um processo por
                    celular espelhado, iniciado pelo daemon ou pela interface)
 ```
 
@@ -82,7 +82,7 @@ kiremote-mirror   (Xlib + Xv/XShm + libavcodec + ALSA; um processo por
 
 Build com Makefile + `config.mk` + pkg-config, no esquema do kikarinhas:
 partes opcionais só entram se a dependência existir (GTK2 → `kiremote`;
-libavcodec + Xv → `kiremote-mirror`).
+libavcodec + libswscale → `kiremote-mirror`).
 
 Código a reaproveitar do kikarinhas: `tls.c`, `json.c`, `ini.c`, `log.c`,
 `util.c`, `control.c` (socket JSON), `mpris.c`, `audio.c`. Do xispanel:
@@ -182,9 +182,10 @@ Peças:
    cabeçalho de 12 bytes (pts + flags de config/keyframe, tamanho) →
    libavcodec. VA-API opcional pelo hwaccel do libavcodec (libva já
    instalado).
-4. **Tela**: janela Xlib; YUV 4:2:0 vai direto por XvShmPutImage (a GPU
-   converte e escala, zero cópia de conversão na CPU). Sem Xv: libswscale
-   + XShmPutImage. Redesenha só quando chega quadro novo.
+4. **Tela**: janela Xlib; libswscale converte e escala para o formato da
+   janela e XShmPutImage a põe na tela. Redesenha só quando chega quadro
+   novo. Sem Xv: o X moderno não o tem mais, e a decodificação por hardware
+   (VA-API pelo libavcodec) é o que ajuda de verdade, não a conversão.
 5. **Controle**: toque/mouse, roda, teclas, texto, voltar/início/recentes,
    ligar tela, clipboard nos dois sentidos, girar. Mensagens binárias do
    protocolo de controle do scrcpy.
@@ -410,7 +411,7 @@ compilando sozinhos.
 | `kiremote` | `kiremoted`, `kiremote-cli`, `.mo`, autostart | openssl, dbus, x11… |
 | `kiremote-gtk` | `kiremote`, `.desktop`, ícones | `kiremote (= v)`, GTK2 |
 | `kiremote-kidesktop` | `kiremote-tab.so` + `.desktop`, página, widget | `kiremote (= v)`, `kidesktop-core (>= ABI)` |
-| `kiremote-mirror` (fase 5) | `kiremote-mirror` | libavcodec, Xv… |
+| `kiremote-mirror` (fase 5) | `kiremote-mirror` | libavcodec, libswscale… |
 
 O ABI do widget/página (`XISPANEL_WIDGET_ABI`, `XISSERVE_PAGE_ABI` = 1) é
 verificado em tempo de execução pelo KiDesktop; o pacote registra o ABI
@@ -539,7 +540,7 @@ contra o qual foi compilado no `Depends`.
 
 ### 5. Espelhamento (feita, fora o que está em "Fica para depois")
 
-`kiremote-mirror`: adb, servidor, vídeo, Xv, controle, clipboard; depois
+`kiremote-mirror`: adb, servidor, vídeo, controle, clipboard; depois
 áudio; depois Wi-Fi casado pelo IP do KDE Connect. Botão na interface e no
 menu da bandeja.
 
@@ -550,7 +551,8 @@ de fuzz), `adb devices -l` (`mirror/adb.c`), subir o servidor pelo adb no
 `poll()` (`mirror/server.c`, testado com `tests/tools/fake_adb`) e o vídeo
 numa janela Xlib com libavcodec e libswscale + XShm. Testado com o celular
 de verdade (Android 12, USB, 460×1024): ~25 MB de RSS e ~10% de um núcleo.
-O X desta máquina não tem Xv, então a reserva (libswscale) veio primeiro.
+O Xv não será feito: o X moderno não o tem mais (o desta máquina também não) e o
+libswscale + XShm já dá conta.
 
 Depois: a ação "Espelhar a tela" nas interfaces (`KR_ACT_MIRROR`, só com o
 `kiremote-mirror` instalado) e o controle: mensagens do socket de controle
@@ -584,8 +586,7 @@ estava sem tocar nada), clipboard celular → computador ao vivo (só na janela 
 teste do X, `tests/mirror/`), a depuração sem fio, os `.deb` nas outras
 distros.
 
-Fica para depois (não bloqueiam a fase): Xv (o X desta máquina não tem),
-Ctrl+V com `paste` (hoje o atalho vai como tecla e a sincronização cuida do
+Fica para depois (não bloqueiam a fase): Ctrl+V com `paste` (hoje o atalho vai como tecla e a sincronização cuida do
 resto), reconectar sozinho quando o Wi-Fi cai, avisar na interface quando o
 `kiremote-mirror` não está instalado (a aba Mirroring aparece mesmo assim),
 `adb pair` e mDNS (fase 6).

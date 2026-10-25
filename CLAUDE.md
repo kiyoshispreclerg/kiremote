@@ -14,7 +14,7 @@ sessão) 3d (módulos do KiDesktop) e 3e (`debian/`, scripts e CI) feitas. Vers�
 Fase 4 (SMS e contatos) adiada: o KiDesktop não tem onde guardar contatos.
 Fase 5 (espelhamento) feita: `kiremote-mirror` com vídeo, som, mouse, teclado,
 clipboard, atalhos, Wi-Fi, a aba Mirroring nas configurações e o 4º `.deb`; o que
-fica para depois (Xv etc.) está no `PLANO.md`.
+fica para depois está no `PLANO.md`.
 
 O usuário escreve em português (pt-BR) e quer as respostas em português.
 Comentários e identificadores no código, em inglês. Todo texto que o usuário

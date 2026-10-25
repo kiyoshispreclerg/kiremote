@@ -56,7 +56,7 @@ Do cliente do scrcpy (`upstream/scrcpy/app/src`):
 |---|---|---|
 | Caminho do jar no celular | `/data/local/tmp/scrcpy-server.jar` | `/data/local/tmp/kiremote-scrcpy-server.jar`: um scrcpy de outra versão no mesmo celular não troca o nosso jar |
 | Túnel | `reverse`, caindo para `forward` se falhar | só `reverse` por enquanto |
-| Interface | SDL2 (+ OpenGL) | Xlib: Xv quando o servidor X tem, senão libswscale + XShm |
+| Interface | SDL2 (+ OpenGL) | Xlib: libswscale + XShm (sem Xv: o X moderno não o tem) |
 | Áudio | opus por padrão, decodificado com libavcodec e tocado pelo SDL | `audio_codec=raw` (PCM, nada a decodificar; ~1,5 Mbit/s) tocado direto pelo libpulse (o PipeWire também responde), com a fila cortada em 250 ms: prefere falhar a atrasar |
 | Clipboard ao colar | Ctrl+V manda o texto do computador com `paste` e não repassa a tecla | só a sincronização automática nos dois sentidos, quando alguém copia (nem ao abrir a janela nem ao ganhar o foco: o que já estava lá pode ser uma senha); Ctrl+V vai como tecla. Sem os atalhos Alt+c/x/v nem o `GET_CLIPBOARD` |
 | Atalhos | `MOD` = Alt esquerdo ou Super esquerdo | Alt ou Super de qualquer lado (o X não diz qual), só `h b s m p o n r f` e as setas de volume; não há `MOD+i` (FPS), `MOD+w` (recortar), zoom etc. |
