@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kiremote\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-25 14:20-0300\n"
+"POT-Creation-Date: 2026-10-25 14:27-0300\n"
 "PO-Revision-Date: 2026-10-09 08:41-0300\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -530,7 +530,7 @@ msgstr ""
 "  -V, --version      show the version and exit\n"
 "  -h, --help         show this help and exit\n"
 
-#: src/kiremoted.c:96 mirror/main.c:832
+#: src/kiremoted.c:96 mirror/main.c:919
 #, c-format
 msgid "cannot watch signals: %s"
 msgstr "cannot watch signals: %s"
@@ -1817,23 +1817,29 @@ msgstr ""
 "Kiremote is not running.\n"
 "Start kiremoted to change its settings."
 
-#: ui/gtk/krui.c:177
+#: ui/gtk/krui.c:179
 msgid ""
 "Mirroring and the camera need the programs kiremote-mirror and adb, and "
 "neither is installed."
-msgstr "Mirroring and the camera need the programs kiremote-mirror and adb, and neither is installed."
-
-#: ui/gtk/krui.c:179
-msgid ""
-"Mirroring and the camera need the program kiremote-mirror, which is not "
-"installed."
-msgstr "Mirroring and the camera need the program kiremote-mirror, which is not installed."
+msgstr ""
+"Mirroring and the camera need the programs kiremote-mirror and adb, and "
+"neither is installed."
 
 #: ui/gtk/krui.c:181
 msgid ""
+"Mirroring and the camera need the program kiremote-mirror, which is not "
+"installed."
+msgstr ""
+"Mirroring and the camera need the program kiremote-mirror, which is not "
+"installed."
+
+#: ui/gtk/krui.c:183
+msgid ""
 "Mirroring and the camera need adb (the Android platform tools), which is not "
 "installed."
-msgstr "Mirroring and the camera need adb (the Android platform tools), which is not installed."
+msgstr ""
+"Mirroring and the camera need adb (the Android platform tools), which is not "
+"installed."
 
 #: ui/gtk/main.c:28
 #, c-format
@@ -1891,8 +1897,9 @@ msgid "Yes"
 msgstr "Yes"
 
 #: kidesktop/page.c:132 kidesktop/tab.c:20 mirror/stream.c:164
-#: mirror/screen.c:168 mirror/main.c:417 mirror/main.c:546 mirror/main.c:610
-#: mirror/main.c:844 mirror/audio.c:125 mirror/audio.c:132 mirror/v4l2.c:27
+#: mirror/screen.c:178 mirror/main.c:435 mirror/main.c:604 mirror/main.c:682
+#: mirror/main.c:932 mirror/main.c:1022 mirror/audio.c:125 mirror/audio.c:132
+#: mirror/v4l2.c:27
 msgid "Out of memory"
 msgstr "Out of memory"
 
@@ -2003,15 +2010,15 @@ msgstr "Could not accept the server's connection: %s"
 msgid "The server on the phone did not connect"
 msgstr "The server on the phone did not connect"
 
-#: mirror/screen.c:173
+#: mirror/screen.c:183
 msgid "Could not open the X display"
 msgstr "Could not open the X display"
 
-#: mirror/screen.c:202
+#: mirror/screen.c:212
 msgid "The X display needs 24-bit color for the mirror"
 msgstr "The X display needs 24-bit color for the mirror"
 
-#: mirror/main.c:38
+#: mirror/main.c:39
 #, c-format
 msgid ""
 "Usage: %s [OPTION]...\n"
@@ -2084,71 +2091,89 @@ msgstr ""
 "s recent apps, m menu, p power, Up and Down volume, n notifications (Shift:\n"
 "close them), r rotate, o screen off (Shift: on); and f fullscreen.\n"
 
-#: mirror/main.c:320
+#: mirror/main.c:338
 msgid "The phone sent a message that could not be read"
 msgstr "The phone sent a message that could not be read"
 
-#: mirror/main.c:324 mirror/main.c:636
+#: mirror/main.c:342 mirror/main.c:723
 msgid "The phone closed the connection"
 msgstr "The phone closed the connection"
 
-#: mirror/main.c:397
+#: mirror/main.c:415
 msgid ""
 "This computer cannot decode the phone's video (no decoder in libavcodec)"
 msgstr ""
 "This computer cannot decode the phone's video (no decoder in libavcodec)"
 
-#: mirror/main.c:419
+#: mirror/main.c:437
 #, c-format
 msgid "The camera is %s now (%ux%u)"
 msgstr "The camera is %s now (%ux%u)"
 
-#: mirror/main.c:448
+#: mirror/main.c:466
 msgid "The video device went away"
 msgstr "The video device went away"
 
-#: mirror/main.c:460
+#: mirror/main.c:478
 msgid "The video could not be decoded"
 msgstr "The video could not be decoded"
 
-#: mirror/main.c:484
+#: mirror/main.c:510
+#, c-format
+msgid "Lost the connection to the phone (%s); trying to get it back"
+msgstr "Lost the connection to the phone (%s); trying to get it back"
+
+#: mirror/main.c:532
+#, c-format
+msgid "%s (reconnecting...)"
+msgstr "%s (reconnecting...)"
+
+#: mirror/main.c:542
 msgid "The phone sent sound in a format this program does not play"
 msgstr "The phone sent sound in a format this program does not play"
 
-#: mirror/main.c:524
+#: mirror/main.c:582
 msgid "The phone cannot share its sound (Android 11 or newer is needed)"
 msgstr "The phone cannot share its sound (Android 11 or newer is needed)"
 
-#: mirror/main.c:574
+#: mirror/main.c:632
 msgid "Already open for this phone"
 msgstr "Already open for this phone"
 
-#: mirror/main.c:577
+#: mirror/main.c:635
 msgid "This phone is being used as a webcam: stop that first"
 msgstr "This phone is being used as a webcam: stop that first"
 
-#: mirror/main.c:579
+#: mirror/main.c:637
 msgid "This phone's screen is already being mirrored: close that window first"
 msgstr "This phone's screen is already being mirrored: close that window first"
 
-#: mirror/main.c:601
+#: mirror/main.c:660
+msgid "Got the phone back"
+msgstr "Got the phone back"
+
+#: mirror/main.c:669
 #, c-format
 msgid "Using the camera of %s"
 msgstr "Using the camera of %s"
 
-#: mirror/main.c:601
+#: mirror/main.c:669
 #, c-format
 msgid "Mirroring %s"
 msgstr "Mirroring %s"
 
-#: mirror/main.c:825
+#: mirror/main.c:695
+msgid "The phone did not come back"
+msgstr "The phone did not come back"
+
+#: mirror/main.c:912
 #, c-format
 msgid ""
 "scrcpy-server %s not found (scripts/fetch-scrcpy-server.sh downloads it)"
 msgstr ""
 "scrcpy-server %s not found (scripts/fetch-scrcpy-server.sh downloads it)"
 
-#: mirror/main.c:909
+#: mirror/main.c:1000
 msgid "The sound stopped"
 msgstr "The sound stopped"
 

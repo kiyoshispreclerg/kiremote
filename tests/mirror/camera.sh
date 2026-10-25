@@ -94,6 +94,34 @@ kill $first; wait $first 2>/dev/null || true
 t=30; while [ -S "$tmp/run/kiremote-mirror/0123456789abcdef.sock" ] && [ $t -gt 0 ]; do sleep 0.1; t=$((t - 1)); done
 [ ! -S "$tmp/run/kiremote-mirror/0123456789abcdef.sock" ] || fail "the socket stayed after the camera ended"
 
+# ---- the connection drops: over Wi-Fi it is tried again, on a cable it ends ----
+starts() { grep -c 'video_source=camera' "$tmp/adb.log" || true; }
+rm -f "$tmp"/adb.log*
+: >"$tmp/adb.log"
+FAKEADB_MODE=drop-once KIREMOTE_V4L2_FILE="$tmp/wifi.yuv" $mirror --camera --connect 192.168.1.42 -v >"$tmp/wifi.log" 2>&1 &
+wifi=$!; pids="$pids $wifi"
+t=100; while ! grep -q 'Lost the connection' "$tmp/wifi.log" && [ $t -gt 0 ]; do sleep 0.1; t=$((t - 1)); done
+grep -q 'Lost the connection' "$tmp/wifi.log" || { cat "$tmp/wifi.log"; fail "the drop was not noticed"; }
+first_run=$(stat -c %s "$tmp/wifi.yuv") # all of the first stream's frames: the fixture is finite
+[ "$first_run" -ge "$frame" ] || fail "no frames before the drop"
+t=100; while [ "$(starts)" -lt 2 ] && [ $t -gt 0 ]; do sleep 0.1; t=$((t - 1)); done
+[ "$(starts)" -ge 2 ] || { cat "$tmp/wifi.log"; fail "the server was not started again after the drop"; }
+waitfor "$tmp/wifi.yuv" $((first_run * 2)) || { cat "$tmp/wifi.log"; fail "no frames after the phone came back"; }
+kill -0 $wifi 2>/dev/null || { cat "$tmp/wifi.log"; fail "the camera ended instead of reconnecting"; }
+[ "$(grep -c '^connect 192.168.1.42' "$tmp/adb.log")" -ge 2 ] || fail "adb connect was not run again"
+grep -q 'Lost the connection' "$tmp/wifi.log" || fail "the drop was not reported"
+grep -q 'Got the phone back' "$tmp/wifi.log" || fail "the return was not reported"
+kill $wifi; wait $wifi 2>/dev/null || true
+
+rm -f "$tmp"/adb.log*
+: >"$tmp/adb.log"
+FAKEADB_MODE=drop-once KIREMOTE_V4L2_FILE="$tmp/usb.yuv" $mirror --camera >"$tmp/usb.log" 2>&1 &
+usb=$!; pids="$pids $usb"
+t=100; while kill -0 $usb 2>/dev/null && [ $t -gt 0 ]; do sleep 0.1; t=$((t - 1)); done
+if kill -0 $usb 2>/dev/null; then cat "$tmp/usb.log"; fail "a dropped cable connection did not end the camera"; fi
+wait $usb 2>/dev/null || true
+[ "$(starts)" -eq 1 ] || fail "a cable connection was retried"
+
 # ---- the video device is checked before the phone is touched ----
 rc=0
 $mirror --camera --v4l2 /nonexistent/video9 >"$tmp/nodev.log" 2>&1 || rc=$?

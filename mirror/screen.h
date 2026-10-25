@@ -24,6 +24,9 @@ int kr_screen_fd(const kr_screen *s);
 /* Handles what X sent. false once the user closed the window. */
 bool kr_screen_dispatch(kr_screen *s);
 
+/* Changes the window's title (UTF-8). */
+void kr_screen_set_title(kr_screen *s, const char *title);
+
 /* The video changed size (rotation): the window takes the new shape. */
 void kr_screen_video_size(kr_screen *s, unsigned width, unsigned height);
 /* Draws a frame (kept for redrawing). */

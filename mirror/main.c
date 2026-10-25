@@ -15,6 +15,7 @@
 #include <sys/signalfd.h>
 #include <unistd.h>
 
+#include "adb.h"
 #include "audio.h"
 #include "camera.h"
 #include "conf.h"
@@ -102,7 +103,22 @@ typedef struct {
     bool screen_off;
     bool done;
     int status; /* exit status */
+    /* Over Wi-Fi, a lost connection is retried instead of ending (lost()). */
+    kr_server_opts opts; /* what to start the server with again */
+    char wifi_serial[128]; /* the phone's adb serial if it is an address (HOST:PORT), else "" */
+    char title[128];
+    bool ready_once;
+    bool down;        /* the connection is gone and we are getting it back */
+    bool drop_server; /* free m->server at the end of this turn of the loop */
+    bool reconnected; /* the screen is up from before: say the phone's screen is off again */
+    double down_since, retry_at;
+    int attempts;
 } mirror;
+
+/* How long a lost Wi-Fi connection is tried again before giving up, and the
+ * wait between tries (grows to the maximum). */
+#define RECONNECT_FOR_S 120
+#define RECONNECT_MAX_WAIT_S 10
 
 static void stop(mirror *m, int status, const char *msg)
 {
@@ -113,16 +129,18 @@ static void stop(mirror *m, int status, const char *msg)
     m->done = true;
 }
 
+static void lost(mirror *m, int status, const char *msg);
+
 /* ---- control -------------------------------------------------------------- */
 
 static void flush_out(mirror *m)
 {
-    while (m->out_len) {
+    while (m->out_len && m->control_fd >= 0) {
         ssize_t n = write(m->control_fd, m->out, m->out_len);
         if (n < 0) {
             if (errno == EAGAIN || errno == EINTR)
                 return;
-            stop(m, 1, strerror(errno));
+            lost(m, 1, strerror(errno));
             return;
         }
         memmove(m->out, m->out + n, m->out_len - (size_t)n);
@@ -313,7 +331,7 @@ static void on_focus_out(void *ud)
 static void read_control(mirror *m)
 {
     uint8_t buf[16384];
-    for (int round = 0; round < 8 && !m->done; round++) {
+    for (int round = 0; round < 8 && !m->done && m->control_fd >= 0; round++) {
         ssize_t n = read(m->control_fd, buf, sizeof buf);
         if (n > 0) {
             if (!kr_devmsg_feed(m->devmsg, buf, (size_t)n))
@@ -321,9 +339,9 @@ static void read_control(mirror *m)
             continue;
         }
         if (n == 0)
-            stop(m, 0, _("The phone closed the connection"));
+            lost(m, 0, _("The phone closed the connection"));
         else if (errno != EAGAIN && errno != EINTR)
-            stop(m, 1, strerror(errno));
+            lost(m, 1, strerror(errno));
         return;
     }
 }
@@ -424,9 +442,9 @@ static void on_session(void *ud, uint32_t w, uint32_t h, bool resized)
         kr_screen_video_size(m->screen, w, h);
         return;
     }
-    const char *title = m->name[0] ? m->name : m->model[0] ? m->model : "Android";
+    snprintf(m->title, sizeof m->title, "%s", m->name[0] ? m->name : m->model[0] ? m->model : "Android");
     const char *why = NULL;
-    m->screen = kr_screen_new(title, w, h, &why);
+    m->screen = kr_screen_new(m->title, w, h, &why);
     if (!m->screen) {
         stop(m, 1, why);
         return;
@@ -474,6 +492,46 @@ static void drop_audio(mirror *m, const char *why)
     m->astream = NULL;
     kr_audio_free(m->audio);
     m->audio = NULL;
+}
+
+/* The connection to the phone is gone. Over the network (the phone's serial is
+ * an address) that is often only the Wi-Fi: the window, the camera device and
+ * the claim on the phone stay, the server is started again (main loop) with
+ * `adb connect` first, for RECONNECT_FOR_S seconds. Over a cable, or before
+ * it ever worked, it is the end, as it was. */
+static void lost(mirror *m, int status, const char *msg)
+{
+    if (m->done || m->down)
+        return;
+    if (!m->ready_once || !m->wifi_serial[0]) {
+        stop(m, status, msg);
+        return;
+    }
+    kr_log_warn(_("Lost the connection to the phone (%s); trying to get it back"), msg);
+    if (m->video_fd >= 0)
+        close(m->video_fd);
+    if (m->control_fd >= 0)
+        close(m->control_fd);
+    m->video_fd = m->control_fd = -1;
+    drop_audio(m, NULL);
+    kr_stream_free(m->stream);
+    m->stream = NULL;
+    kr_devmsg_free(m->devmsg);
+    m->devmsg = NULL;
+    kr_decoder_free(m->dec); /* the next stream says its codec again */
+    m->dec = NULL;
+    m->out_len = 0;
+    m->buttons = 0;
+    m->down = true;
+    m->drop_server = true;
+    m->down_since = kr_now();
+    m->attempts = 0;
+    m->retry_at = m->down_since + 1;
+    if (m->screen) {
+        char t[sizeof m->title + 32];
+        snprintf(t, sizeof t, _("%s (reconnecting...)"), m->title);
+        kr_screen_set_title(m->screen, t);
+    }
 }
 
 static void on_audio_codec(void *ud, uint32_t codec)
@@ -598,7 +656,21 @@ static void server_ready(void *ud, int fd, int audio_fd, int control_fd, const c
         static const kr_devmsg_cbs dcbs = {on_phone_clipboard, NULL};
         m->devmsg = kr_devmsg_new(&dcbs, m);
     }
-    kr_log_info(m->camera ? _("Using the camera of %s") : _("Mirroring %s"), model && *model ? model : serial);
+    if (m->down) {
+        kr_log_info(_("Got the phone back"));
+        m->down = false;
+        m->reconnected = true;
+        if (m->screen) {
+            kr_screen_set_title(m->screen, m->title);
+            if (m->screen_off && control_fd >= 0) /* the new server starts with the phone's screen on */
+                send_msg(m, msgbuf, kr_ctl_set_display_power(msgbuf, false), false);
+        }
+    } else {
+        kr_log_info(m->camera ? _("Using the camera of %s") : _("Mirroring %s"), model && *model ? model : serial);
+    }
+    m->ready_once = true;
+    m->attempts = 0;
+    snprintf(m->wifi_serial, sizeof m->wifi_serial, "%s", serial && kr_adb_is_tcpip(serial) ? serial : "");
     snprintf(m->model, sizeof m->model, "%s", model ? model : "");
     fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) | O_NONBLOCK);
     m->video_fd = fd;
@@ -612,7 +684,22 @@ static void server_ready(void *ud, int fd, int audio_fd, int control_fd, const c
 
 static void server_error(void *ud, const char *message)
 {
-    stop(ud, 1, message);
+    mirror *m = ud;
+    if (m->drop_server) /* this server was given up already; its last words are no news */
+        return;
+    if (m->down && !m->done) { /* a try to get the phone back failed: later, or never */
+        double now = kr_now();
+        kr_log_debug("reconnect: %s", message);
+        m->drop_server = true;
+        if (now - m->down_since > RECONNECT_FOR_S) {
+            stop(m, 1, _("The phone did not come back"));
+            return;
+        }
+        double wait = 2.0 * ++m->attempts;
+        m->retry_at = now + (wait > RECONNECT_MAX_WAIT_S ? RECONNECT_MAX_WAIT_S : wait);
+        return;
+    }
+    lost(m, 1, message);
 }
 
 static void server_log(void *ud, const char *line)
@@ -625,7 +712,7 @@ static void server_log(void *ud, const char *line)
 static void read_video(mirror *m)
 {
     static uint8_t buf[256 * 1024];
-    for (int round = 0; round < 8 && !m->done; round++) {
+    for (int round = 0; round < 8 && !m->done && m->video_fd >= 0; round++) {
         ssize_t n = read(m->video_fd, buf, sizeof buf);
         if (n > 0) {
             if (!kr_stream_feed(m->stream, buf, (size_t)n))
@@ -633,9 +720,9 @@ static void read_video(mirror *m)
             continue;
         }
         if (n == 0)
-            stop(m, 0, _("The phone closed the connection"));
+            lost(m, 0, _("The phone closed the connection"));
         else if (errno != EAGAIN && errno != EINTR)
-            stop(m, 1, strerror(errno));
+            lost(m, 1, strerror(errno));
         return;
     }
 }
@@ -836,6 +923,7 @@ int main(int argc, char **argv)
     mirror m = {.v4l_path = v4l_path, .mode = camera ? "camera" : "mirror", .camera = camera, .flip = conf.camera_flip, .video_fd = -1, .audio_fd = -1, .control_fd = -1, .clipboard = conf.clipboard, .screen_off = conf.screen_off};
     if (id && *id)
         claim_phone(&m, id); /* before anything is copied to the phone */
+    m.opts = opts;
     m.procs = kr_procs_new();
     static const kr_server_cb scb = {server_ready, server_error, server_log};
     if (m.procs && !m.done)
@@ -871,13 +959,16 @@ int main(int argc, char **argv)
             fds[n++] = (struct pollfd){.fd = m.control_fd, .events = POLLIN | (m.out_len ? POLLOUT : 0)};
         }
         int s_at = n;
-        n += kr_server_pollfds(m.server, fds + n, MAX_FDS - n);
+        if (m.server)
+            n += kr_server_pollfds(m.server, fds + n, MAX_FDS - n);
         int p_at = n;
         n += kr_procs_pollfds(m.procs, fds + n, MAX_FDS - n);
 
-        double next = kr_server_deadline(m.server), pd = kr_procs_deadline(m.procs);
+        double next = m.server ? kr_server_deadline(m.server) : 0, pd = kr_procs_deadline(m.procs);
         if (pd && (!next || pd < next))
             next = pd;
+        if (m.down && !m.server && (!next || m.retry_at < next))
+            next = m.retry_at;
         int timeout = -1;
         if (next) {
             double ms = (next - kr_now()) * 1000;
@@ -911,9 +1002,25 @@ int main(int argc, char **argv)
             flush_out(&m);
         if (c_at >= 0 && (fds[c_at].revents & (POLLIN | POLLHUP | POLLERR)))
             read_control(&m);
-        kr_server_dispatch(m.server, fds + s_at, p_at - s_at);
+        if (m.server)
+            kr_server_dispatch(m.server, fds + s_at, p_at - s_at);
         kr_procs_dispatch(m.procs, fds + p_at, n - p_at);
-        kr_server_tick(m.server);
+        if (m.server)
+            kr_server_tick(m.server);
+        if (m.drop_server) { /* not from inside its own callbacks */
+            kr_server_free(m.server);
+            m.server = NULL;
+            m.drop_server = false;
+        }
+        if (m.down && !m.server && !m.done && kr_now() >= m.retry_at) {
+            kr_server_opts again = m.opts;
+            again.serial = again.connect = m.wifi_serial; /* adb connect it, then that phone only */
+            again.connect_fallback = false;
+            again.tcpip = false;
+            m.server = kr_server_start(m.procs, &again, &scb, &m);
+            if (!m.server)
+                stop(&m, 1, _("Out of memory"));
+        }
         if (x_at >= 0 && m.screen && fds[x_at].revents && !kr_screen_dispatch(m.screen))
             stop(&m, 0, NULL);
     }

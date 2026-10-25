@@ -16,6 +16,8 @@ echoes what it gets. Then it waits until the client closes. $FAKEADB_MODE change
   usb+tcpip      the phone is on USB; `tcpip` makes `connect` work from then on
   nowifi         `shell ip route` shows no Wi-Fi
   refused        `connect` always fails (adb prints that and still exits 0)
+  drop-once      the first server sends its stream and then drops the connection (the
+                 Wi-Fi went away); the next one stays
 
 `connect HOST:PORT` adds a phone with that serial to `devices -l`. The Wi-Fi
 address of the phone is 192.168.1.42.
@@ -92,6 +94,10 @@ if args[:1] == ['shell']:
     a = socket.create_connection(('127.0.0.1', port)) if 'audio=true' in args else None
     c = None if 'control=false' in args else socket.create_connection(('127.0.0.1', port))
     s.sendall(open(os.environ['FAKEADB_STREAM'], 'rb').read())
+    if mode == 'drop-once' and not os.path.exists(log + '.dropped'):
+        open(log + '.dropped', 'w').close()
+        time.sleep(0.5)
+        sys.exit(0)  # the sockets close with the process
     if c:
         while True:
             b = c.recv(4096)

@@ -581,6 +581,18 @@ sorteada, `adb pair`) não é automatizada: `--connect IP:PORTA`. O pacote
 `kiremote-mirror` ou sem o `adb`, as ações "Espelhar a tela" e "Usar como
 webcam" somem e as abas Mirroring e Camera mostram um aviso do que falta.
 
+**Wi-Fi que cai.** Se o celular está pelo adb em rede (o serial é um endereço
+`IP:PORTA`, de `--connect`, `--wifi` ou `--tcpip`) e a conexão acaba, o
+`kiremote-mirror` não sai: a janela (ou o dispositivo da câmera) e a posse do
+celular ficam, o título da janela ganha "(reconectando...)", e o servidor é
+subido de novo (`adb connect` e tudo) depois de 1 s, 2 s, 4 s... (no máximo 10 s
+entre as tentativas), por até 2 minutos; depois sai. No cabo, ou se nunca tinha
+chegado a funcionar, acaba como antes. Limite: se o Wi-Fi some sem o TCP
+perceber, só o adb avisa (demora); não há vigia de quadros parados, porque
+o scrcpy não manda nada quando a tela não muda. Testado com o adb falso
+(`FAKEADB_MODE=drop-once`, `tests/mirror/camera.sh`) e, à mão, com a janela
+num Xvfb; não com o Wi-Fi de verdade.
+
 Testado com o celular de verdade (Android 12): vídeo, fluxo de som aberto no
 PulseAudio, clipboard computador → celular e o eco ignorado, `--tcpip` pelo
 Wi-Fi (e o celular devolvido ao modo USB). Não testado: som audível (o celular
@@ -589,7 +601,7 @@ teste do X, `tests/mirror/`), a depuração sem fio, os `.deb` nas outras
 distros.
 
 Fica para depois (não bloqueiam a fase): Ctrl+V com `paste` (hoje o atalho vai como tecla e a sincronização cuida do
-resto), reconectar sozinho quando o Wi-Fi cai, `adb pair` e mDNS (fase 6).
+resto), `adb pair` e mDNS (fase 6).
 
 **Câmera como webcam (feita).** `--camera` pede `video_source=camera`
 ao servidor, decodifica e escreve num dispositivo v4l2loopback

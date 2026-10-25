@@ -161,6 +161,16 @@ static void initial_size(kr_screen *s, unsigned *w, unsigned *h)
     }
 }
 
+void kr_screen_set_title(kr_screen *s, const char *title)
+{
+    Atom utf8 = XInternAtom(s->dpy, "UTF8_STRING", False);
+    Atom net_name = XInternAtom(s->dpy, "_NET_WM_NAME", False);
+    XChangeProperty(s->dpy, s->win, net_name, utf8, 8, PropModeReplace, (const unsigned char *)title,
+                    (int)strlen(title));
+    XStoreName(s->dpy, s->win, title); /* WM_NAME: for window managers without _NET_WM_NAME */
+    XFlush(s->dpy);
+}
+
 kr_screen *kr_screen_new(const char *title, unsigned width, unsigned height, const char **why)
 {
     kr_screen *s = calloc(1, sizeof *s);
@@ -227,11 +237,7 @@ kr_screen *kr_screen_new(const char *title, unsigned width, unsigned height, con
         XSetClassHint(s->dpy, s->win, ch);
         XFree(ch);
     }
-    Atom utf8 = XInternAtom(s->dpy, "UTF8_STRING", False);
-    Atom net_name = XInternAtom(s->dpy, "_NET_WM_NAME", False);
-    XChangeProperty(s->dpy, s->win, net_name, utf8, 8, PropModeReplace, (const unsigned char *)title,
-                    (int)strlen(title));
-    XStoreName(s->dpy, s->win, title); /* WM_NAME: for window managers without _NET_WM_NAME */
+    kr_screen_set_title(s, title);
     s->wm_delete = XInternAtom(s->dpy, "WM_DELETE_WINDOW", False);
     XSetWMProtocols(s->dpy, s->win, &s->wm_delete, 1);
     set_hints(s);
@@ -248,7 +254,7 @@ kr_screen *kr_screen_new(const char *title, unsigned width, unsigned height, con
         kr_log_debug("screen: no input method, keys only as X looks them up");
 
     s->a_clipboard = XInternAtom(s->dpy, "CLIPBOARD", False);
-    s->a_utf8 = utf8;
+    s->a_utf8 = XInternAtom(s->dpy, "UTF8_STRING", False);
     s->a_targets = XInternAtom(s->dpy, "TARGETS", False);
     s->a_string = XA_STRING;
     s->a_text = XInternAtom(s->dpy, "TEXT", False);
