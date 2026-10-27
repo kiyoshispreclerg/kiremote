@@ -132,21 +132,25 @@ EVP_PKEY *kr_cert_key(const kr_cert *c)
 
 static EVP_PKEY *read_key(const char *path)
 {
-    FILE *f = fopen(path, "r");
-    if (!f)
-        return NULL;
-    EVP_PKEY *k = PEM_read_PrivateKey(f, NULL, NULL, NULL);
-    fclose(f);
+    size_t len;
+    char *pem = kr_read_file_or_backup(path, kr_pem_text_ok, &len);
+    BIO *b = pem ? BIO_new_mem_buf(pem, (int)len) : NULL;
+    EVP_PKEY *k = b ? PEM_read_bio_PrivateKey(b, NULL, NULL, NULL) : NULL;
+    BIO_free(b);
+    if (pem)
+        OPENSSL_cleanse(pem, len);
+    free(pem);
     return k;
 }
 
 static X509 *read_x509(const char *path)
 {
-    FILE *f = fopen(path, "r");
-    if (!f)
-        return NULL;
-    X509 *x = PEM_read_X509(f, NULL, NULL, NULL);
-    fclose(f);
+    size_t len;
+    char *pem = kr_read_file_or_backup(path, kr_pem_text_ok, &len);
+    BIO *b = pem ? BIO_new_mem_buf(pem, (int)len) : NULL;
+    X509 *x = b ? PEM_read_bio_X509(b, NULL, NULL, NULL) : NULL;
+    BIO_free(b);
+    free(pem);
     return x;
 }
 
@@ -157,7 +161,7 @@ static bool write_pem(const char *path, EVP_PKEY *key, X509 *x)
     if (!kr_pathf(tmp, sizeof tmp, "%s.tmp", path))
         return false;
     kr_make_parent_dirs(path);
-    if (kr_backup_file(path) != 0)
+    if (kr_backup_file(path, kr_pem_text_ok) != 0)
         kr_log_warn(_("cannot back up %s: %s"), path, strerror(errno));
     int fd = open(tmp, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0600);
     if (fd < 0)
@@ -170,6 +174,7 @@ static bool write_pem(const char *path, EVP_PKEY *key, X509 *x)
     }
     bool ok = key ? PEM_write_PrivateKey(f, key, NULL, NULL, 0, NULL, NULL)
                   : PEM_write_X509(f, x);
+    ok = ok && kr_flush_sync(f) == 0;
     ok = (fclose(f) == 0) && ok;
     if (!ok || rename(tmp, path) != 0) {
         unlink(tmp);

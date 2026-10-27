@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kiremote\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-27 09:10-0300\n"
+"POT-Creation-Date: 2026-10-27 10:04-0300\n"
 "PO-Revision-Date: 2026-10-17 21:00-0300\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -18,52 +18,52 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: src/ini.c:395 src/cert.c:161 src/trust.c:195
+#: src/ini.c:417 src/cert.c:165 src/trust.c:195
 #, c-format
 msgid "cannot back up %s: %s"
 msgstr "não foi possível fazer backup de %s: %s"
 
-#: src/cert.c:186
+#: src/cert.c:191
 #, c-format
 msgid "%s does not match the private key"
 msgstr "%s não corresponde à chave privada"
 
-#: src/cert.c:190
+#: src/cert.c:195
 #, c-format
 msgid "%s is not valid yet"
 msgstr "%s ainda não é válido"
 
-#: src/cert.c:194
+#: src/cert.c:199
 #, c-format
 msgid "%s has expired"
 msgstr "%s expirou"
 
-#: src/cert.c:198
+#: src/cert.c:203
 #, c-format
 msgid "%s does not hold a valid device id"
 msgstr "%s não tem um id de dispositivo válido"
 
-#: src/cert.c:209
+#: src/cert.c:214
 #, c-format
 msgid "path too long: %s"
 msgstr "caminho comprido demais: %s"
 
-#: src/cert.c:218
+#: src/cert.c:223
 #, c-format
 msgid "cannot read %s, making a new key"
 msgstr "não foi possível ler %s; criando uma chave nova"
 
-#: src/cert.c:222 src/cert.c:244
+#: src/cert.c:227 src/cert.c:249
 #, c-format
 msgid "cannot create %s: %s"
 msgstr "não foi possível criar %s: %s"
 
-#: src/cert.c:226
+#: src/cert.c:231
 #, c-format
 msgid "created a new private key in %s"
 msgstr "chave privada nova criada em %s"
 
-#: src/cert.c:248
+#: src/cert.c:253
 #, c-format
 msgid "created a new certificate in %s (device id %s)"
 msgstr "certificado novo criado em %s (id do dispositivo %s)"
@@ -1720,6 +1720,21 @@ msgstr "Procurar aparelhos"
 #, c-format
 msgid "ignoring %s: not a certificate for that device"
 msgstr "ignorando %s: não é um certificado desse dispositivo"
+
+#: src/util.c:88
+#, c-format
+msgid "%s is corrupt, using the copy %s"
+msgstr "%s está corrompido; usando a cópia %s"
+
+#: src/util.c:90
+#, c-format
+msgid "%s is missing, using the copy %s"
+msgstr "%s não existe; usando a cópia %s"
+
+#: src/util.c:126
+#, c-format
+msgid "%s looks corrupt; the earlier copy %s was kept"
+msgstr "%s parece corrompido; a cópia anterior %s foi mantida"
 
 #: ui/gtk/kractions.c:24
 msgid "Send files"

@@ -138,6 +138,28 @@ static const char *classify(line *l, const char *section)
     return NULL;
 }
 
+bool kr_ini_text_usable(const char *text, size_t len)
+{
+    return kr_text_usable(text, len);
+}
+
+static void count_warn(void *ud, int number, const char *msg)
+{
+    (void)number;
+    (void)msg;
+    (*(int *)ud)++;
+}
+
+bool kr_ini_text_clean(const char *text, size_t len)
+{
+    int warnings = 0;
+    if (!kr_text_usable(text, len))
+        return false;
+    kr_ini *ini = kr_ini_parse(text, count_warn, &warnings);
+    kr_ini_free(ini);
+    return ini && warnings == 0;
+}
+
 kr_ini *kr_ini_parse(const char *text,
                      void (*warn)(void *ud, int line, const char *msg),
                      void *ud)
@@ -391,14 +413,14 @@ int kr_ini_save(const kr_ini *ini, const char *path)
     }
     kr_make_parent_dirs(path);
     /* A failed backup does not stop the save: the new settings matter more. */
-    if (kr_backup_file(path) != 0)
+    if (kr_backup_file(path, kr_ini_text_clean) != 0)
         kr_log_warn(_("cannot back up %s: %s"), path, strerror(errno));
     FILE *f = fopen(tmp, "w");
     if (!f) {
         free(text);
         return -1;
     }
-    bool ok = fputs(text, f) >= 0 && fflush(f) == 0;
+    bool ok = fputs(text, f) >= 0 && kr_flush_sync(f) == 0;
     ok = fclose(f) == 0 && ok;
     free(text);
     if (!ok || rename(tmp, path) < 0) {

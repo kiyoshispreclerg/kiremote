@@ -4,6 +4,7 @@
 
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdio.h>
 
 #define KR_PATH_MAX 4096
 
@@ -11,11 +12,31 @@
  * The caller frees it. */
 char *kr_read_file(const char *path, size_t *len);
 
+/* Judges a file's contents (NUL-terminated, len bytes). */
+typedef bool (*kr_text_check)(const char *text, size_t len);
+
 /* Copies path to "<path>.backup" (same folder, same mode, fsync'd, replaced
  * atomically) so a crash while the file is rewritten leaves a good copy.
- * Call it before writing the new contents. A missing file is not an error
+ * Call it before writing the new contents. Only a file that passes ok (NULL:
+ * anything) is copied, so a corrupt file never replaces a good backup (that
+ * is logged, and is not an error). A missing file is not an error either
  * (0, nothing to back up); -1 with errno otherwise. */
-int kr_backup_file(const char *path);
+int kr_backup_file(const char *path, kr_text_check ok);
+
+/* kr_read_file, but when path is missing or fails ok and "<path>.backup"
+ * passes, the backup's contents (logged). With no usable backup it is exactly
+ * kr_read_file. */
+char *kr_read_file_or_backup(const char *path, kr_text_check ok, size_t *len);
+
+/* fflush + fsync: the data is on disk when this returns 0, so renaming the
+ * file right after cannot leave it empty after a power cut. */
+int kr_flush_sync(FILE *f);
+
+/* kr_text_check: non-empty, no NUL bytes. */
+bool kr_text_usable(const char *text, size_t len);
+
+/* kr_text_check: a PEM block that was written to the end. */
+bool kr_pem_text_ok(const char *text, size_t len);
 
 bool kr_file_exists(const char *path);
 bool kr_dir_exists(const char *path);

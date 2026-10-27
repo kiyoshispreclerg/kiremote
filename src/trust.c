@@ -55,7 +55,7 @@ static void load_one(kr_trust *t, const char *id)
         !path_for(t, id, "ini", ini_path, sizeof ini_path))
         return;
     size_t len;
-    char *pem = kr_read_file(pem_path, &len);
+    char *pem = kr_read_file_or_backup(pem_path, kr_pem_text_ok, &len);
     X509 *cert = pem ? kr_x509_from_pem(pem, len) : NULL;
     free(pem);
     char cn[KR_ID_SIZE];
@@ -65,7 +65,7 @@ static void load_one(kr_trust *t, const char *id)
         return;
     }
 
-    char *text = kr_read_file(ini_path, NULL);
+    char *text = kr_read_file_or_backup(ini_path, kr_ini_text_usable, NULL);
     kr_ini *ini = kr_ini_parse(text ? text : "", NULL, NULL);
     free(text);
     const char *name = ini ? kr_ini_get(ini, "device", "name") : NULL;
@@ -191,10 +191,10 @@ static bool save_cert(const kr_trust *t, const entry *e)
               kr_pathf(tmp, sizeof tmp, "%s.tmp", path);
     if (ok) {
         kr_make_parent_dirs(path);
-        if (kr_backup_file(path) != 0)
+        if (kr_backup_file(path, kr_pem_text_ok) != 0)
             kr_log_warn(_("cannot back up %s: %s"), path, strerror(errno));
         FILE *f = fopen(tmp, "w");
-        ok = f && fputs(pem, f) >= 0;
+        ok = f && fputs(pem, f) >= 0 && kr_flush_sync(f) == 0;
         if (f)
             ok = (fclose(f) == 0) && ok;
         ok = ok && rename(tmp, path) == 0;

@@ -91,7 +91,7 @@ kr_config *kr_config_load(const char *path)
     }
 
     kr_config *c = NULL;
-    char *text = kr_read_file(path, NULL);
+    char *text = kr_read_file_or_backup(path, kr_ini_text_usable, NULL);
     if (!text) {
         if (errno != ENOENT) {
             kr_log_error(_("cannot read %s: %s"), path, strerror(errno));

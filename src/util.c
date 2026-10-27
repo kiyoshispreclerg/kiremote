@@ -6,9 +6,13 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/stat.h>
 #include <time.h>
 #include <unistd.h>
+
+#include "i18n.h"
+#include "log.h"
 
 char *kr_read_file(const char *path, size_t *len)
 {
@@ -48,7 +52,55 @@ char *kr_read_file(const char *path, size_t *len)
     return buf;
 }
 
-int kr_backup_file(const char *path)
+bool kr_text_usable(const char *text, size_t len)
+{
+    return len > 0 && strlen(text) == len;
+}
+
+bool kr_pem_text_ok(const char *text, size_t len)
+{
+    return kr_text_usable(text, len) && strstr(text, "-----BEGIN ") && strstr(text, "-----END ");
+}
+
+int kr_flush_sync(FILE *f)
+{
+    if (fflush(f) != 0 || ferror(f))
+        return -1;
+    return fsync(fileno(f));
+}
+
+char *kr_read_file_or_backup(const char *path, kr_text_check ok, size_t *len)
+{
+    size_t n = 0;
+    char *text = kr_read_file(path, &n);
+    int err = errno;
+    if (text && (!ok || ok(text, n))) {
+        if (len)
+            *len = n;
+        return text;
+    }
+    char bak[KR_PATH_MAX];
+    size_t bn = 0;
+    char *copy = NULL;
+    if (kr_pathf(bak, sizeof bak, "%s.backup", path) && (copy = kr_read_file(bak, &bn)) &&
+        (!ok || ok(copy, bn))) {
+        if (text)
+            kr_log_warn(_("%s is corrupt, using the copy %s"), path, bak);
+        else
+            kr_log_warn(_("%s is missing, using the copy %s"), path, bak);
+        free(text);
+        if (len)
+            *len = bn;
+        return copy;
+    }
+    free(copy);
+    if (len)
+        *len = n;
+    errno = err;
+    return text;
+}
+
+int kr_backup_file(const char *path, kr_text_check check)
 {
     char bak[KR_PATH_MAX], tmp[KR_PATH_MAX];
     if (!kr_pathf(bak, sizeof bak, "%s.backup", path) ||
@@ -63,6 +115,17 @@ int kr_backup_file(const char *path)
     if (fstat(in, &st) < 0 || !S_ISREG(st.st_mode)) {
         close(in);
         return 0;
+    }
+    if (check) {
+        size_t n;
+        char *text = kr_read_file(path, &n);
+        bool good = text && check(text, n);
+        free(text);
+        if (!good) {
+            close(in);
+            kr_log_warn(_("%s looks corrupt; the earlier copy %s was kept"), path, bak);
+            return 0;
+        }
     }
     /* Same mode as the original: it may hold the private key. */
     int out = open(tmp, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, st.st_mode & 0777);

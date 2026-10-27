@@ -158,6 +158,68 @@ TEST(save_keeps_a_backup_of_the_previous_file)
     rmdir(dir);
 }
 
+static void put(const char *path, const char *text)
+{
+    FILE *f = fopen(path, "w");
+    if (f) {
+        fputs(text, f);
+        fclose(f);
+    }
+}
+
+TEST(a_corrupt_file_does_not_replace_a_good_backup)
+{
+    char dir[] = "/tmp/kr-bak-XXXXXX", path[KR_PATH_MAX], bak[KR_PATH_MAX];
+    CHECK(mkdtemp(dir) != NULL);
+    CHECK(kr_pathf(path, sizeof path, "%s/a.ini", dir));
+    CHECK(kr_pathf(bak, sizeof bak, "%s/a.ini.backup", dir));
+    put(bak, "[s]\nk = good\n");
+    put(path, "");
+    kr_ini *ini = kr_ini_new();
+    CHECK(kr_ini_set(ini, "s", "k", "new") == 0);
+    CHECK(kr_ini_save(ini, path) == 0);
+    char *old = kr_read_file(bak, NULL);
+    CHECK(old && strstr(old, "good"));
+    free(old);
+    kr_ini_free(ini);
+    unlink(path);
+    unlink(bak);
+    rmdir(dir);
+}
+
+TEST(loading_falls_back_to_the_backup)
+{
+    char dir[] = "/tmp/kr-bak-XXXXXX", path[KR_PATH_MAX], bak[KR_PATH_MAX];
+    CHECK(mkdtemp(dir) != NULL);
+    CHECK(kr_pathf(path, sizeof path, "%s/a.ini", dir));
+    CHECK(kr_pathf(bak, sizeof bak, "%s/a.ini.backup", dir));
+    put(bak, "[s]\nk = saved\n");
+
+    char *t = kr_read_file_or_backup(path, kr_ini_text_usable, NULL); /* missing */
+    CHECK(t && strstr(t, "saved"));
+    free(t);
+    put(path, ""); /* zeroed by a power cut */
+    t = kr_read_file_or_backup(path, kr_ini_text_usable, NULL);
+    CHECK(t && strstr(t, "saved"));
+    free(t);
+    put(path, "[s]\nk = main\n"); /* fine: the file wins */
+    t = kr_read_file_or_backup(path, kr_ini_text_usable, NULL);
+    CHECK(t && strstr(t, "main"));
+    free(t);
+    put(path, "-----BEGIN X-----\n"); /* cut-off PEM, no backup of it */
+    t = kr_read_file_or_backup(path, kr_pem_text_ok, NULL);
+    CHECK(t != NULL);
+    free(t);
+    put(bak, "-----BEGIN X-----\nab\n-----END X-----\n");
+    t = kr_read_file_or_backup(path, kr_pem_text_ok, NULL);
+    CHECK(t && strstr(t, "-----END"));
+    free(t);
+
+    unlink(path);
+    unlink(bak);
+    rmdir(dir);
+}
+
 int main(void)
 {
     RUN(pathf_refuses_to_truncate);
@@ -170,5 +232,7 @@ int main(void)
     RUN(unique_file_names);
     RUN(share_dir);
     RUN(save_keeps_a_backup_of_the_previous_file);
+    RUN(a_corrupt_file_does_not_replace_a_good_backup);
+    RUN(loading_falls_back_to_the_backup);
     return harness_report();
 }
