@@ -191,6 +191,8 @@ static bool save_cert(const kr_trust *t, const entry *e)
               kr_pathf(tmp, sizeof tmp, "%s.tmp", path);
     if (ok) {
         kr_make_parent_dirs(path);
+        if (kr_backup_file(path) != 0)
+            kr_log_warn(_("cannot back up %s: %s"), path, strerror(errno));
         FILE *f = fopen(tmp, "w");
         ok = f && fputs(pem, f) >= 0;
         if (f)

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kiremote\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-25 14:27-0300\n"
+"POT-Creation-Date: 2026-10-27 09:10-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,47 +18,52 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
 
-#: src/cert.c:184
+#: src/ini.c:395 src/cert.c:161 src/trust.c:195
+#, c-format
+msgid "cannot back up %s: %s"
+msgstr ""
+
+#: src/cert.c:186
 #, c-format
 msgid "%s does not match the private key"
 msgstr ""
 
-#: src/cert.c:188
+#: src/cert.c:190
 #, c-format
 msgid "%s is not valid yet"
 msgstr ""
 
-#: src/cert.c:192
+#: src/cert.c:194
 #, c-format
 msgid "%s has expired"
 msgstr ""
 
-#: src/cert.c:196
+#: src/cert.c:198
 #, c-format
 msgid "%s does not hold a valid device id"
 msgstr ""
 
-#: src/cert.c:207
+#: src/cert.c:209
 #, c-format
 msgid "path too long: %s"
 msgstr ""
 
-#: src/cert.c:216
+#: src/cert.c:218
 #, c-format
 msgid "cannot read %s, making a new key"
 msgstr ""
 
-#: src/cert.c:220 src/cert.c:242
+#: src/cert.c:222 src/cert.c:244
 #, c-format
 msgid "cannot create %s: %s"
 msgstr ""
 
-#: src/cert.c:224
+#: src/cert.c:226
 #, c-format
 msgid "created a new private key in %s"
 msgstr ""
 
-#: src/cert.c:246
+#: src/cert.c:248
 #, c-format
 msgid "created a new certificate in %s (device id %s)"
 msgstr ""
@@ -77,7 +82,7 @@ msgstr ""
 msgid "cannot read %s: %s"
 msgstr ""
 
-#: src/config.c:250 src/daemon.c:952 src/trust.c:182 src/trust.c:200
+#: src/config.c:250 src/daemon.c:952 src/trust.c:182 src/trust.c:202
 #, c-format
 msgid "cannot write %s: %s"
 msgstr ""

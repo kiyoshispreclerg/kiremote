@@ -11,6 +11,12 @@
  * The caller frees it. */
 char *kr_read_file(const char *path, size_t *len);
 
+/* Copies path to "<path>.backup" (same folder, same mode, fsync'd, replaced
+ * atomically) so a crash while the file is rewritten leaves a good copy.
+ * Call it before writing the new contents. A missing file is not an error
+ * (0, nothing to back up); -1 with errno otherwise. */
+int kr_backup_file(const char *path);
+
 bool kr_file_exists(const char *path);
 bool kr_dir_exists(const char *path);
 

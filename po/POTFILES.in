@@ -1,3 +1,4 @@
+src/ini.c
 src/cert.c
 src/config.c
 src/conn.c

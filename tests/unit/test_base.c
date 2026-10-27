@@ -2,6 +2,8 @@
 /* Phase 0 building blocks: paths, configuration, ini editing, JSON paths. */
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #include "../harness.h"
 #include "config.h"
@@ -127,6 +129,35 @@ TEST(share_dir)
     unsetenv("XDG_CONFIG_HOME");
 }
 
+TEST(save_keeps_a_backup_of_the_previous_file)
+{
+    char dir[] = "/tmp/kr-bak-XXXXXX", path[KR_PATH_MAX], bak[KR_PATH_MAX];
+    CHECK(mkdtemp(dir) != NULL);
+    CHECK(kr_pathf(path, sizeof path, "%s/a.ini", dir));
+    CHECK(kr_pathf(bak, sizeof bak, "%s/a.ini.backup", dir));
+
+    /* First save: nothing to back up. */
+    kr_ini *ini = kr_ini_new();
+    CHECK(kr_ini_set(ini, "s", "k", "one") == 0);
+    CHECK(kr_ini_save(ini, path) == 0);
+    CHECK(!kr_file_exists(bak));
+
+    /* Second save: the backup holds the first contents, same mode. */
+    CHECK(chmod(path, 0600) == 0);
+    CHECK(kr_ini_set(ini, "s", "k", "two") == 0);
+    CHECK(kr_ini_save(ini, path) == 0);
+    char *old = kr_read_file(bak, NULL);
+    CHECK(old && strstr(old, "one") && !strstr(old, "two"));
+    free(old);
+    struct stat st;
+    CHECK(stat(bak, &st) == 0 && (st.st_mode & 0777) == 0600);
+    kr_ini_free(ini);
+
+    unlink(path);
+    unlink(bak);
+    rmdir(dir);
+}
+
 int main(void)
 {
     RUN(pathf_refuses_to_truncate);
@@ -138,5 +169,6 @@ int main(void)
     RUN(json_paths);
     RUN(unique_file_names);
     RUN(share_dir);
+    RUN(save_keeps_a_backup_of_the_previous_file);
     return harness_report();
 }

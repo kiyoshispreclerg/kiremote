@@ -1,6 +1,9 @@
 /* SPDX-License-Identifier: GPL-3.0-or-later */
 #include "ini.h"
 
+#include "i18n.h"
+#include "log.h"
+
 #include <ctype.h>
 #include <errno.h>
 #include <stdio.h>
@@ -387,6 +390,9 @@ int kr_ini_save(const kr_ini *ini, const char *path)
         return -1;
     }
     kr_make_parent_dirs(path);
+    /* A failed backup does not stop the save: the new settings matter more. */
+    if (kr_backup_file(path) != 0)
+        kr_log_warn(_("cannot back up %s: %s"), path, strerror(errno));
     FILE *f = fopen(tmp, "w");
     if (!f) {
         free(text);

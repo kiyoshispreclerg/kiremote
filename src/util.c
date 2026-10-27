@@ -2,6 +2,7 @@
 #include "util.h"
 
 #include <errno.h>
+#include <fcntl.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -45,6 +46,64 @@ char *kr_read_file(const char *path, size_t *len)
     if (len)
         *len = size;
     return buf;
+}
+
+int kr_backup_file(const char *path)
+{
+    char bak[KR_PATH_MAX], tmp[KR_PATH_MAX];
+    if (!kr_pathf(bak, sizeof bak, "%s.backup", path) ||
+        !kr_pathf(tmp, sizeof tmp, "%s.backup.tmp", path)) {
+        errno = ENAMETOOLONG;
+        return -1;
+    }
+    int in = open(path, O_RDONLY | O_CLOEXEC);
+    if (in < 0)
+        return errno == ENOENT ? 0 : -1;
+    struct stat st;
+    if (fstat(in, &st) < 0 || !S_ISREG(st.st_mode)) {
+        close(in);
+        return 0;
+    }
+    /* Same mode as the original: it may hold the private key. */
+    int out = open(tmp, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, st.st_mode & 0777);
+    if (out < 0) {
+        int e = errno;
+        close(in);
+        errno = e;
+        return -1;
+    }
+    bool ok = fchmod(out, st.st_mode & 0777) == 0;
+    char buf[8192];
+    while (ok) {
+        ssize_t n = read(in, buf, sizeof buf);
+        if (n < 0 && errno == EINTR)
+            continue;
+        if (n <= 0) {
+            ok = n == 0;
+            break;
+        }
+        for (ssize_t off = 0; ok && off < n;) {
+            ssize_t w = write(out, buf + off, (size_t)(n - off));
+            if (w < 0 && errno == EINTR)
+                continue;
+            if (w < 0)
+                ok = false;
+            else
+                off += w;
+        }
+    }
+    ok = ok && fsync(out) == 0;
+    int e = errno;
+    close(in);
+    ok = close(out) == 0 && ok;
+    if (!ok || rename(tmp, bak) < 0) {
+        if (ok)
+            e = errno;
+        unlink(tmp);
+        errno = e;
+        return -1;
+    }
+    return 0;
 }
 
 bool kr_file_exists(const char *path)

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kiremote\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-25 14:27-0300\n"
+"POT-Creation-Date: 2026-10-27 09:10-0300\n"
 "PO-Revision-Date: 2026-10-09 08:41-0300\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -17,47 +17,52 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: src/cert.c:184
+#: src/ini.c:395 src/cert.c:161 src/trust.c:195
+#, c-format
+msgid "cannot back up %s: %s"
+msgstr "cannot back up %s: %s"
+
+#: src/cert.c:186
 #, c-format
 msgid "%s does not match the private key"
 msgstr "%s does not match the private key"
 
-#: src/cert.c:188
+#: src/cert.c:190
 #, c-format
 msgid "%s is not valid yet"
 msgstr "%s is not valid yet"
 
-#: src/cert.c:192
+#: src/cert.c:194
 #, c-format
 msgid "%s has expired"
 msgstr "%s has expired"
 
-#: src/cert.c:196
+#: src/cert.c:198
 #, c-format
 msgid "%s does not hold a valid device id"
 msgstr "%s does not hold a valid device id"
 
-#: src/cert.c:207
+#: src/cert.c:209
 #, c-format
 msgid "path too long: %s"
 msgstr "path too long: %s"
 
-#: src/cert.c:216
+#: src/cert.c:218
 #, c-format
 msgid "cannot read %s, making a new key"
 msgstr "cannot read %s, making a new key"
 
-#: src/cert.c:220 src/cert.c:242
+#: src/cert.c:222 src/cert.c:244
 #, c-format
 msgid "cannot create %s: %s"
 msgstr "cannot create %s: %s"
 
-#: src/cert.c:224
+#: src/cert.c:226
 #, c-format
 msgid "created a new private key in %s"
 msgstr "created a new private key in %s"
 
-#: src/cert.c:246
+#: src/cert.c:248
 #, c-format
 msgid "created a new certificate in %s (device id %s)"
 msgstr "created a new certificate in %s (device id %s)"
@@ -76,7 +81,7 @@ msgstr "cannot find the configuration folder (is HOME set?)"
 msgid "cannot read %s: %s"
 msgstr "cannot read %s: %s"
 
-#: src/config.c:250 src/daemon.c:952 src/trust.c:182 src/trust.c:200
+#: src/config.c:250 src/daemon.c:952 src/trust.c:182 src/trust.c:202
 #, c-format
 msgid "cannot write %s: %s"
 msgstr "cannot write %s: %s"

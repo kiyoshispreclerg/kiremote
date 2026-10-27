@@ -157,6 +157,8 @@ static bool write_pem(const char *path, EVP_PKEY *key, X509 *x)
     if (!kr_pathf(tmp, sizeof tmp, "%s.tmp", path))
         return false;
     kr_make_parent_dirs(path);
+    if (kr_backup_file(path) != 0)
+        kr_log_warn(_("cannot back up %s: %s"), path, strerror(errno));
     int fd = open(tmp, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0600);
     if (fd < 0)
         return false;
